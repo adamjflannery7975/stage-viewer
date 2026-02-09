@@ -7,9 +7,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Stage Viewer">
 <link rel="manifest" href="manifest.json">
-<title>ChordPro Stage Viewer Mobile v1.0</title>
+<title>ChordPro Stage Viewer Mobile v1.1</title>
 <style>
-/* GLOBAL THEME BLOCK */
+/* GLOBAL THEME BLOCK - Shared across ChordPro Studio apps */
 :root {
   --bg: #0b0f14;
   --panel: #0f1620;
@@ -26,13 +26,13 @@
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
   --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
 
-  /* Stage Viewer tokens */
+  /* Stage Viewer UI tokens */
   --ui-bg: var(--panel);
   --ui-card: var(--panel2);
   --ui-accent: var(--accent2);
   --ui-text: var(--text);
 
-  /* Sheet rendering */
+  /* Sheet rendering palette */
   --ipad-bg: #000;
   --chord-clr: #00ffff;
   --section-clr: #ffff00;
@@ -421,29 +421,32 @@ select:focus, input[type="text"]:focus {
   margin-top: 10px;
 }
 
+/* FIXED: Hide gig banner (like original) */
 .gig-banner {
   display: none !important;
 }
 
-/* Status indicator for offline mode */
+/* FIXED: Offline indicator - bottom-left, auto-hide after 5s */
 .offline-indicator {
   position: fixed;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(34,197,94,.2);
+  bottom: 20px;
+  left: 20px;
+  background: rgba(34,197,94,.9);
   border: 1px solid rgba(34,197,94,.4);
-  color: #22c55e;
-  padding: 6px 12px;
+  color: #fff;
+  padding: 8px 12px;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 700;
-  z-index: 9998;
-  display: none;
+  z-index: 8999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,.3);
 }
 
 .offline-indicator.show {
-  display: block;
+  opacity: 1;
 }
 
 /* Toast notification */
@@ -626,7 +629,7 @@ select:focus, input[type="text"]:focus {
   </div>
 </div>
 
-<div class="offline-indicator" id="offlineIndicator">📡 OFFLINE MODE</div>
+<div class="offline-indicator" id="offlineIndicator">📡 OFFLINE</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -833,7 +836,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ============================================
-// Core Functions (Original + Modified)
+// Core Functions (From Original v5)
 // ============================================
 function getActivePersona() {
   const el = document.getElementById('userProfile');
@@ -879,7 +882,7 @@ function normalizePersonaName(s) {
     .trim()
     .toLowerCase()
     .replace(/\(.*?\)/g, '')
-    .replace(/version/g, '')
+    .replace(/\bversion\b/g, '')
     .replace(/[^a-z]/g, '')
     .replace(/\s+/g, '')
     .trim();
@@ -1029,6 +1032,7 @@ function applyStyles(c) {
 }
 
 function setGigBanner(gig) {
+  // Banner hidden in CSS - kept for compatibility
   const el = document.getElementById('gigBanner');
   if (!el) return;
 }
@@ -1274,9 +1278,6 @@ function displaySong(s, idx) {
   const uidShort = uid ? uid.slice(0, 8) : 'no-uid';
   const filename = `${title}${artist ? ' - ' + artist : ''}${persona ? ' (' + persona + ')' : ''}.cho`;
 
-  const banner = document.getElementById('gigBanner');
-  if (banner) banner.textContent = `📄 ${filename} • ${uidShort}`;
-
   const singer = s.singer || content.match(/\{singer[:\s]*(.*?)\}/i)?.[1]?.trim() || '';
   const duration = s.duration || content.match(/\{duration[:\s]*(.*?)\}/i)?.[1]?.trim() || '';
   const capoVal = s.capo || content.match(/\{capo[:\s]*(.*?)\}/i)?.[1]?.trim() || '';
@@ -1436,17 +1437,23 @@ if (infoModal && !infoModal.bound) {
   });
 }
 
-// Check online/offline status
+// Check online/offline status - show indicator briefly
 window.addEventListener('online', () => {
-  document.getElementById('offlineIndicator').classList.remove('show');
+  const ind = document.getElementById('offlineIndicator');
+  ind.classList.remove('show');
 });
 
 window.addEventListener('offline', () => {
-  document.getElementById('offlineIndicator').classList.add('show');
+  const ind = document.getElementById('offlineIndicator');
+  ind.classList.add('show');
+  // Auto-hide after 5 seconds
+  setTimeout(() => ind.classList.remove('show'), 5000);
 });
 
 if (!navigator.onLine) {
-  document.getElementById('offlineIndicator').classList.add('show');
+  const ind = document.getElementById('offlineIndicator');
+  ind.classList.add('show');
+  setTimeout(() => ind.classList.remove('show'), 5000);
 }
 
 // Initialize

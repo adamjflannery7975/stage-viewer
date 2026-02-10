@@ -106,17 +106,54 @@ def relpath(from_dir: Path, to_path: Path) -> str:
 
 
 def load_setlists(setlists_path: Path) -> dict:
+    """
+    Supports BOTH formats:
+      New: { version, updated, collections: [...] }
+      Old: { version, setlists: [...] }  (auto-migrated into collections)
+    """
     if not setlists_path.exists():
-        return {"version": 1, "setlists": []}
+        return {"version": 1, "updated": now_iso_local(), "collections": []}
+
     try:
         data = json.loads(read_text(setlists_path))
         if not isinstance(data, dict):
             raise ValueError("setlists.json is not a JSON object")
-        if "setlists" not in data or not isinstance(data["setlists"], list):
-            raise ValueError("setlists.json must contain { setlists: [] }")
-        if "version" not in data:
-            data["version"] = 1
-        return data
+
+        # New format
+        if "collections" in data:
+            if not isinstance(data["collections"], list):
+                raise ValueError("setlists.json 'collections' must be an array")
+            if "version" not in data:
+                data["version"] = 1
+            if "updated" not in data:
+                data["updated"] = now_iso_local()
+            return data
+
+        # Old format -> migrate
+        if "setlists" in data:
+            if not isinstance(data["setlists"], list):
+                raise ValueError("setlists.json 'setlists' must be an array")
+
+            migrated = {
+                "version": data.get("version", 1),
+                "updated": now_iso_local(),
+                "collections": []
+            }
+
+            for sl in data["setlists"]:
+                migrated["collections"].append({
+                    "id": sl.get("id") or sl.get("name") or "",
+                    "type": "gig",
+                    "name": sl.get("name") or sl.get("id") or "Unnamed",
+                    "notes": sl.get("notes", ""),
+                    "sets": sl.get("sets", [])
+                })
+
+            return migrated
+
+        # Unknown
+        raise ValueError("setlists.json must contain either 'collections' or 'setlists'")
+
     except Exception as e:
         raise RuntimeError(f"Failed to parse {setlists_path}: {e}") from e
 
@@ -163,7 +200,7 @@ def consolidate(repo_root: Path, verbose: bool = True) -> Tuple[dict, dict, dict
         log["errors"].append(str(e))
         setlists = {"version": 1, "setlists": []}
 
-    log["counts"]["setlists"] = len(setlists.get("setlists", []))
+    log["counts"]["setlists"] = len(setlists.get("collections", []))
 
     # Scan .cho files
     cho_files = sorted(songs_dir.rglob("*.cho"))
@@ -266,15 +303,15 @@ def consolidate(repo_root: Path, verbose: bool = True) -> Tuple[dict, dict, dict
     missing_uids: List[str] = []
     referenced = 0
 
-    for sl in setlists.get("setlists", []):
-        sets = sl.get("sets", [])
-        for s in sets:
-            uids = s.get("songs", [])
-            if isinstance(uids, list):
-                for uid in uids:
-                    referenced += 1
-                    if uid not in songs_by_uid:
-                        missing_uids.append(str(uid))
+    for col in setlists.get("collections", []):
+    sets = col.get("sets", [])
+    for s in sets:
+        uids = s.get("songs", [])
+        if isinstance(uids, list):
+            for uid in uids:
+                referenced += 1
+                if uid not in songs_by_uid:
+                    missing_uids.append(str(uid))
 
     log["counts"]["setlistSongsReferenced"] = referenced
     log["counts"]["setlistMissingUids"] = len(missing_uids)
@@ -287,12 +324,12 @@ def consolidate(repo_root: Path, verbose: bool = True) -> Tuple[dict, dict, dict
             log["warnings"].append(f"...and {len(uniq) - 50} more missing UIDs referenced by setlists")
 
     # Build library.index.json (derived master)
-    library_index = {
-        "version": 1,
-        "lastConsolidated": now_iso_local(),
-        "songs": songs_list,
-        "setlists": setlists.get("setlists", []),
-    }
+ library_index = {
+    "version": 1,
+    "lastConsolidated": now_iso_local(),
+    "songs": songs_list,
+    "collections": setlists.get("collections", []),
+}
 
     finished = now_iso_local()
     log["finished"] = finished

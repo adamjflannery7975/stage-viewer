@@ -2,7 +2,7 @@
    Offline-first shell + offline fallback for library index + .cho files
 */
 
-const CACHE_VERSION = "v3"; // bump this to force updates when you change caching behavior
+const CACHE_VERSION = "v4"; // bump this to force updates when you change caching behavior
 const SHELL_CACHE = `cps-shell-${CACHE_VERSION}`;
 const DATA_CACHE  = `cps-data-${CACHE_VERSION}`;
 

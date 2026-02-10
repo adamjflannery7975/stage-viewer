@@ -1,0 +1,22 @@
+{
+  "name": "ChordPro Stage Viewer",
+  "short_name": "Stage Viewer",
+  "description": "Offline-first Stage Viewer for ChordPro Studio",
+  "start_url": "./Stage_Viewer_Styled_v5_songcards_singer_PWA.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0f14",
+  "theme_color": "#0b0f14",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

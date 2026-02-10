@@ -253,8 +253,15 @@
     <div class="brand">Stage Viewer</div>
 
     <label>
-      Setlist:
-      <select id="setlistSelect" disabled>
+      Collection:
+      <select id="collectionSelect" disabled>
+        <option>Loading…</option>
+      </select>
+    </label>
+
+    <label>
+      Set:
+      <select id="setSelect" disabled>
         <option>Loading…</option>
       </select>
     </label>
@@ -327,7 +334,8 @@
 
     // --- DOM ---
     const statusEl = document.getElementById('status');
-    const setlistSelect = document.getElementById('setlistSelect');
+    const collectionSelect = document.getElementById('collectionSelect');
+    const setSelect = document.getElementById('setSelect');
     const personaSelect = document.getElementById('personaSelect');
     const refreshBtn = document.getElementById('refreshBtn');
     const summaryCards = document.getElementById('summaryCards');
@@ -344,9 +352,11 @@
     // --- State ---
     let LIB = null;             // library.index.json
     let SONG_MAP = new Map();   // uid -> song record
-    let CURRENT_SETLIST_ID = null;
 
-    // Flattened order of songs for navigation (based on selected setlist)
+    let CURRENT_COLLECTION_ID = null;
+    let CURRENT_SET_ID = null;
+
+    // Flattened order of songs for navigation (based on selected set)
     let CURRENT_UID_ORDER = [];
     let CURRENT_UID = null;
 
@@ -395,9 +405,101 @@
       return unique(p).sort((a,b)=>a.localeCompare(b));
     }
 
+    // ----------------- Collections model -----------------
+
+    function adaptLegacySetlistsToCollections(){
+      // If LIB.collections missing but LIB.setlists exists, adapt it.
+      if (Array.isArray(LIB.collections)) return;
+      if (!Array.isArray(LIB.setlists)) {
+        LIB.collections = [];
+        return;
+      }
+      LIB.collections = LIB.setlists.map(sl => ({
+        id: sl.id || sl.name || '',
+        type: 'gig',
+        name: sl.name || sl.id || '(unnamed)',
+        notes: sl.notes || '',
+        sets: Array.isArray(sl.sets) ? sl.sets.map((s, idx) => ({
+          id: s.id || `set${idx+1}`,
+          name: s.name || `Set ${idx+1}`,
+          songs: Array.isArray(s.songs) ? s.songs.map(String) : []
+        })) : []
+      }));
+    }
+
+    function ensureSmartAllSongsCollection(){
+      if (!Array.isArray(LIB.collections)) LIB.collections = [];
+
+      if (!LIB.collections.some(c => String(c.id) === '_all_songs')){
+        LIB.collections.unshift({
+          id: "_all_songs",
+          type: "smart",
+          name: "All Songs",
+          rules: { mode: "all_songs" },
+          sets: []
+        });
+      }
+    }
+
+    function getCollections(){
+      return Array.isArray(LIB.collections) ? LIB.collections : [];
+    }
+
+    function findCollectionById(id){
+      return getCollections().find(c => String(c.id) === String(id));
+    }
+
+    function isSmartCollection(c){
+      return c && c.type === 'smart';
+    }
+
+    function computeAllSongsUidList(){
+      const uids = Array.from(SONG_MAP.keys());
+      uids.sort((a,b)=>{
+        const sa = SONG_MAP.get(a), sb = SONG_MAP.get(b);
+        const ta = (sa?.title||"").toLowerCase(), tb = (sb?.title||"").toLowerCase();
+        const aa = (sa?.artist||"").toLowerCase(), ab = (sb?.artist||"").toLowerCase();
+        if (ta !== tb) return ta.localeCompare(tb);
+        if (aa !== ab) return aa.localeCompare(ab);
+        return a.localeCompare(b);
+      });
+      return uids;
+    }
+
+    function getSetsForCollection(col){
+      if (!col) return [];
+      if (isSmartCollection(col)){
+        const mode = col.rules?.mode;
+        if (mode === 'all_songs'){
+          return [{
+            id: "all",
+            name: "All Songs",
+            songs: computeAllSongsUidList()
+          }];
+        }
+        // Unknown smart mode: no sets
+        return [];
+      }
+
+      const sets = Array.isArray(col.sets) ? col.sets : [];
+      // Ensure stable ids
+      return sets.map((s, idx) => ({
+        id: s.id || `set${idx+1}`,
+        name: s.name || `Set ${idx+1}`,
+        songs: Array.isArray(s.songs) ? s.songs.map(String) : []
+      }));
+    }
+
+    function findSetInCollection(col, setId){
+      const sets = getSetsForCollection(col);
+      return sets.find(s => String(s.id) === String(setId)) || null;
+    }
+
+    // ----------------- UI wiring -----------------
+
     function renderSummary(){
       const songCount = (LIB.songs || []).length;
-      const setlistCount = (LIB.setlists || []).length;
+      const collectionCount = getCollections().length;
       const personas = computePersonas();
       const personaText = personas.length ? personas.join(', ') : '—';
 
@@ -405,7 +507,7 @@
         <div class="card">
           <h3>Library</h3>
           <div class="small">Songs: <b>${songCount}</b></div>
-          <div class="small">Setlists: <b>${setlistCount}</b></div>
+          <div class="small">Collections: <b>${collectionCount}</b></div>
           <div class="small">Last consolidated:</div>
           <div class="small"><b>${LIB.lastConsolidated || '—'}</b></div>
         </div>
@@ -438,66 +540,58 @@
       personaSelect.disabled = false;
     }
 
-    function ensureVirtualAllSongsSetlist(){
-      // If no setlists exist, create an in-memory virtual setlist so we can test rendering immediately.
-      if (!Array.isArray(LIB.setlists) || !LIB.setlists.length){
-        const uids = Array.from(SONG_MAP.keys());
-        uids.sort((a,b)=>{
-          const sa = SONG_MAP.get(a), sb = SONG_MAP.get(b);
-          const ta = (sa?.title||"").toLowerCase(), tb = (sb?.title||"").toLowerCase();
-          const aa = (sa?.artist||"").toLowerCase(), ab = (sb?.artist||"").toLowerCase();
-          if (ta !== tb) return ta.localeCompare(tb);
-          if (aa !== ab) return aa.localeCompare(ab);
-          return a.localeCompare(b);
-        });
-
-        LIB.setlists = [{
-          id: "_all_songs",
-          name: "All Songs",
-          notes: "Virtual (auto-generated)",
-          sets: [{ name: "All Songs", songs: uids }]
-        }];
-      }
-    }
-
-    function populateSetlistSelect(){
-      setlistSelect.innerHTML = '';
-      const setlists = Array.isArray(LIB.setlists) ? LIB.setlists : [];
-      if (!setlists.length){
-        setlistSelect.innerHTML = '<option value="">(no setlists)</option>';
-        setlistSelect.disabled = true;
+    function populateCollectionSelect(){
+      collectionSelect.innerHTML = '';
+      const cols = getCollections();
+      if (!cols.length){
+        collectionSelect.innerHTML = '<option value="">(no collections)</option>';
+        collectionSelect.disabled = true;
         return;
       }
 
-      setlists.forEach(sl => {
+      cols.forEach(c => {
         const opt = document.createElement('option');
-        opt.value = String(sl.id || sl.name || '');
-        opt.textContent = sl.name || sl.id || '(unnamed)';
-        setlistSelect.appendChild(opt);
+        opt.value = String(c.id);
+        opt.textContent = c.name || c.id || '(unnamed)';
+        collectionSelect.appendChild(opt);
       });
 
-      const saved = localStorage.getItem('cps_setlist');
-      const values = setlists.map(sl => String(sl.id || sl.name || ''));
+      const values = cols.map(c => String(c.id));
+      const saved = localStorage.getItem('cps_collection');
       const pick = (saved && values.includes(saved)) ? saved : values[0];
 
-      setlistSelect.value = pick;
-      CURRENT_SETLIST_ID = pick;
-      setlistSelect.disabled = false;
+      collectionSelect.value = pick;
+      CURRENT_COLLECTION_ID = pick;
+      collectionSelect.disabled = false;
     }
 
-    function findSetlistById(id){
-      const setlists = Array.isArray(LIB.setlists) ? LIB.setlists : [];
-      return setlists.find(sl => String(sl.id || sl.name || '') === String(id));
-    }
+    function populateSetSelect(){
+      setSelect.innerHTML = '';
+      const col = findCollectionById(CURRENT_COLLECTION_ID);
+      const sets = getSetsForCollection(col);
 
-    function buildUidOrderFromSetlist(setlist){
-      const uids = [];
-      const sets = Array.isArray(setlist?.sets) ? setlist.sets : [];
+      if (!sets.length){
+        setSelect.innerHTML = '<option value="">(no sets)</option>';
+        setSelect.disabled = true;
+        CURRENT_SET_ID = null;
+        return;
+      }
+
       sets.forEach(s => {
-        const arr = Array.isArray(s.songs) ? s.songs : [];
-        arr.forEach(uid => uids.push(String(uid)));
+        const opt = document.createElement('option');
+        opt.value = String(s.id);
+        opt.textContent = s.name || s.id || '(unnamed set)';
+        setSelect.appendChild(opt);
       });
-      return uids;
+
+      const values = sets.map(s => String(s.id));
+      const savedKey = `cps_set_${String(CURRENT_COLLECTION_ID)}`;
+      const saved = localStorage.getItem(savedKey);
+      const pick = (saved && values.includes(saved)) ? saved : values[0];
+
+      setSelect.value = pick;
+      CURRENT_SET_ID = pick;
+      setSelect.disabled = false;
     }
 
     function selectRow(uid){
@@ -505,16 +599,31 @@
       rows.forEach(r => r.classList.toggle('selected', r.getAttribute('data-uid') === uid));
     }
 
+    function buildUidOrder(){
+      const col = findCollectionById(CURRENT_COLLECTION_ID);
+      const set = findSetInCollection(col, CURRENT_SET_ID);
+      const uids = Array.isArray(set?.songs) ? set.songs.map(String) : [];
+      return uids;
+    }
+
     function renderSongTable(){
-      const setlist = findSetlistById(CURRENT_SETLIST_ID);
-      if (!setlist){
-        setStatus('No setlist selected.');
+      const col = findCollectionById(CURRENT_COLLECTION_ID);
+      if (!col){
+        setStatus('No collection selected.');
         songRows.innerHTML = '';
         layout.style.display = 'none';
         return;
       }
 
-      CURRENT_UID_ORDER = buildUidOrderFromSetlist(setlist);
+      const set = findSetInCollection(col, CURRENT_SET_ID);
+      if (!set){
+        setStatus('No set selected.');
+        songRows.innerHTML = '';
+        layout.style.display = 'none';
+        return;
+      }
+
+      CURRENT_UID_ORDER = buildUidOrder();
       songRows.innerHTML = '';
 
       let missing = 0;
@@ -558,19 +667,17 @@
       layout.style.display = 'grid';
 
       const persona = personaSelect.value || '(none)';
-      const msg = `Loaded setlist: ${setlist.name || setlist.id} • Songs: ${CURRENT_UID_ORDER.length}` +
+      const msg = `Loaded: ${col.name || col.id} → ${set.name || set.id} • Songs: ${CURRENT_UID_ORDER.length}` +
                   (missing ? ` • Missing: ${missing}` : '') +
                   ` • Persona: ${persona}`;
       setStatus(msg);
     }
 
     function resolveChoPathForPersona(song, persona){
-      // Preferred: exact persona key in files
       if (song?.files && typeof song.files === 'object'){
         if (persona && song.files[persona]) return song.files[persona];
         if (song.files["_default"]) return song.files["_default"];
 
-        // fallback to any first file path
         const keys = Object.keys(song.files);
         if (keys.length) return song.files[keys[0]];
       }
@@ -578,7 +685,6 @@
     }
 
     function parseChordProMeta(text){
-      // Minimal tag parsing for header display (first occurrence wins)
       const meta = {};
       const tagRe = /^\s*\{([a-zA-Z0-9_\-]+)\s*:\s*(.*?)\}\s*$/;
       for (const line of text.split('\n')){
@@ -592,11 +698,6 @@
     }
 
     function chordProToHtml(text){
-      // Simple stage-friendly renderer:
-      // - {soc}/{eoc} become section markers
-      // - {comment:} and {c:} become section-ish
-      // - chord tokens [Am] are highlighted
-      // - other tags are suppressed
       const lines = text.split('\n');
       const out = [];
 
@@ -605,7 +706,6 @@
       for (let raw of lines){
         const line = raw.replace(/\r$/, '');
 
-        // Section markers
         if (/^\s*\{soc\}\s*$/i.test(line) || /^\s*\{start_of_chorus\}\s*$/i.test(line)){
           out.push(`<span class="section">[CHORUS]</span>`);
           continue;
@@ -615,19 +715,16 @@
           continue;
         }
 
-        // Comments
         const mComment = /^\s*\{(?:c|comment)\s*:\s*(.*?)\}\s*$/i.exec(line);
         if (mComment){
           out.push(`<span class="section">${escapeHtml(mComment[1])}</span>`);
           continue;
         }
 
-        // Skip other pure tags (title/artist/etc are shown in header)
         if (isTag(line)){
           continue;
         }
 
-        // Highlight chords [..]
         const html = escapeHtml(line).replace(/\[([^\]]+)\]/g, (_m, chord) => {
           return `<span class="chord">[${escapeHtml(chord)}]</span>`;
         });
@@ -654,14 +751,11 @@
       }
 
       try{
-        // choRel is relative to repo root. We are in /apps, so prefix with ../
-        // If choRel already begins with "../", we should not double it.
         const url = choRel.startsWith("../") ? choRel : ("../" + choRel);
 
         setStatus(`Loading song… (${url})`);
         const choText = await fetchText(url);
 
-        // Header display
         const meta = parseChordProMeta(choText);
         const title = song.title || meta.title || '(untitled)';
         const artist = song.artist || meta.artist || '(unknown)';
@@ -707,7 +801,8 @@
 
     async function loadLibrary(){
       setStatus('Loading library index…');
-      setlistSelect.disabled = true;
+      collectionSelect.disabled = true;
+      setSelect.disabled = true;
       personaSelect.disabled = true;
       summaryCards.style.display = 'none';
       layout.style.display = 'none';
@@ -721,21 +816,27 @@
       try{
         LIB = await fetchJSON(url);
         buildSongMap();
-        ensureVirtualAllSongsSetlist(); // allows immediate testing even before you build setlists
+
+        // Move to collections-first model
+        adaptLegacySetlistsToCollections();
+        ensureSmartAllSongsCollection();
+
         renderSummary();
         populatePersonaSelect();
-        populateSetlistSelect();
+        populateCollectionSelect();
+        populateSetSelect();
 
-        // restore previous selection if possible
-        const saved = localStorage.getItem('cps_setlist');
-        if (saved) {
-          setlistSelect.value = saved;
-          CURRENT_SETLIST_ID = saved;
+        // restore previous selections where possible
+        const savedCol = localStorage.getItem('cps_collection');
+        if (savedCol && getCollections().some(c => String(c.id) === String(savedCol))){
+          collectionSelect.value = savedCol;
+          CURRENT_COLLECTION_ID = savedCol;
+          populateSetSelect();
         }
 
         renderSongTable();
 
-        // Auto-open the first song if nothing selected yet (nice for iPad)
+        // Auto-open the first song (nice for iPad)
         if (CURRENT_UID_ORDER.length){
           const first = CURRENT_UID_ORDER[0];
           const exists = SONG_MAP.get(first);
@@ -751,9 +852,28 @@
     // Events
     refreshBtn.addEventListener('click', loadLibrary);
 
-    setlistSelect.addEventListener('change', () => {
-      CURRENT_SETLIST_ID = setlistSelect.value;
-      localStorage.setItem('cps_setlist', CURRENT_SETLIST_ID);
+    collectionSelect.addEventListener('change', () => {
+      CURRENT_COLLECTION_ID = collectionSelect.value;
+      localStorage.setItem('cps_collection', CURRENT_COLLECTION_ID);
+
+      // reset set selection for this collection
+      populateSetSelect();
+      const savedKey = `cps_set_${String(CURRENT_COLLECTION_ID)}`;
+      localStorage.removeItem(savedKey);
+
+      CURRENT_UID = null;
+      renderSongTable();
+      if (CURRENT_UID_ORDER.length){
+        const first = CURRENT_UID_ORDER[0];
+        if (SONG_MAP.get(first)) openSong(first);
+      }
+    });
+
+    setSelect.addEventListener('change', () => {
+      CURRENT_SET_ID = setSelect.value;
+      const savedKey = `cps_set_${String(CURRENT_COLLECTION_ID)}`;
+      localStorage.setItem(savedKey, CURRENT_SET_ID);
+
       CURRENT_UID = null;
       renderSongTable();
       if (CURRENT_UID_ORDER.length){
@@ -764,7 +884,6 @@
 
     personaSelect.addEventListener('change', () => {
       localStorage.setItem('cps_persona', personaSelect.value);
-      // re-open current song using the new persona mapping
       if (CURRENT_UID) openSong(CURRENT_UID);
       else renderSongTable();
     });

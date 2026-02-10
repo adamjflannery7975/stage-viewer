@@ -1,0 +1,21 @@
+{
+  "runId": "20260210T040100Z",
+  "started": "2026-02-10T15:01:00+11:00",
+  "repoRoot": "/Users/adamflannery/Documents/GitHub/stage-viewer",
+  "inputs": {
+    "songsDir": "/Users/adamflannery/Documents/GitHub/stage-viewer/songs",
+    "setlists": "/Users/adamflannery/Documents/GitHub/stage-viewer/library/setlists.json"
+  },
+  "counts": {
+    "choFilesFound": 1,
+    "songsIndexed": 1,
+    "uidsMissing": 0,
+    "uidCollisionsPersona": 0,
+    "setlists": 0,
+    "setlistSongsReferenced": 0,
+    "setlistMissingUids": 0
+  },
+  "warnings": [],
+  "errors": [],
+  "finished": "2026-02-10T15:01:00+11:00"
+}

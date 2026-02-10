@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "lastConsolidated": "2026-02-10T15:01:00+11:00",
+  "songs": [
+    {
+      "uid": "uid-273ee8a9-b093-4d82-bc72-fad59e74a9eb",
+      "title": "3 A.M",
+      "artist": "Matchbox Twenty",
+      "personas": [
+        "Adam"
+      ],
+      "singer": "Adam",
+      "duration": "3:35",
+      "tempo": 135,
+      "key": "A",
+      "capo": 2,
+      "files": {
+        "Adam": "songs/3 A.M - Matchbox Twenty - Adam.cho"
+      }
+    }
+  ],
+  "setlists": []
+}

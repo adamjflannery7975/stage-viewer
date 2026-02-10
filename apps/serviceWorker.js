@@ -1,12 +1,15 @@
 /* ChordPro Studio – Stage Viewer Service Worker
-   Offline-first shell + offline fallback for library index + .cho files
+   Goals:
+   - stage_viewer.html updates reliably (network-first)
+   - app shell assets available offline (cache-first)
+   - library + .cho sync when online (network-first with cache fallback)
 */
 
-const CACHE_VERSION = "v4"; // bump this to force updates when you change caching behavior
+const CACHE_VERSION = "v5"; // bump when you publish changes
 const SHELL_CACHE = `cps-shell-${CACHE_VERSION}`;
 const DATA_CACHE  = `cps-data-${CACHE_VERSION}`;
 
-// These are all relative to /stage-viewer/apps/ because the SW lives in /apps
+// SW lives in /apps, so these are relative to /apps/
 const APP_SHELL_ASSETS = [
   "./stage_viewer.html",
   "./manifest.json",
@@ -15,7 +18,6 @@ const APP_SHELL_ASSETS = [
   "./icon-512.png"
 ];
 
-// Install: pre-cache the app shell so it loads offline once visited at least once
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(SHELL_CACHE);
@@ -24,7 +26,6 @@ self.addEventListener("install", (event) => {
   })());
 });
 
-// Activate: clean old caches + take control immediately
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
@@ -41,32 +42,29 @@ function isSameOriginRequest(request) {
   try {
     const url = new URL(request.url);
     return url.origin === self.location.origin;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
 
-function isAppShell(url) {
-  // Anything inside /apps/ that is part of the shell
-  return (
-    url.pathname.includes("/apps/") &&
-    (url.pathname.endsWith("/apps/") ||
-      url.pathname.endsWith("/apps/stage_viewer.html") ||
-      url.pathname.endsWith("/apps/manifest.json") ||
-      url.pathname.endsWith("/apps/serviceWorker.js") ||
-      url.pathname.endsWith("/apps/icon-192.png") ||
-      url.pathname.endsWith("/apps/icon-512.png"))
-  );
-}
-
 function isLibraryOrSongData(url) {
-  // Data we want available offline:
-  // - /library/*.json
-  // - /songs/*.cho
   const p = url.pathname;
   return (
     (p.includes("/library/") && p.endsWith(".json")) ||
     (p.includes("/songs/") && p.endsWith(".cho"))
+  );
+}
+
+function isStageViewerHtml(url) {
+  return url.pathname.endsWith("/apps/stage_viewer.html");
+}
+
+function isShellAsset(url) {
+  return (
+    url.pathname.endsWith("/apps/manifest.json") ||
+    url.pathname.endsWith("/apps/serviceWorker.js") ||
+    url.pathname.endsWith("/apps/icon-192.png") ||
+    url.pathname.endsWith("/apps/icon-512.png")
   );
 }
 
@@ -83,7 +81,7 @@ async function cacheFirst(request, cacheName) {
 async function networkFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
   try {
-    const fresh = await fetch(request);
+    const fresh = await fetch(request, { cache: "no-store" });
     if (fresh && fresh.ok) cache.put(request, fresh.clone());
     return fresh;
   } catch (e) {
@@ -93,46 +91,30 @@ async function networkFirst(request, cacheName) {
   }
 }
 
-// Fetch strategy:
-// - App shell: cache-first (loads instantly + offline)
-// - Data (library json + songs cho): network-first, fallback to cache (sync when online)
-// - Everything else: pass through (or you can make it cache-first later)
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-
-  // Only handle GET and same-origin; leave everything else alone
   if (req.method !== "GET") return;
   if (!isSameOriginRequest(req)) return;
 
   const url = new URL(req.url);
 
-  // Navigation requests: serve shell (stage_viewer.html) cache-first
-  if (req.mode === "navigate") {
-    event.respondWith((async () => {
-      try {
-        // Try cache first, then network
-        return await cacheFirst("./stage_viewer.html", SHELL_CACHE);
-      } catch (e) {
-        // As a last resort, try returning any cached shell
-        const cache = await caches.open(SHELL_CACHE);
-        const cached = await cache.match("./stage_viewer.html");
-        return cached || Response.error();
-      }
-    })());
+  // Always try to update HTML (prevents "old UI" after deploy)
+  if (req.mode === "navigate" || isStageViewerHtml(url)) {
+    event.respondWith(networkFirst(req, SHELL_CACHE));
     return;
   }
 
-  // Shell assets
-  if (isAppShell(url)) {
+  // Shell assets: icons/manifest/sw = cache-first
+  if (isShellAsset(url)) {
     event.respondWith(cacheFirst(req, SHELL_CACHE));
     return;
   }
 
-  // Library index + .cho song files
+  // Library + songs: network-first so it syncs when online
   if (isLibraryOrSongData(url)) {
     event.respondWith(networkFirst(req, DATA_CACHE));
     return;
   }
 
-  // Default: just go to network (keeps behavior predictable)
+  // Default: network
 });

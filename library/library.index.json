@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastConsolidated": "2026-02-10T16:35:28+11:00",
+  "lastConsolidated": "2026-02-10T17:42:38+11:00",
   "songs": [
     {
       "uid": "uid-273ee8a9-b093-4d82-bc72-fad59e74a9eb",
@@ -40,7 +40,9 @@
         {
           "id": "main",
           "name": "Working On",
-          "songs": []
+          "songs": [
+            "uid-273ee8a9-b093-4d82-bc72-fad59e74a9eb"
+          ]
         }
       ]
     },

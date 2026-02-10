@@ -1,30 +1,46 @@
 {
   "version": 1,
-  "updated": "2026-02-10T00:00:00+11:00",
+  "updated": "2026-02-10T06:37:17.663Z",
   "collections": [
- {
-  "id": "_all_songs",
-  "type": "smart",
-  "name": "All Songs",
-  "rules": { "mode": "all_songs" },
-  "sets": []
-},
+    {
+      "id": "_all_songs",
+      "type": "smart",
+      "name": "All Songs",
+      "rules": {
+        "mode": "all_songs"
+      },
+      "sets": []
+    },
     {
       "id": "working_on",
       "type": "list",
       "name": "Working On",
-      "tags": ["practice"],
+      "tags": [
+        "practice"
+      ],
       "sets": [
-        { "id": "main", "name": "Working On", "songs": [] }
+        {
+          "id": "main",
+          "name": "Working On",
+          "songs": [
+            "uid-273ee8a9-b093-4d82-bc72-fad59e74a9eb"
+          ]
+        }
       ]
     },
     {
       "id": "newbies",
       "type": "list",
       "name": "Newbies",
-      "tags": ["practice"],
+      "tags": [
+        "practice"
+      ],
       "sets": [
-        { "id": "main", "name": "Newbies", "songs": [] }
+        {
+          "id": "main",
+          "name": "Newbies",
+          "songs": []
+        }
       ]
     }
   ]

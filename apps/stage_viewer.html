@@ -5,9 +5,9 @@
   <title>ChordPro Studio – Stage Viewer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- PWA -->
-  <link rel="manifest" href="./manifest.json">
-  <link rel="apple-touch-icon" href="./icon-192.png">
+  <!-- PWA (paths relative to /apps/) -->
+  <link rel="manifest" href="../manifest.json">
+  <link rel="apple-touch-icon" href="../icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#111111">
@@ -27,6 +27,8 @@
       --songbg:#0b0d12;
       --songborder:rgba(255,255,255,0.12);
       --chord:#ffd479;
+
+      --shadow: 0 10px 30px rgba(0,0,0,0.25);
     }
     body.light{
       --bg:#f2f3f6;
@@ -42,7 +44,11 @@
       --songbg:#ffffff;
       --songborder:rgba(0,0,0,0.14);
       --chord:#b05a00;
+
+      --shadow: 0 10px 30px rgba(0,0,0,0.12);
     }
+
+    * { box-sizing:border-box; }
 
     body{
       margin:0;
@@ -54,17 +60,24 @@
     header{
       position:sticky;
       top:0;
-      z-index:10;
+      z-index:30;
       background:var(--panel);
       border-bottom:1px solid var(--border);
-      padding:10px 14px;
+      padding:10px 12px;
       display:flex;
       gap:10px;
       align-items:center;
       flex-wrap:wrap;
     }
 
-    .brand{ font-weight:700; letter-spacing:0.2px; margin-right:auto; }
+    .brand{
+      font-weight:800;
+      letter-spacing:0.2px;
+      margin-right:auto;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
 
     select, button{
       background:var(--card);
@@ -79,40 +92,12 @@
     button:hover{ border-color:rgba(255,255,255,0.22); }
     body.light button:hover{ border-color:rgba(0,0,0,0.22); }
 
-    .miniLabel{ color:var(--muted); font-size:12px; margin-right:6px; }
-    body.perf .miniLabel{ display:none; }
-
-    main{
-      padding:14px;
-      max-width:1200px;
-      margin:0 auto;
-      box-sizing:border-box;
+    .btnPrimary{
+      border-color: rgba(106,163,255,0.45);
     }
-
-    .status{
-      font-size:13px;
-      color:var(--muted);
-      margin-bottom:10px;
+    .btnPrimary:hover{
+      border-color: rgba(106,163,255,0.8);
     }
-    body.perf .status{ display:none; }
-
-    /* Summary strip */
-    .summaryStrip{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:10px 12px;
-      margin:0 0 12px 0;
-    }
-    body.perf .summaryStrip{ display:none; }
-
-    .summaryStrip .k{ color:var(--muted); font-size:12px; }
-    .summaryStrip .v{ font-weight:800; }
-    .summaryStrip .spacer{ margin-left:auto; }
 
     .pill{
       display:inline-block;
@@ -121,74 +106,134 @@
       border:1px solid var(--border);
       color:var(--muted);
       font-size:12px;
-      margin-left:6px;
       white-space:nowrap;
     }
+    .pillAccent{
+      color: var(--text);
+      border-color: rgba(126,231,135,0.40);
+      background: rgba(126,231,135,0.12);
+    }
 
-    .layout{
-      display:grid;
-      grid-template-columns: 1fr 1.15fr;
+    .status{
+      font-size:13px;
+      color:var(--muted);
+      padding: 8px 12px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* App layout */
+    .app{
+      display:flex;
       gap:12px;
-      align-items:start;
-    }
-    @media (max-width: 980px){
-      .layout{ grid-template-columns: 1fr; }
-    }
-
-    /* Table wrapper makes header sticky reliably */
-    .tableWrap{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:14px;
-      overflow:auto;
-      max-height: calc(100vh - 180px);
-    }
-    body.perf .tableWrap{
-      max-height: calc(100vh - 120px);
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 12px;
+      padding-top: 6px;
     }
 
-    table{
-      width:100%;
-      border-collapse:collapse;
-      background:var(--card);
+    /* Sidebar */
+    .sidebar{
+      width: 340px;
+      min-width: 340px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
     }
-    th, td{
-      text-align:left;
-      padding:12px 12px;
-      border-bottom:1px solid var(--border);
+    .sidebarHeader{
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+      display:flex;
+      align-items:center;
+      gap:10px;
+      justify-content:space-between;
+    }
+    body.light .sidebarHeader{
+      background: rgba(0,0,0,0.03);
+    }
+    .sidebarHeader h3{
+      margin:0;
       font-size:14px;
-      vertical-align:top;
+      letter-spacing:0.02em;
     }
-    body.perf td{
-      font-size:15px;
-      padding:14px 12px;
+    .sidebarBody{
+      padding: 10px 10px 12px 10px;
     }
 
-    th{
-      position:sticky;
-      top:0;
-      z-index:2;
+    .miniRow{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom: 10px;
+    }
+
+    .sectionTitle{
       font-size:12px;
       text-transform:uppercase;
       letter-spacing:0.08em;
       color:var(--muted);
-      background:rgba(255,255,255,0.06);
-      backdrop-filter: blur(6px);
+      margin: 10px 4px 6px;
     }
-    body.light th{ background:rgba(0,0,0,0.06); }
 
-    tr.clickable{ cursor:pointer; }
-    tr.clickable:hover td{
+    .songList{
+      border:1px solid var(--border);
+      border-radius: 14px;
+      overflow:hidden;
+      background: var(--card);
+    }
+
+    .songItem{
+      padding:10px 12px;
+      border-bottom:1px solid var(--border);
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .songItem:last-child{ border-bottom:none; }
+    .songItem:hover{
       background: rgba(106,163,255,0.10);
     }
-    body.light tr.clickable:hover td{
+    body.light .songItem:hover{
       background: rgba(42,102,255,0.08);
     }
-    tr.selected td{
-      background: rgba(126,231,135,0.12);
+    .songItem.selected{
+      background: rgba(126,231,135,0.10);
     }
-    body.light tr.selected td{
-      background: rgba(31,138,59,0.10);
+    body.light .songItem.selected{
+      background: rgba(31,138,59,0.08);
+    }
+    .songTop{
+      display:flex;
+      gap:8px;
+      align-items:baseline;
+      justify-content:space-between;
+    }
+    .songTitleMini{
+      font-weight:800;
+      font-size:14px;
+      line-height:1.2;
+    }
+    .songArtistMini{
+      color: var(--muted);
+      font-size:12px;
+    }
+    .songMetaMini{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      color: var(--muted);
+      font-size:12px;
+    }
+
+    /* Main panel */
+    .main{
+      flex:1;
+      min-width: 320px;
     }
 
     .songPanel{
@@ -196,7 +241,7 @@
       border:1px solid var(--songborder);
       border-radius:14px;
       overflow:hidden;
-      display:none;
+      box-shadow: var(--shadow);
     }
 
     .songHeader{
@@ -204,116 +249,258 @@
       gap:10px;
       align-items:center;
       flex-wrap:wrap;
-      padding:10px 12px;
+      padding:12px 14px;
       background:var(--card);
       border-bottom:1px solid var(--border);
     }
-    .songTitle{ font-weight:900; font-size:16px; }
-    body.perf .songTitle{ font-size:18px; }
-    .songMeta{ color:var(--muted); font-size:12px; }
-    body.perf .songMeta{ font-size:13px; }
-
-    .songNav{
+    .songTitle{
+      font-weight:900;
+      font-size:20px;
+      letter-spacing:0.2px;
+    }
+    .songMeta{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:2px;
+    }
+    .songHeaderLeft{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width: 240px;
+    }
+    .songHeaderRight{
       margin-left:auto;
       display:flex;
       gap:8px;
       align-items:center;
+      flex-wrap:wrap;
     }
 
     .songBody{
-      padding:12px;
+      padding:16px 16px 80px 16px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size:16px;
-      line-height:1.35;
+      font-size:18px;
+      line-height:1.45;
       white-space:pre-wrap;
       word-break:break-word;
+      overflow-x:auto;
     }
-    body.perf .songBody{ font-size:18px; line-height:1.42; }
 
-    .line{ display:block; padding:1px 0; }
-    .chord{ color:var(--chord); font-weight:900; }
+    .line{
+      display:block;
+      padding:1px 0;
+    }
+    .chord{
+      color:var(--chord);
+      font-weight:900;
+    }
     .section{
       color:var(--accent2);
       font-weight:900;
-      margin-top:10px;
+      margin-top:12px;
       display:block;
     }
-    .warn{ color:var(--danger); font-weight:800; }
+    .warn{
+      color:var(--danger);
+      font-weight:800;
+    }
+
+    /* Collapsed sidebar (Stage Mode) */
+    body.stageMode .sidebar{
+      display:none;
+    }
+    body.stageMode .app{
+      max-width: 1100px;
+    }
+
+    /* Floating scroll buttons */
+    .floatNav{
+      position: fixed;
+      right: 16px;
+      bottom: 18px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      z-index:40;
+    }
+    .floatNav button{
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      font-size: 18px;
+      box-shadow: var(--shadow);
+      border-color: rgba(106,163,255,0.35);
+    }
+
+    /* Modal */
+    .modalBackdrop{
+      position: fixed;
+      inset:0;
+      background: rgba(0,0,0,0.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index: 60;
+      padding: 16px;
+    }
+    .modal{
+      width: min(720px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modalHeader{
+      padding: 12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+    body.light .modalHeader{
+      background: rgba(0,0,0,0.03);
+    }
+    .modalHeader h3{
+      margin:0;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+    }
+    .modalBody{
+      padding: 12px 14px;
+      color: var(--text);
+    }
+    .kv{
+      display:grid;
+      grid-template-columns: 180px 1fr;
+      gap:8px 12px;
+      align-items:baseline;
+      font-size: 13px;
+    }
+    .k{
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 11px;
+    }
+    .v{
+      word-break: break-word;
+    }
+    .divider{
+      height:1px;
+      background: var(--border);
+      margin: 12px 0;
+    }
+
+    @media (max-width: 980px){
+      .app{
+        flex-direction:column;
+      }
+      .sidebar{
+        width:100%;
+        min-width: 0;
+      }
+      body.stageMode .sidebar{
+        display:none;
+      }
+    }
   </style>
 </head>
 
 <body>
   <header>
-    <div class="brand">Stage Viewer</div>
+    <div class="brand">
+      <button id="menuBtn" title="Show/hide menu">☰ Menu</button>
+      <span>Stage Viewer</span>
+    </div>
 
     <label>
-      <span class="miniLabel">Collection</span>
-      <select id="collectionSelect" disabled>
+      Setlist:
+      <select id="setlistSelect" disabled>
         <option>Loading…</option>
       </select>
     </label>
 
     <label>
-      <span class="miniLabel">Set</span>
-      <select id="setSelect" disabled>
-        <option>Loading…</option>
-      </select>
-    </label>
-
-    <label>
-      <span class="miniLabel">Persona</span>
+      Persona:
       <select id="personaSelect" disabled>
         <option>Loading…</option>
       </select>
     </label>
 
+    <button id="prevBtn" title="Previous song">« Prev</button>
+    <button id="nextBtn" title="Next song" class="btnPrimary">Next »</button>
+
+    <button id="infoBtn" title="Info">i</button>
+    <button id="stageBtn" title="Stage Mode (hide menu)">Stage</button>
     <button id="refreshBtn" title="Reload library index">Refresh</button>
-    <button id="perfBtn" title="Toggle performance mode">Performance</button>
-    <button id="themeBtn" title="Toggle light/dark">Theme</button>
+    <button id="themeBtn" title="Toggle light/dark">Toggle Theme</button>
   </header>
 
-  <main>
-    <div class="status" id="status">Loading library…</div>
+  <div class="status" id="status">Loading library…</div>
 
-    <div class="summaryStrip" id="summaryStrip" style="display:none;"></div>
-
-    <div class="layout" id="layout" style="display:none;">
-      <div class="tableWrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:6%;">#</th>
-              <th style="width:52%;">Song</th>
-              <th style="width:18%;">Singer</th>
-              <th style="width:10%;">Dur</th>
-              <th style="width:7%;">Capo</th>
-              <th style="width:7%;">Key</th>
-            </tr>
-          </thead>
-          <tbody id="songRows"></tbody>
-        </table>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebarHeader">
+        <h3>Library</h3>
+        <span class="pill" id="libMiniPill">—</span>
       </div>
+      <div class="sidebarBody">
+        <div class="miniRow">
+          <span class="pill" id="songsCountPill">Songs: —</span>
+          <span class="pill" id="setlistsCountPill">Setlists: —</span>
+        </div>
 
-      <div class="songPanel" id="songPanel">
+        <div class="sectionTitle">Songs in setlist</div>
+        <div class="songList" id="songList"></div>
+      </div>
+    </aside>
+
+    <section class="main">
+      <div class="songPanel" id="songPanel" style="display:none;">
         <div class="songHeader">
-          <div>
+          <div class="songHeaderLeft">
             <div class="songTitle" id="songTitle">—</div>
             <div class="songMeta" id="songMeta">—</div>
           </div>
-          <div class="songNav">
-            <button id="prevBtn" title="Previous song">Prev</button>
-            <button id="nextBtn" title="Next song">Next</button>
+          <div class="songHeaderRight">
+            <span class="pill pillAccent" id="capoPill" style="display:none;">CAPO —</span>
+            <span class="pill" id="setPill" style="display:none;">—</span>
           </div>
         </div>
         <div class="songBody" id="songBody"></div>
       </div>
+
+      <div id="emptyState" class="songPanel" style="padding:14px; color:var(--muted);">
+        No song loaded yet.
+      </div>
+    </section>
+  </div>
+
+  <div class="floatNav" id="floatNav" style="display:none;">
+    <button id="scrollUpBtn" title="Scroll up">▲</button>
+    <button id="scrollDownBtn" title="Scroll down">▼</button>
+  </div>
+
+  <!-- Info Modal -->
+  <div class="modalBackdrop" id="modalBackdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modalHeader">
+        <h3>Info</h3>
+        <button id="closeModalBtn">Close</button>
+      </div>
+      <div class="modalBody">
+        <div class="kv" id="infoKv"></div>
+      </div>
     </div>
-  </main>
+  </div>
 
   <script>
-    // --- PWA SW ---
+    // --- PWA SW (paths relative to /apps/) ---
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./serviceWorker.js').catch(() => {});
+      navigator.serviceWorker.register('../serviceWorker.js').catch(() => {});
     }
 
     // --- Theme ---
@@ -327,42 +514,44 @@
       if (t === 'light') document.body.classList.add('light');
     })();
 
-    // --- Performance mode ---
-    const perfBtn = document.getElementById('perfBtn');
-    perfBtn.addEventListener('click', () => {
-      document.body.classList.toggle('perf');
-      localStorage.setItem('cps_perf', document.body.classList.contains('perf') ? '1' : '0');
-    });
-    (function initPerf(){
-      const p = localStorage.getItem('cps_perf');
-      if (p === '1') document.body.classList.add('perf');
-    })();
-
     // --- DOM ---
     const statusEl = document.getElementById('status');
-    const summaryStrip = document.getElementById('summaryStrip');
-
-    const collectionSelect = document.getElementById('collectionSelect');
-    const setSelect = document.getElementById('setSelect');
+    const setlistSelect = document.getElementById('setlistSelect');
     const personaSelect = document.getElementById('personaSelect');
     const refreshBtn = document.getElementById('refreshBtn');
-
-    const songRows = document.getElementById('songRows');
-    const layout = document.getElementById('layout');
-
-    const songPanel = document.getElementById('songPanel');
-    const songTitleEl = document.getElementById('songTitle');
-    const songMetaEl = document.getElementById('songMeta');
-    const songBodyEl = document.getElementById('songBody');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
 
-    // --- State ---
-    let LIB = null;
-    let SONG_MAP = new Map();
+    const menuBtn = document.getElementById('menuBtn');
+    const stageBtn = document.getElementById('stageBtn');
+    const sidebar = document.getElementById('sidebar');
 
-    let CURRENT_COLLECTION_ID = null;
-    let CURRENT_SET_ID = null;
+    const songListEl = document.getElementById('songList');
+    const songPanel = document.getElementById('songPanel');
+    const emptyState = document.getElementById('emptyState');
+    const songTitleEl = document.getElementById('songTitle');
+    const songMetaEl = document.getElementById('songMeta');
+    const songBodyEl = document.getElementById('songBody');
+    const capoPill = document.getElementById('capoPill');
+    const setPill = document.getElementById('setPill');
+
+    const floatNav = document.getElementById('floatNav');
+    const scrollUpBtn = document.getElementById('scrollUpBtn');
+    const scrollDownBtn = document.getElementById('scrollDownBtn');
+
+    const libMiniPill = document.getElementById('libMiniPill');
+    const songsCountPill = document.getElementById('songsCountPill');
+    const setlistsCountPill = document.getElementById('setlistsCountPill');
+
+    const infoBtn = document.getElementById('infoBtn');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const infoKv = document.getElementById('infoKv');
+
+    // --- State ---
+    let LIB = null;             // library.index.json
+    let SONG_MAP = new Map();   // uid -> song record
+    let CURRENT_SETLIST_ID = null;
 
     let CURRENT_UID_ORDER = [];
     let CURRENT_UID = null;
@@ -374,6 +563,7 @@
       if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
       return await res.json();
     }
+
     async function fetchText(url){
       const res = await fetch(url, { cache: 'no-store' });
       if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
@@ -391,22 +581,6 @@
         .replaceAll('>','&gt;')
         .replaceAll('"','&quot;')
         .replaceAll("'",'&#039;');
-    }
-
-    function fmtDurationToSeconds(d){
-      if (!d) return 0;
-      const s = String(d).trim();
-      const m = /^(\d+)\s*:\s*(\d{1,2})$/.exec(s);
-      if (!m) return 0;
-      const mins = parseInt(m[1], 10);
-      const secs = parseInt(m[2], 10);
-      if (Number.isNaN(mins) || Number.isNaN(secs)) return 0;
-      return mins * 60 + secs;
-    }
-    function fmtSeconds(sec){
-      const m = Math.floor(sec / 60);
-      const s = sec % 60;
-      return `${m}:${String(s).padStart(2,'0')}`;
     }
 
     function buildSongMap(){
@@ -427,77 +601,26 @@
       return unique(p).sort((a,b)=>a.localeCompare(b));
     }
 
-    function adaptLegacySetlistsToCollections(){
-      if (Array.isArray(LIB.collections)) return;
-      if (!Array.isArray(LIB.setlists)) { LIB.collections = []; return; }
-
-      LIB.collections = LIB.setlists.map(sl => ({
-        id: sl.id || sl.name || '',
-        type: 'gig',
-        name: sl.name || sl.id || '(unnamed)',
-        notes: sl.notes || '',
-        sets: Array.isArray(sl.sets) ? sl.sets.map((s, idx) => ({
-          id: s.id || `set${idx+1}`,
-          name: s.name || `Set ${idx+1}`,
-          songs: Array.isArray(s.songs) ? s.songs.map(String) : []
-        })) : []
-      }));
-    }
-
-    function ensureSmartAllSongsCollection(){
-      if (!Array.isArray(LIB.collections)) LIB.collections = [];
-      if (!LIB.collections.some(c => String(c.id) === '_all_songs')){
-        LIB.collections.unshift({
-          id: "_all_songs",
-          type: "smart",
-          name: "All Songs",
-          rules: { mode: "all_songs" },
-          sets: []
+    function ensureVirtualAllSongsSetlist(){
+      // If no setlists exist, create an in-memory virtual setlist so viewer still works.
+      if (!Array.isArray(LIB.setlists) || !LIB.setlists.length){
+        const uids = Array.from(SONG_MAP.keys());
+        uids.sort((a,b)=>{
+          const sa = SONG_MAP.get(a), sb = SONG_MAP.get(b);
+          const ta = (sa?.title||"").toLowerCase(), tb = (sb?.title||"").toLowerCase();
+          const aa = (sa?.artist||"").toLowerCase(), ab = (sb?.artist||"").toLowerCase();
+          if (ta !== tb) return ta.localeCompare(tb);
+          if (aa !== ab) return aa.localeCompare(ab);
+          return a.localeCompare(b);
         });
+
+        LIB.setlists = [{
+          id: "_all_songs",
+          name: "All Songs",
+          notes: "Virtual (auto-generated)",
+          sets: [{ id: "main", name: "All Songs", songs: uids }]
+        }];
       }
-    }
-
-    function getCollections(){
-      return Array.isArray(LIB.collections) ? LIB.collections : [];
-    }
-    function findCollectionById(id){
-      return getCollections().find(c => String(c.id) === String(id));
-    }
-    function isSmartCollection(c){ return c && c.type === 'smart'; }
-
-    function computeAllSongsUidList(){
-      const uids = Array.from(SONG_MAP.keys());
-      uids.sort((a,b)=>{
-        const sa = SONG_MAP.get(a), sb = SONG_MAP.get(b);
-        const ta = (sa?.title||"").toLowerCase(), tb = (sb?.title||"").toLowerCase();
-        const aa = (sa?.artist||"").toLowerCase(), ab = (sb?.artist||"").toLowerCase();
-        if (ta !== tb) return ta.localeCompare(tb);
-        if (aa !== ab) return aa.localeCompare(ab);
-        return a.localeCompare(b);
-      });
-      return uids;
-    }
-
-    function getSetsForCollection(col){
-      if (!col) return [];
-      if (isSmartCollection(col)){
-        const mode = col.rules?.mode;
-        if (mode === 'all_songs'){
-          return [{ id:"all", name:"All Songs", songs: computeAllSongsUidList() }];
-        }
-        return [];
-      }
-      const sets = Array.isArray(col.sets) ? col.sets : [];
-      return sets.map((s, idx) => ({
-        id: s.id || `set${idx+1}`,
-        name: s.name || `Set ${idx+1}`,
-        songs: Array.isArray(s.songs) ? s.songs.map(String) : []
-      }));
-    }
-
-    function findSetInCollection(col, setId){
-      const sets = getSetsForCollection(col);
-      return sets.find(s => String(s.id) === String(setId)) || null;
     }
 
     function populatePersonaSelect(){
@@ -521,199 +644,44 @@
       personaSelect.disabled = false;
     }
 
-    function populateCollectionSelect(){
-      collectionSelect.innerHTML = '';
-      const cols = getCollections();
-      if (!cols.length){
-        collectionSelect.innerHTML = '<option value="">(no collections)</option>';
-        collectionSelect.disabled = true;
+    function populateSetlistSelect(){
+      setlistSelect.innerHTML = '';
+      const setlists = Array.isArray(LIB.setlists) ? LIB.setlists : [];
+      if (!setlists.length){
+        setlistSelect.innerHTML = '<option value="">(no setlists)</option>';
+        setlistSelect.disabled = true;
         return;
       }
-      cols.forEach(c => {
+
+      setlists.forEach(sl => {
         const opt = document.createElement('option');
-        opt.value = String(c.id);
-        opt.textContent = c.name || c.id || '(unnamed)';
-        collectionSelect.appendChild(opt);
+        opt.value = String(sl.id || sl.name || '');
+        opt.textContent = sl.name || sl.id || '(unnamed)';
+        setlistSelect.appendChild(opt);
       });
 
-      const values = cols.map(c => String(c.id));
-      const saved = localStorage.getItem('cps_collection');
+      const saved = localStorage.getItem('cps_setlist');
+      const values = setlists.map(sl => String(sl.id || sl.name || ''));
       const pick = (saved && values.includes(saved)) ? saved : values[0];
 
-      collectionSelect.value = pick;
-      CURRENT_COLLECTION_ID = pick;
-      collectionSelect.disabled = false;
+      setlistSelect.value = pick;
+      CURRENT_SETLIST_ID = pick;
+      setlistSelect.disabled = false;
     }
 
-    function populateSetSelect(){
-      setSelect.innerHTML = '';
-      const col = findCollectionById(CURRENT_COLLECTION_ID);
-      const sets = getSetsForCollection(col);
+    function findSetlistById(id){
+      const setlists = Array.isArray(LIB.setlists) ? LIB.setlists : [];
+      return setlists.find(sl => String(sl.id || sl.name || '') === String(id));
+    }
 
-      if (!sets.length){
-        setSelect.innerHTML = '<option value="">(no sets)</option>';
-        setSelect.disabled = true;
-        CURRENT_SET_ID = null;
-        return;
-      }
-
+    function buildUidOrderFromSetlist(setlist){
+      const uids = [];
+      const sets = Array.isArray(setlist?.sets) ? setlist.sets : [];
       sets.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = String(s.id);
-        opt.textContent = s.name || s.id || '(unnamed set)';
-        setSelect.appendChild(opt);
+        const arr = Array.isArray(s.songs) ? s.songs : [];
+        arr.forEach(uid => uids.push(String(uid)));
       });
-
-      const values = sets.map(s => String(s.id));
-      const savedKey = `cps_set_${String(CURRENT_COLLECTION_ID)}`;
-      const saved = localStorage.getItem(savedKey);
-      const pick = (saved && values.includes(saved)) ? saved : values[0];
-
-      setSelect.value = pick;
-      CURRENT_SET_ID = pick;
-      setSelect.disabled = false;
-    }
-
-    function selectRow(uid){
-      const rows = songRows.querySelectorAll('tr[data-uid]');
-      rows.forEach(r => r.classList.toggle('selected', r.getAttribute('data-uid') === uid));
-    }
-
-    function buildUidOrder(){
-      const col = findCollectionById(CURRENT_COLLECTION_ID);
-      const set = findSetInCollection(col, CURRENT_SET_ID);
-      return Array.isArray(set?.songs) ? set.songs.map(String) : [];
-    }
-
-    function computeSetDuration(uids){
-      let total = 0;
-      for (const uid of (uids || [])){
-        const s = SONG_MAP.get(String(uid));
-        total += fmtDurationToSeconds(s?.duration);
-      }
-      return total;
-    }
-
-    function computeSingerCounts(uids){
-      const counts = {};
-      for (const uid of (uids || [])){
-        const s = SONG_MAP.get(String(uid));
-        const singer = (s?.singer || '').trim();
-        if (!singer) continue;
-        counts[singer] = (counts[singer] || 0) + 1;
-      }
-      return counts;
-    }
-
-    function renderSummaryStrip(){
-      const col = findCollectionById(CURRENT_COLLECTION_ID);
-      const set = findSetInCollection(col, CURRENT_SET_ID);
-
-      if (!col || !set){
-        summaryStrip.style.display = 'none';
-        return;
-      }
-
-      const uids = Array.isArray(set.songs) ? set.songs : [];
-      const totalSec = computeSetDuration(uids);
-      const singerCounts = computeSingerCounts(uids);
-      const singerKeys = Object.keys(singerCounts).sort((a,b)=>a.localeCompare(b));
-
-      let singerHtml = '';
-      if (singerKeys.length > 1){
-        singerHtml = singerKeys.map(k => `<span class="pill">${escapeHtml(k)}: <b>${singerCounts[k]}</b></span>`).join(' ');
-      } else if (singerKeys.length === 1){
-        // keep it minimal if only one singer
-        singerHtml = `<span class="pill">${escapeHtml(singerKeys[0])}: <b>${singerCounts[singerKeys[0]]}</b></span>`;
-      }
-
-      summaryStrip.innerHTML = `
-        <span class="k">Now:</span>
-        <span class="v">${escapeHtml(col.name || col.id)}</span>
-        <span class="k">→</span>
-        <span class="v">${escapeHtml(set.name || set.id)}</span>
-
-        <span class="pill">Songs: <b>${uids.length}</b></span>
-        <span class="pill">Set: <b>${fmtSeconds(totalSec)}</b></span>
-        ${singerHtml ? singerHtml : ''}
-
-        <span class="spacer"></span>
-        <span class="k">Consolidated:</span>
-        <span class="v">${escapeHtml(LIB.lastConsolidated || '—')}</span>
-      `;
-      summaryStrip.style.display = 'flex';
-    }
-
-    function renderSongTable(){
-      const col = findCollectionById(CURRENT_COLLECTION_ID);
-      const set = findSetInCollection(col, CURRENT_SET_ID);
-
-      if (!col){
-        setStatus('No collection selected.');
-        songRows.innerHTML = '';
-        layout.style.display = 'none';
-        summaryStrip.style.display = 'none';
-        return;
-      }
-      if (!set){
-        setStatus('No set selected.');
-        songRows.innerHTML = '';
-        layout.style.display = 'none';
-        summaryStrip.style.display = 'none';
-        return;
-      }
-
-      CURRENT_UID_ORDER = buildUidOrder();
-      songRows.innerHTML = '';
-
-      let missing = 0;
-
-      CURRENT_UID_ORDER.forEach((uid, idx) => {
-        const s = SONG_MAP.get(uid);
-        const tr = document.createElement('tr');
-        tr.className = 'clickable';
-        tr.setAttribute('data-uid', uid);
-
-        if (!s){
-          missing++;
-          tr.innerHTML = `
-            <td>${idx+1}</td>
-            <td><b class="warn">Missing song</b> <span class="pill">${escapeHtml(uid)}</span></td>
-            <td>—</td><td>—</td><td>—</td><td>—</td>
-          `;
-          tr.addEventListener('click', () => setStatus(`Missing song UID: ${uid}`));
-        } else {
-          const title = s.title || '(untitled)';
-          const artist = s.artist || '(unknown)';
-          const singer = s.singer || '—';
-          const duration = s.duration || '—';
-
-          // Capo/Key: prefer song fields if present, otherwise blank (we show true meta on open)
-          const capo = (s.capo ?? '').toString().trim();
-          const key  = (s.key  ?? '').toString().trim();
-
-          tr.innerHTML = `
-            <td>${idx+1}</td>
-            <td><b>${escapeHtml(title)}</b> <span class="pill">${escapeHtml(artist)}</span></td>
-            <td>${escapeHtml(singer)}</td>
-            <td>${escapeHtml(String(duration))}</td>
-            <td>${escapeHtml(capo || '—')}</td>
-            <td>${escapeHtml(key || '—')}</td>
-          `;
-          tr.addEventListener('click', () => openSong(uid));
-        }
-
-        songRows.appendChild(tr);
-      });
-
-      layout.style.display = 'grid';
-      renderSummaryStrip();
-
-      const persona = personaSelect.value || '(none)';
-      const msg = `Loaded: ${col.name || col.id} → ${set.name || set.id} • Songs: ${CURRENT_UID_ORDER.length}` +
-                  (missing ? ` • Missing: ${missing}` : '') +
-                  ` • Persona: ${persona}`;
-      setStatus(msg);
+      return uids;
     }
 
     function resolveChoPathForPersona(song, persona){
@@ -742,7 +710,6 @@
     function chordProToHtml(text){
       const lines = text.split('\n');
       const out = [];
-
       const isTag = (line) => /^\s*\{[^\}]+\}\s*$/.test(line);
 
       for (let raw of lines){
@@ -771,8 +738,95 @@
 
         out.push(`<span class="line">${html || '&nbsp;'}</span>`);
       }
-
       return out.join('');
+    }
+
+    function renderSidebarStats(){
+      const songCount = (LIB.songs || []).length;
+      const setlistCount = (LIB.setlists || []).length;
+      songsCountPill.textContent = `Songs: ${songCount}`;
+      setlistsCountPill.textContent = `Setlists: ${setlistCount}`;
+      libMiniPill.textContent = LIB.lastConsolidated ? `Updated: ${LIB.lastConsolidated}` : `Updated: —`;
+    }
+
+    function renderSongList(){
+      const setlist = findSetlistById(CURRENT_SETLIST_ID);
+      if (!setlist){
+        setStatus('No setlist selected.');
+        songListEl.innerHTML = `<div style="padding:12px;color:var(--muted)">No setlist selected.</div>`;
+        return;
+      }
+
+      CURRENT_UID_ORDER = buildUidOrderFromSetlist(setlist);
+      songListEl.innerHTML = '';
+
+      // For display: also capture which set each song came from (first match)
+      const uidToSetName = new Map();
+      (setlist.sets || []).forEach(st => {
+        (st.songs || []).forEach(uid => {
+          const k = String(uid);
+          if (!uidToSetName.has(k)) uidToSetName.set(k, st.name || st.id || 'Set');
+        });
+      });
+
+      let missing = 0;
+      CURRENT_UID_ORDER.forEach(uid => {
+        const s = SONG_MAP.get(uid);
+        const div = document.createElement('div');
+        div.className = 'songItem';
+        div.setAttribute('data-uid', uid);
+
+        if (!s){
+          missing++;
+          div.innerHTML = `
+            <div class="songTop">
+              <div class="songTitleMini warn">Missing song</div>
+              <span class="pill">${escapeHtml(uid)}</span>
+            </div>
+            <div class="songMetaMini">—</div>
+          `;
+          div.addEventListener('click', () => setStatus(`Missing song UID: ${uid}`));
+        } else {
+          const title = s.title || '(untitled)';
+          const artist = s.artist || '(unknown)';
+          const singer = s.singer || '—';
+          const duration = s.duration || '—';
+          const tempo = (s.tempo !== null && s.tempo !== undefined && s.tempo !== "") ? s.tempo : '—';
+          const setName = uidToSetName.get(uid) || (setlist.name || 'Setlist');
+
+          div.innerHTML = `
+            <div class="songTop">
+              <div>
+                <div class="songTitleMini">${escapeHtml(title)}</div>
+                <div class="songArtistMini">${escapeHtml(artist)}</div>
+              </div>
+              <span class="pill">${escapeHtml(setName)}</span>
+            </div>
+            <div class="songMetaMini">
+              <span>🎤 ${escapeHtml(singer)}</span>
+              <span>⏱ ${escapeHtml(String(duration))}</span>
+              <span>🎛 ${escapeHtml(String(tempo))}</span>
+            </div>
+          `;
+          div.addEventListener('click', () => openSong(uid));
+        }
+
+        songListEl.appendChild(div);
+      });
+
+      setPill.style.display = 'inline-block';
+      setPill.textContent = setlist.name || setlist.id || 'Setlist';
+
+      const persona = personaSelect.value || '(none)';
+      const msg = `Loaded: ${setlist.name || setlist.id} • Songs: ${CURRENT_UID_ORDER.length}` +
+                  (missing ? ` • Missing: ${missing}` : '') +
+                  ` • Persona: ${persona}`;
+      setStatus(msg);
+    }
+
+    function selectSidebarRow(uid){
+      const items = songListEl.querySelectorAll('[data-uid]');
+      items.forEach(el => el.classList.toggle('selected', el.getAttribute('data-uid') === uid));
     }
 
     async function openSong(uid){
@@ -786,49 +840,56 @@
       const choRel = resolveChoPathForPersona(song, persona);
       if (!choRel){
         setStatus(`No .cho file found for UID ${uid} (persona "${persona}")`);
-        songPanel.style.display = 'none';
         return;
       }
 
       try{
         const url = choRel.startsWith("../") ? choRel : ("../" + choRel);
 
-        setStatus(`Loading song… (${url})`);
+        setStatus(`Loading song…`);
         const choText = await fetchText(url);
 
         const meta = parseChordProMeta(choText);
-
         const title = song.title || meta.title || '(untitled)';
         const artist = song.artist || meta.artist || '(unknown)';
-
-        const singer = (meta.singer || song.singer || '—');
-        const capo = (meta.capo || song.capo || '');
-        const key = (meta.key || song.key || '');
-        const tempo = (meta.tempo || song.tempo || '');
-        const duration = (meta.duration || song.duration || '');
+        const singer = song.singer || meta.singer || '—';
+        const capo = meta.capo || (song.capo ?? '');
+        const key = meta.key || (song.key ?? '');
+        const tempo = meta.tempo || (song.tempo ?? '');
+        const duration = meta.duration || (song.duration ?? '');
 
         songTitleEl.textContent = `${title} — ${artist}`;
 
-        // Stage-first ordering
-        songMetaEl.textContent =
-          `Singer: ${singer}` +
-          (capo ? ` | Capo: ${capo}` : '') +
-          (key ? ` | Key: ${key}` : '') +
-          (tempo ? ` | Tempo: ${tempo}` : '') +
-          (duration ? ` | Duration: ${duration}` : '') +
-          ` | Persona: ${persona || '—'}` +
-          ` | UID: ${uid}`;
+        // Minimal always-visible meta (no UID)
+        let metaBits = [];
+        metaBits.push(`Persona: ${persona || '—'}`);
+        metaBits.push(`Singer: ${singer || '—'}`);
+        if (key) metaBits.push(`Key: ${key}`);
+        if (tempo) metaBits.push(`Tempo: ${tempo}`);
+        if (duration) metaBits.push(`Duration: ${duration}`);
+        songMetaEl.textContent = metaBits.join('  •  ');
+
+        // Capo pill
+        if (capo){
+          capoPill.style.display = 'inline-block';
+          capoPill.textContent = `CAPO ${capo}`;
+        } else {
+          capoPill.style.display = 'none';
+        }
 
         songBodyEl.innerHTML = chordProToHtml(choText);
+
+        emptyState.style.display = 'none';
         songPanel.style.display = 'block';
+        floatNav.style.display = 'flex';
 
         CURRENT_UID = uid;
-        selectRow(uid);
+        selectSidebarRow(uid);
         setStatus(`Loaded: ${title} — ${artist}`);
+
       }catch(e){
         console.error(e);
         setStatus(`Failed to load song UID ${uid}: ${e.message}`);
-        songPanel.style.display = 'none';
       }
     }
 
@@ -839,43 +900,139 @@
       const uid = CURRENT_UID_ORDER[nextIndex];
       if (uid) openSong(uid);
     }
+
+    function scrollByScreen(dir){
+      // Scroll the song body panel by ~80% viewport height
+      const amt = Math.round(window.innerHeight * 0.8);
+      const delta = dir === 'up' ? -amt : amt;
+      songBodyEl.scrollBy({ top: delta, left: 0, behavior: 'smooth' });
+    }
+
     prevBtn.addEventListener('click', () => navDelta(-1));
     nextBtn.addEventListener('click', () => navDelta(1));
+    scrollUpBtn.addEventListener('click', () => scrollByScreen('up'));
+    scrollDownBtn.addEventListener('click', () => scrollByScreen('down'));
+
+    // Sidebar/menu controls
+    menuBtn.addEventListener('click', () => {
+      // On desktop/tablet, we toggle stageMode off/on
+      document.body.classList.toggle('stageMode');
+      localStorage.setItem('cps_stageMode', document.body.classList.contains('stageMode') ? '1' : '0');
+    });
+
+    stageBtn.addEventListener('click', () => {
+      document.body.classList.toggle('stageMode');
+      localStorage.setItem('cps_stageMode', document.body.classList.contains('stageMode') ? '1' : '0');
+    });
+
+    (function initStageMode(){
+      const s = localStorage.getItem('cps_stageMode');
+      if (s === '1') document.body.classList.add('stageMode');
+    })();
+
+    // Info modal
+    function openInfoModal(){
+      if (!LIB) return;
+
+      const setlist = findSetlistById(CURRENT_SETLIST_ID);
+      const persona = personaSelect.value || '';
+      const song = CURRENT_UID ? SONG_MAP.get(CURRENT_UID) : null;
+
+      const rows = [];
+
+      // Library
+      rows.push(['Library songs', String((LIB.songs || []).length)]);
+      rows.push(['Library setlists', String((LIB.setlists || []).length)]);
+      rows.push(['Last consolidated', LIB.lastConsolidated || '—']);
+      rows.push(['Selected setlist', setlist ? (setlist.name || setlist.id) : '—']);
+      rows.push(['Selected persona', persona || '—']);
+
+      // Song
+      rows.push(['—', '—']);
+      rows.push(['Current song', song ? (song.title || '(untitled)') : '—']);
+      rows.push(['Artist', song ? (song.artist || '—') : '—']);
+      rows.push(['Singer', song ? (song.singer || '—') : '—']);
+      rows.push(['Duration', song ? (song.duration || '—') : '—']);
+      rows.push(['Tempo', song ? (String(song.tempo ?? '—')) : '—']);
+      rows.push(['UID', CURRENT_UID || '—']);
+
+      // File paths (helpful for debugging)
+      if (song && song.files){
+        const p = persona && song.files[persona] ? song.files[persona] : (song.files._default || '');
+        rows.push(['Resolved file', p || '—']);
+      }
+
+      infoKv.innerHTML = '';
+      rows.forEach(([k,v]) => {
+        if (k === '—' && v === '—'){
+          const div = document.createElement('div');
+          div.className = 'divider';
+          div.style.gridColumn = '1 / -1';
+          infoKv.appendChild(div);
+          return;
+        }
+        const dk = document.createElement('div');
+        dk.className = 'k';
+        dk.textContent = k;
+
+        const dv = document.createElement('div');
+        dv.className = 'v';
+        dv.textContent = v;
+
+        infoKv.appendChild(dk);
+        infoKv.appendChild(dv);
+      });
+
+      modalBackdrop.style.display = 'flex';
+    }
+
+    function closeInfoModal(){
+      modalBackdrop.style.display = 'none';
+    }
+
+    infoBtn.addEventListener('click', openInfoModal);
+    closeModalBtn.addEventListener('click', closeInfoModal);
+    modalBackdrop.addEventListener('click', (e) => {
+      if (e.target === modalBackdrop) closeInfoModal();
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeInfoModal();
+      if (e.key === 'ArrowLeft') navDelta(-1);
+      if (e.key === 'ArrowRight') navDelta(1);
+    });
 
     async function loadLibrary(){
       setStatus('Loading library index…');
-      collectionSelect.disabled = true;
-      setSelect.disabled = true;
+      setlistSelect.disabled = true;
       personaSelect.disabled = true;
-      summaryStrip.style.display = 'none';
-      layout.style.display = 'none';
+      songListEl.innerHTML = '';
+      emptyState.style.display = 'block';
       songPanel.style.display = 'none';
-      songRows.innerHTML = '';
+      floatNav.style.display = 'none';
       CURRENT_UID = null;
       CURRENT_UID_ORDER = [];
 
+      const url = '../library/library.index.json';
+
       try{
-        LIB = await fetchJSON('../library/library.index.json');
+        LIB = await fetchJSON(url);
         buildSongMap();
+        ensureVirtualAllSongsSetlist();
 
-        adaptLegacySetlistsToCollections();
-        ensureSmartAllSongsCollection();
-
+        renderSidebarStats();
         populatePersonaSelect();
-        populateCollectionSelect();
-        populateSetSelect();
+        populateSetlistSelect();
 
-        // Restore previous selections
-        const savedCol = localStorage.getItem('cps_collection');
-        if (savedCol && getCollections().some(c => String(c.id) === String(savedCol))){
-          collectionSelect.value = savedCol;
-          CURRENT_COLLECTION_ID = savedCol;
-          populateSetSelect();
+        // restore previous selection if possible
+        const saved = localStorage.getItem('cps_setlist');
+        if (saved) {
+          setlistSelect.value = saved;
+          CURRENT_SETLIST_ID = saved;
         }
 
-        renderSongTable();
+        renderSongList();
 
-        // Auto-open first song
+        // Auto-open first song (nice on iPad)
         if (CURRENT_UID_ORDER.length){
           const first = CURRENT_UID_ORDER[0];
           if (SONG_MAP.get(first)) openSong(first);
@@ -889,29 +1046,13 @@
 
     refreshBtn.addEventListener('click', loadLibrary);
 
-    collectionSelect.addEventListener('change', () => {
-      CURRENT_COLLECTION_ID = collectionSelect.value;
-      localStorage.setItem('cps_collection', CURRENT_COLLECTION_ID);
-
-      populateSetSelect();
-      const savedKey = `cps_set_${String(CURRENT_COLLECTION_ID)}`;
-      localStorage.removeItem(savedKey);
-
+    setlistSelect.addEventListener('change', () => {
+      CURRENT_SETLIST_ID = setlistSelect.value;
+      localStorage.setItem('cps_setlist', CURRENT_SETLIST_ID);
       CURRENT_UID = null;
-      renderSongTable();
-      if (CURRENT_UID_ORDER.length){
-        const first = CURRENT_UID_ORDER[0];
-        if (SONG_MAP.get(first)) openSong(first);
-      }
-    });
+      renderSongList();
 
-    setSelect.addEventListener('change', () => {
-      CURRENT_SET_ID = setSelect.value;
-      const savedKey = `cps_set_${String(CURRENT_COLLECTION_ID)}`;
-      localStorage.setItem(savedKey, CURRENT_SET_ID);
-
-      CURRENT_UID = null;
-      renderSongTable();
+      // Auto-open first song in new setlist
       if (CURRENT_UID_ORDER.length){
         const first = CURRENT_UID_ORDER[0];
         if (SONG_MAP.get(first)) openSong(first);
@@ -921,9 +1062,9 @@
     personaSelect.addEventListener('change', () => {
       localStorage.setItem('cps_persona', personaSelect.value);
       if (CURRENT_UID) openSong(CURRENT_UID);
-      else renderSongTable();
     });
 
+    // Init
     loadLibrary();
   </script>
 </body>

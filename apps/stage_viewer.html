@@ -289,31 +289,48 @@
       flex-wrap:wrap;
     }
 
+    /* ChordPro display theme variables (driven by shared theme.js) */
+    :root{
+      --cp-bg: #000000;
+      --cp-lyrics: #ffffff;
+      --cp-chords: #00ffff;
+      --cp-section: #ffff00;
+      --cp-chorus: #ff6b6b;
+      --cp-font-size: 18px;
+      --cp-line-height: 1.45;
+    }
+
     .songBody{
       padding:16px 16px 80px 16px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size:18px;
-      line-height:1.45;
+      font-size: var(--cp-font-size);
+      line-height: var(--cp-line-height);
       white-space:pre-wrap;
       word-break:break-word;
       overflow-x:auto;
       max-height: calc(100vh - 150px);
       overflow-y:auto;
+      background: var(--cp-bg);
+      color: var(--cp-lyrics);
     }
 
     .line{
       display:block;
       padding:1px 0;
+      color: var(--cp-lyrics);
     }
     .chord{
-      color:var(--chord);
+      color:var(--cp-chords);
       font-weight:900;
     }
     .section{
-      color:var(--accent2);
+      color:var(--cp-section);
       font-weight:900;
       margin-top:12px;
       display:block;
+    }
+    .chorusLine{
+      color: var(--cp-chorus);
     }
     .warn{
       color:var(--danger);
@@ -421,6 +438,9 @@
       }
     }
   </style>
+
+  <!-- Shared theme (UI + ChordPro) -->
+  <script src="../shared/theme.js" defer></script>
 </head>
 
 <body>
@@ -533,16 +553,16 @@
       navigator.serviceWorker.register('../serviceWorker.js').catch(() => {});
     }
 
-    // --- Theme ---
+    // --- Shared Theme toggle (UI mode) ---
     const themeBtn = document.getElementById('themeBtn');
     themeBtn.addEventListener('click', () => {
-      document.body.classList.toggle('light');
-      localStorage.setItem('cps_theme', document.body.classList.contains('light') ? 'light' : 'dark');
+      if (window.CPS_THEME && CPS_THEME.getUiMode && CPS_THEME.applyUiMode) {
+        const next = (CPS_THEME.getUiMode() === 'light') ? 'dark' : 'light';
+        CPS_THEME.applyUiMode(next);
+      } else {
+        document.body.classList.toggle('light');
+      }
     });
-    (function initTheme(){
-      const t = localStorage.getItem('cps_theme');
-      if (t === 'light') document.body.classList.add('light');
-    })();
 
     // --- DOM ---
     const topHeader = document.getElementById('topHeader');
@@ -593,9 +613,6 @@
     let LIB = null;
     let SONG_MAP = new Map();
 
-    // Two modes:
-    // 1) Collections mode: LIB.collections exists. User chooses collection + set; we render songs from that set.
-    // 2) Fallback setlist mode: LIB.setlists exists. User chooses setlist; we render songs from its sets.
     let USING_COLLECTIONS = false;
 
     let CURRENT_COLLECTION_ID = null;
@@ -610,7 +627,6 @@
     let headerHideTimer = null;
 
     function setStatus(msg){
-      // status line is hidden; keep for debugging if you want later
       statusEl.textContent = msg;
     }
 
@@ -685,21 +701,32 @@
       const out = [];
       const isTag = (line) => /^\s*\{[^\}]+\}\s*$/.test(line);
 
+      let inChorus = false;
+
       for (let raw of lines){
         const line = raw.replace(/\r$/, '');
 
         if (/^\s*\{soc\}\s*$/i.test(line) || /^\s*\{start_of_chorus\}\s*$/i.test(line)){
-          out.push(`<span class="section">[CHORUS]</span>`);
+          inChorus = true;
+          out.push(`<span class="section">Chorus</span>`);
           continue;
         }
         if (/^\s*\{eoc\}\s*$/i.test(line) || /^\s*\{end_of_chorus\}\s*$/i.test(line)){
-          out.push(`<span class="section">[/CHORUS]</span>`);
+          inChorus = false;
+          out.push(`<span class="section"></span>`);
           continue;
         }
 
         const mComment = /^\s*\{(?:c|comment)\s*:\s*(.*?)\}\s*$/i.exec(line);
         if (mComment){
-          out.push(`<span class="section">${escapeHtml(mComment[1])}</span>`);
+          const label = (mComment[1] || '').trim();
+          // Treat "{comment: Chorus}" as chorus start marker (your current convention)
+          if (/^chorus$/i.test(label)){
+            inChorus = true;
+          } else {
+            inChorus = false;
+          }
+          out.push(`<span class="section">${escapeHtml(label)}</span>`);
           continue;
         }
 
@@ -709,7 +736,8 @@
           return `<span class="chord">[${escapeHtml(chord)}]</span>`;
         });
 
-        out.push(`<span class="line">${html || '&nbsp;'}</span>`);
+        const cls = inChorus ? "line chorusLine" : "line";
+        out.push(`<span class="${cls}">${html || '&nbsp;'}</span>`);
       }
       return out.join('');
     }
@@ -726,7 +754,6 @@
       libMiniPill.textContent = LIB.lastConsolidated ? `Updated: ${LIB.lastConsolidated}` : `Updated: —`;
     }
 
-    // ---------- Selection Model (Collections mode) ----------
     function getCollectionById(id){
       return (LIB.collections || []).find(c => String(c.id) === String(id));
     }
@@ -798,19 +825,10 @@
       }
     }
 
-    // ---------- Fallback Setlist mode ----------
     function ensureVirtualAllSongsSetlist(){
       if (!Array.isArray(LIB.setlists) || !LIB.setlists.length){
         const uids = Array.from(SONG_MAP.keys());
-        uids.sort((a,b)=>{
-          const sa = SONG_MAP.get(a), sb = SONG_MAP.get(b);
-          const ta = (sa?.title||"").toLowerCase(), tb = (sb?.title||"").toLowerCase();
-          const aa = (sa?.artist||"").toLowerCase(), ab = (sb?.artist||"").toLowerCase();
-          if (ta !== tb) return ta.localeCompare(tb);
-          if (aa !== ab) return aa.localeCompare(ab);
-          return a.localeCompare(b);
-        });
-
+        uids.sort();
         LIB.setlists = [{
           id: "_all_songs",
           name: "All Songs",
@@ -854,7 +872,6 @@
       return uids;
     }
 
-    // ---------- Shared rendering ----------
     function renderSetPill(){
       if (USING_COLLECTIONS){
         const col = getCollectionById(CURRENT_COLLECTION_ID);
@@ -877,6 +894,7 @@
 
       if (!CURRENT_UID_ORDER.length){
         songListEl.innerHTML = `<div style="padding:12px;color:var(--muted)">No songs in this selection.</div>`;
+        renderSetPill();
         return;
       }
 
@@ -894,7 +912,6 @@
             </div>
             <div class="songMetaMini">—</div>
           `;
-          div.addEventListener('click', () => {});
         } else {
           const title = s.title || '(untitled)';
           const artist = s.artist || '(unknown)';
@@ -952,7 +969,6 @@
 
         songTitleEl.textContent = `${title} — ${artist}`;
 
-        // Keep this minimal (no UID)
         const metaBits = [];
         metaBits.push(`Persona: ${persona || '—'}`);
         metaBits.push(`Singer: ${singer || '—'}`);
@@ -1001,12 +1017,10 @@
     scrollUpBtn.addEventListener('click', () => scrollByScreen('up'));
     scrollDownBtn.addEventListener('click', () => scrollByScreen('down'));
 
-    // Menu toggle (this is your “hide menu / show menu”)
     function setStageMode(enabled){
       document.body.classList.toggle('stageMode', !!enabled);
       localStorage.setItem('cps_stageMode', enabled ? '1' : '0');
 
-      // When entering stageMode, auto-hide the top header after a short delay
       if (enabled){
         scheduleHeaderAutoHide();
       } else {
@@ -1027,7 +1041,6 @@
 
     function scheduleHeaderAutoHide(){
       clearTimeout(headerHideTimer);
-      // show immediately, then hide after 1.8s
       topHeader.classList.remove('autoHidden');
       headerHideTimer = setTimeout(() => {
         if (document.body.classList.contains('stageMode')){
@@ -1042,12 +1055,10 @@
       scheduleHeaderAutoHide();
     }
 
-    // Tap/move to reveal header in stageMode
     window.addEventListener('mousemove', nudgeHeaderVisible, { passive:true });
     window.addEventListener('touchstart', nudgeHeaderVisible, { passive:true });
     window.addEventListener('scroll', nudgeHeaderVisible, { passive:true });
 
-    // Info modal
     function openInfoModal(){
       if (!LIB) return;
 
@@ -1150,7 +1161,6 @@
     });
 
     async function loadLibrary(){
-      // Reset
       songListEl.innerHTML = '';
       emptyState.style.display = 'block';
       songPanel.style.display = 'none';
@@ -1158,7 +1168,6 @@
       CURRENT_UID = null;
       CURRENT_UID_ORDER = [];
 
-      // Hide/select control blocks until we know which mode
       collectionWrap.style.display = 'none';
       setWrap.style.display = 'none';
       setlistWrap.style.display = 'none';
@@ -1174,7 +1183,6 @@
         LIB = await fetchJSON(url);
         buildSongMap();
 
-        // Decide mode
         USING_COLLECTIONS = Array.isArray(LIB.collections) && LIB.collections.length > 0;
 
         if (USING_COLLECTIONS){
@@ -1198,7 +1206,7 @@
               const first = CURRENT_UID_ORDER[0];
               if (SONG_MAP.get(first)) openSong(first);
             }
-          }, { once:false });
+          });
 
           setSelect.addEventListener('change', () => {
             CURRENT_SET_ID = setSelect.value;
@@ -1213,10 +1221,9 @@
               const first = CURRENT_UID_ORDER[0];
               if (SONG_MAP.get(first)) openSong(first);
             }
-          }, { once:false });
+          });
 
         } else {
-          // fallback to setlists
           ensureVirtualAllSongsSetlist();
 
           setlistWrap.style.display = '';
@@ -1234,14 +1241,13 @@
               const first = CURRENT_UID_ORDER[0];
               if (SONG_MAP.get(first)) openSong(first);
             }
-          }, { once:false });
+          });
         }
 
         populatePersonaSelect();
         renderSidebarStats();
         renderSongList();
 
-        // Auto-open first song
         if (CURRENT_UID_ORDER.length){
           const first = CURRENT_UID_ORDER[0];
           if (SONG_MAP.get(first)) openSong(first);
@@ -1254,7 +1260,6 @@
 
     refreshBtn.addEventListener('click', loadLibrary);
 
-    // Init
     loadLibrary();
   </script>
 </body>

@@ -1,6 +1,6 @@
 {
-  "runId": "20260210T052647Z",
-  "started": "2026-02-10T16:26:47+11:00",
+  "runId": "20260210T053528Z",
+  "started": "2026-02-10T16:35:28+11:00",
   "repoRoot": "/Users/adamflannery/Documents/GitHub/stage-viewer",
   "inputs": {
     "songsDir": "/Users/adamflannery/Documents/GitHub/stage-viewer/songs",
@@ -17,5 +17,5 @@
   },
   "warnings": [],
   "errors": [],
-  "finished": "2026-02-10T16:26:47+11:00"
+  "finished": "2026-02-10T16:35:28+11:00"
 }

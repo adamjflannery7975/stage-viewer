@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastConsolidated": "2026-02-10T16:26:47+11:00",
+  "lastConsolidated": "2026-02-10T16:35:28+11:00",
   "songs": [
     {
       "uid": "uid-273ee8a9-b093-4d82-bc72-fad59e74a9eb",
@@ -26,7 +26,8 @@
       "name": "All Songs",
       "rules": {
         "mode": "all_songs"
-      }
+      },
+      "sets": []
     },
     {
       "id": "working_on",

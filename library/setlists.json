@@ -2,12 +2,13 @@
   "version": 1,
   "updated": "2026-02-10T00:00:00+11:00",
   "collections": [
-    {
-      "id": "_all_songs",
-      "type": "smart",
-      "name": "All Songs",
-      "rules": { "mode": "all_songs" }
-    },
+ {
+  "id": "_all_songs",
+  "type": "smart",
+  "name": "All Songs",
+  "rules": { "mode": "all_songs" },
+  "sets": []
+},
     {
       "id": "working_on",
       "type": "list",

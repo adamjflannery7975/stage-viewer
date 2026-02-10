@@ -64,11 +64,7 @@
       flex-wrap:wrap;
     }
 
-    .brand{
-      font-weight:700;
-      letter-spacing:0.2px;
-      margin-right:auto;
-    }
+    .brand{ font-weight:700; letter-spacing:0.2px; margin-right:auto; }
 
     select, button{
       background:var(--card);
@@ -83,6 +79,9 @@
     button:hover{ border-color:rgba(255,255,255,0.22); }
     body.light button:hover{ border-color:rgba(0,0,0,0.22); }
 
+    .miniLabel{ color:var(--muted); font-size:12px; margin-right:6px; }
+    body.perf .miniLabel{ display:none; }
+
     main{
       padding:14px;
       max-width:1200px;
@@ -90,91 +89,30 @@
       box-sizing:border-box;
     }
 
-    .row{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      margin-bottom:12px;
-    }
-
     .status{
       font-size:13px;
       color:var(--muted);
+      margin-bottom:10px;
     }
+    body.perf .status{ display:none; }
 
-    .cards{
+    /* Summary strip */
+    .summaryStrip{
       display:flex;
       gap:10px;
+      align-items:center;
       flex-wrap:wrap;
-      margin:12px 0;
-    }
-
-    .card{
       background:var(--card);
       border:1px solid var(--border);
       border-radius:14px;
       padding:10px 12px;
-      min-width:240px;
+      margin:0 0 12px 0;
     }
-    .card h3{
-      margin:0 0 4px 0;
-      font-size:14px;
-    }
-    .card .small{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.35;
-    }
+    body.perf .summaryStrip{ display:none; }
 
-    .layout{
-      display:grid;
-      grid-template-columns: 1fr 1.2fr;
-      gap:12px;
-      align-items:start;
-    }
-    @media (max-width: 980px){
-      .layout{ grid-template-columns: 1fr; }
-    }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      overflow:hidden;
-      border-radius:14px;
-      border:1px solid var(--border);
-      background:var(--card);
-    }
-    th, td{
-      text-align:left;
-      padding:10px 12px;
-      border-bottom:1px solid var(--border);
-      font-size:14px;
-      vertical-align:top;
-    }
-    th{
-      font-size:12px;
-      text-transform:uppercase;
-      letter-spacing:0.08em;
-      color:var(--muted);
-      background:rgba(255,255,255,0.02);
-    }
-    body.light th{ background:rgba(0,0,0,0.03); }
-    tr:last-child td{ border-bottom:none; }
-
-    tr.clickable{ cursor:pointer; }
-    tr.clickable:hover td{
-      background: rgba(106,163,255,0.10);
-    }
-    body.light tr.clickable:hover td{
-      background: rgba(42,102,255,0.08);
-    }
-    tr.selected td{
-      background: rgba(126,231,135,0.10);
-    }
-    body.light tr.selected td{
-      background: rgba(31,138,59,0.08);
-    }
+    .summaryStrip .k{ color:var(--muted); font-size:12px; }
+    .summaryStrip .v{ font-weight:800; }
+    .summaryStrip .spacer{ margin-left:auto; }
 
     .pill{
       display:inline-block;
@@ -187,11 +125,78 @@
       white-space:nowrap;
     }
 
+    .layout{
+      display:grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap:12px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .layout{ grid-template-columns: 1fr; }
+    }
+
+    /* Table wrapper makes header sticky reliably */
+    .tableWrap{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      overflow:auto;
+      max-height: calc(100vh - 180px);
+    }
+    body.perf .tableWrap{
+      max-height: calc(100vh - 120px);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      background:var(--card);
+    }
+    th, td{
+      text-align:left;
+      padding:12px 12px;
+      border-bottom:1px solid var(--border);
+      font-size:14px;
+      vertical-align:top;
+    }
+    body.perf td{
+      font-size:15px;
+      padding:14px 12px;
+    }
+
+    th{
+      position:sticky;
+      top:0;
+      z-index:2;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+      color:var(--muted);
+      background:rgba(255,255,255,0.06);
+      backdrop-filter: blur(6px);
+    }
+    body.light th{ background:rgba(0,0,0,0.06); }
+
+    tr.clickable{ cursor:pointer; }
+    tr.clickable:hover td{
+      background: rgba(106,163,255,0.10);
+    }
+    body.light tr.clickable:hover td{
+      background: rgba(42,102,255,0.08);
+    }
+    tr.selected td{
+      background: rgba(126,231,135,0.12);
+    }
+    body.light tr.selected td{
+      background: rgba(31,138,59,0.10);
+    }
+
     .songPanel{
       background:var(--songbg);
       border:1px solid var(--songborder);
       border-radius:14px;
       overflow:hidden;
+      display:none;
     }
 
     .songHeader{
@@ -203,14 +208,11 @@
       background:var(--card);
       border-bottom:1px solid var(--border);
     }
-    .songTitle{
-      font-weight:800;
-      font-size:16px;
-    }
-    .songMeta{
-      color:var(--muted);
-      font-size:12px;
-    }
+    .songTitle{ font-weight:900; font-size:16px; }
+    body.perf .songTitle{ font-size:18px; }
+    .songMeta{ color:var(--muted); font-size:12px; }
+    body.perf .songMeta{ font-size:13px; }
+
     .songNav{
       margin-left:auto;
       display:flex;
@@ -226,25 +228,17 @@
       white-space:pre-wrap;
       word-break:break-word;
     }
+    body.perf .songBody{ font-size:18px; line-height:1.42; }
 
-    .line{
-      display:block;
-      padding:1px 0;
-    }
-    .chord{
-      color:var(--chord);
-      font-weight:800;
-    }
+    .line{ display:block; padding:1px 0; }
+    .chord{ color:var(--chord); font-weight:900; }
     .section{
       color:var(--accent2);
-      font-weight:800;
+      font-weight:900;
       margin-top:10px;
       display:block;
     }
-    .warn{
-      color:var(--danger);
-      font-weight:700;
-    }
+    .warn{ color:var(--danger); font-weight:800; }
   </style>
 </head>
 
@@ -253,53 +247,54 @@
     <div class="brand">Stage Viewer</div>
 
     <label>
-      Collection:
+      <span class="miniLabel">Collection</span>
       <select id="collectionSelect" disabled>
         <option>Loading…</option>
       </select>
     </label>
 
     <label>
-      Set:
+      <span class="miniLabel">Set</span>
       <select id="setSelect" disabled>
         <option>Loading…</option>
       </select>
     </label>
 
     <label>
-      Persona:
+      <span class="miniLabel">Persona</span>
       <select id="personaSelect" disabled>
         <option>Loading…</option>
       </select>
     </label>
 
     <button id="refreshBtn" title="Reload library index">Refresh</button>
-    <button id="themeBtn" title="Toggle light/dark">Toggle Theme</button>
+    <button id="perfBtn" title="Toggle performance mode">Performance</button>
+    <button id="themeBtn" title="Toggle light/dark">Theme</button>
   </header>
 
   <main>
-    <div class="row">
-      <div class="status" id="status">Loading library…</div>
-    </div>
+    <div class="status" id="status">Loading library…</div>
 
-    <div class="cards" id="summaryCards" style="display:none;"></div>
+    <div class="summaryStrip" id="summaryStrip" style="display:none;"></div>
 
     <div class="layout" id="layout" style="display:none;">
-      <div>
+      <div class="tableWrap">
         <table>
           <thead>
             <tr>
-              <th style="width:48%;">Song</th>
-              <th style="width:22%;">Singer</th>
-              <th style="width:15%;">Duration</th>
-              <th style="width:15%;">Tempo</th>
+              <th style="width:6%;">#</th>
+              <th style="width:52%;">Song</th>
+              <th style="width:18%;">Singer</th>
+              <th style="width:10%;">Dur</th>
+              <th style="width:7%;">Capo</th>
+              <th style="width:7%;">Key</th>
             </tr>
           </thead>
           <tbody id="songRows"></tbody>
         </table>
       </div>
 
-      <div class="songPanel" id="songPanel" style="display:none;">
+      <div class="songPanel" id="songPanel">
         <div class="songHeader">
           <div>
             <div class="songTitle" id="songTitle">—</div>
@@ -332,13 +327,26 @@
       if (t === 'light') document.body.classList.add('light');
     })();
 
+    // --- Performance mode ---
+    const perfBtn = document.getElementById('perfBtn');
+    perfBtn.addEventListener('click', () => {
+      document.body.classList.toggle('perf');
+      localStorage.setItem('cps_perf', document.body.classList.contains('perf') ? '1' : '0');
+    });
+    (function initPerf(){
+      const p = localStorage.getItem('cps_perf');
+      if (p === '1') document.body.classList.add('perf');
+    })();
+
     // --- DOM ---
     const statusEl = document.getElementById('status');
+    const summaryStrip = document.getElementById('summaryStrip');
+
     const collectionSelect = document.getElementById('collectionSelect');
     const setSelect = document.getElementById('setSelect');
     const personaSelect = document.getElementById('personaSelect');
     const refreshBtn = document.getElementById('refreshBtn');
-    const summaryCards = document.getElementById('summaryCards');
+
     const songRows = document.getElementById('songRows');
     const layout = document.getElementById('layout');
 
@@ -350,13 +358,12 @@
     const nextBtn = document.getElementById('nextBtn');
 
     // --- State ---
-    let LIB = null;             // library.index.json
-    let SONG_MAP = new Map();   // uid -> song record
+    let LIB = null;
+    let SONG_MAP = new Map();
 
     let CURRENT_COLLECTION_ID = null;
     let CURRENT_SET_ID = null;
 
-    // Flattened order of songs for navigation (based on selected set)
     let CURRENT_UID_ORDER = [];
     let CURRENT_UID = null;
 
@@ -367,7 +374,6 @@
       if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
       return await res.json();
     }
-
     async function fetchText(url){
       const res = await fetch(url, { cache: 'no-store' });
       if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
@@ -385,6 +391,22 @@
         .replaceAll('>','&gt;')
         .replaceAll('"','&quot;')
         .replaceAll("'",'&#039;');
+    }
+
+    function fmtDurationToSeconds(d){
+      if (!d) return 0;
+      const s = String(d).trim();
+      const m = /^(\d+)\s*:\s*(\d{1,2})$/.exec(s);
+      if (!m) return 0;
+      const mins = parseInt(m[1], 10);
+      const secs = parseInt(m[2], 10);
+      if (Number.isNaN(mins) || Number.isNaN(secs)) return 0;
+      return mins * 60 + secs;
+    }
+    function fmtSeconds(sec){
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${m}:${String(s).padStart(2,'0')}`;
     }
 
     function buildSongMap(){
@@ -405,15 +427,10 @@
       return unique(p).sort((a,b)=>a.localeCompare(b));
     }
 
-    // ----------------- Collections model -----------------
-
     function adaptLegacySetlistsToCollections(){
-      // If LIB.collections missing but LIB.setlists exists, adapt it.
       if (Array.isArray(LIB.collections)) return;
-      if (!Array.isArray(LIB.setlists)) {
-        LIB.collections = [];
-        return;
-      }
+      if (!Array.isArray(LIB.setlists)) { LIB.collections = []; return; }
+
       LIB.collections = LIB.setlists.map(sl => ({
         id: sl.id || sl.name || '',
         type: 'gig',
@@ -429,7 +446,6 @@
 
     function ensureSmartAllSongsCollection(){
       if (!Array.isArray(LIB.collections)) LIB.collections = [];
-
       if (!LIB.collections.some(c => String(c.id) === '_all_songs')){
         LIB.collections.unshift({
           id: "_all_songs",
@@ -444,14 +460,10 @@
     function getCollections(){
       return Array.isArray(LIB.collections) ? LIB.collections : [];
     }
-
     function findCollectionById(id){
       return getCollections().find(c => String(c.id) === String(id));
     }
-
-    function isSmartCollection(c){
-      return c && c.type === 'smart';
-    }
+    function isSmartCollection(c){ return c && c.type === 'smart'; }
 
     function computeAllSongsUidList(){
       const uids = Array.from(SONG_MAP.keys());
@@ -471,18 +483,11 @@
       if (isSmartCollection(col)){
         const mode = col.rules?.mode;
         if (mode === 'all_songs'){
-          return [{
-            id: "all",
-            name: "All Songs",
-            songs: computeAllSongsUidList()
-          }];
+          return [{ id:"all", name:"All Songs", songs: computeAllSongsUidList() }];
         }
-        // Unknown smart mode: no sets
         return [];
       }
-
       const sets = Array.isArray(col.sets) ? col.sets : [];
-      // Ensure stable ids
       return sets.map((s, idx) => ({
         id: s.id || `set${idx+1}`,
         name: s.name || `Set ${idx+1}`,
@@ -493,30 +498,6 @@
     function findSetInCollection(col, setId){
       const sets = getSetsForCollection(col);
       return sets.find(s => String(s.id) === String(setId)) || null;
-    }
-
-    // ----------------- UI wiring -----------------
-
-    function renderSummary(){
-      const songCount = (LIB.songs || []).length;
-      const collectionCount = getCollections().length;
-      const personas = computePersonas();
-      const personaText = personas.length ? personas.join(', ') : '—';
-
-      summaryCards.innerHTML = `
-        <div class="card">
-          <h3>Library</h3>
-          <div class="small">Songs: <b>${songCount}</b></div>
-          <div class="small">Collections: <b>${collectionCount}</b></div>
-          <div class="small">Last consolidated:</div>
-          <div class="small"><b>${LIB.lastConsolidated || '—'}</b></div>
-        </div>
-        <div class="card">
-          <h3>Personas</h3>
-          <div class="small"><b>${escapeHtml(personaText)}</b></div>
-        </div>
-      `;
-      summaryCards.style.display = 'flex';
     }
 
     function populatePersonaSelect(){
@@ -548,7 +529,6 @@
         collectionSelect.disabled = true;
         return;
       }
-
       cols.forEach(c => {
         const opt = document.createElement('option');
         opt.value = String(c.id);
@@ -602,24 +582,84 @@
     function buildUidOrder(){
       const col = findCollectionById(CURRENT_COLLECTION_ID);
       const set = findSetInCollection(col, CURRENT_SET_ID);
-      const uids = Array.isArray(set?.songs) ? set.songs.map(String) : [];
-      return uids;
+      return Array.isArray(set?.songs) ? set.songs.map(String) : [];
+    }
+
+    function computeSetDuration(uids){
+      let total = 0;
+      for (const uid of (uids || [])){
+        const s = SONG_MAP.get(String(uid));
+        total += fmtDurationToSeconds(s?.duration);
+      }
+      return total;
+    }
+
+    function computeSingerCounts(uids){
+      const counts = {};
+      for (const uid of (uids || [])){
+        const s = SONG_MAP.get(String(uid));
+        const singer = (s?.singer || '').trim();
+        if (!singer) continue;
+        counts[singer] = (counts[singer] || 0) + 1;
+      }
+      return counts;
+    }
+
+    function renderSummaryStrip(){
+      const col = findCollectionById(CURRENT_COLLECTION_ID);
+      const set = findSetInCollection(col, CURRENT_SET_ID);
+
+      if (!col || !set){
+        summaryStrip.style.display = 'none';
+        return;
+      }
+
+      const uids = Array.isArray(set.songs) ? set.songs : [];
+      const totalSec = computeSetDuration(uids);
+      const singerCounts = computeSingerCounts(uids);
+      const singerKeys = Object.keys(singerCounts).sort((a,b)=>a.localeCompare(b));
+
+      let singerHtml = '';
+      if (singerKeys.length > 1){
+        singerHtml = singerKeys.map(k => `<span class="pill">${escapeHtml(k)}: <b>${singerCounts[k]}</b></span>`).join(' ');
+      } else if (singerKeys.length === 1){
+        // keep it minimal if only one singer
+        singerHtml = `<span class="pill">${escapeHtml(singerKeys[0])}: <b>${singerCounts[singerKeys[0]]}</b></span>`;
+      }
+
+      summaryStrip.innerHTML = `
+        <span class="k">Now:</span>
+        <span class="v">${escapeHtml(col.name || col.id)}</span>
+        <span class="k">→</span>
+        <span class="v">${escapeHtml(set.name || set.id)}</span>
+
+        <span class="pill">Songs: <b>${uids.length}</b></span>
+        <span class="pill">Set: <b>${fmtSeconds(totalSec)}</b></span>
+        ${singerHtml ? singerHtml : ''}
+
+        <span class="spacer"></span>
+        <span class="k">Consolidated:</span>
+        <span class="v">${escapeHtml(LIB.lastConsolidated || '—')}</span>
+      `;
+      summaryStrip.style.display = 'flex';
     }
 
     function renderSongTable(){
       const col = findCollectionById(CURRENT_COLLECTION_ID);
+      const set = findSetInCollection(col, CURRENT_SET_ID);
+
       if (!col){
         setStatus('No collection selected.');
         songRows.innerHTML = '';
         layout.style.display = 'none';
+        summaryStrip.style.display = 'none';
         return;
       }
-
-      const set = findSetInCollection(col, CURRENT_SET_ID);
       if (!set){
         setStatus('No set selected.');
         songRows.innerHTML = '';
         layout.style.display = 'none';
+        summaryStrip.style.display = 'none';
         return;
       }
 
@@ -628,7 +668,7 @@
 
       let missing = 0;
 
-      CURRENT_UID_ORDER.forEach(uid => {
+      CURRENT_UID_ORDER.forEach((uid, idx) => {
         const s = SONG_MAP.get(uid);
         const tr = document.createElement('tr');
         tr.className = 'clickable';
@@ -637,34 +677,37 @@
         if (!s){
           missing++;
           tr.innerHTML = `
+            <td>${idx+1}</td>
             <td><b class="warn">Missing song</b> <span class="pill">${escapeHtml(uid)}</span></td>
-            <td>—</td><td>—</td><td>—</td>
+            <td>—</td><td>—</td><td>—</td><td>—</td>
           `;
-          tr.addEventListener('click', () => {
-            setStatus(`Missing song UID: ${uid}`);
-          });
+          tr.addEventListener('click', () => setStatus(`Missing song UID: ${uid}`));
         } else {
           const title = s.title || '(untitled)';
           const artist = s.artist || '(unknown)';
           const singer = s.singer || '—';
           const duration = s.duration || '—';
-          const tempo = (s.tempo !== null && s.tempo !== undefined && s.tempo !== "") ? s.tempo : '—';
+
+          // Capo/Key: prefer song fields if present, otherwise blank (we show true meta on open)
+          const capo = (s.capo ?? '').toString().trim();
+          const key  = (s.key  ?? '').toString().trim();
 
           tr.innerHTML = `
+            <td>${idx+1}</td>
             <td><b>${escapeHtml(title)}</b> <span class="pill">${escapeHtml(artist)}</span></td>
             <td>${escapeHtml(singer)}</td>
             <td>${escapeHtml(String(duration))}</td>
-            <td>${escapeHtml(String(tempo))}</td>
+            <td>${escapeHtml(capo || '—')}</td>
+            <td>${escapeHtml(key || '—')}</td>
           `;
-          tr.addEventListener('click', async () => {
-            await openSong(uid);
-          });
+          tr.addEventListener('click', () => openSong(uid));
         }
 
         songRows.appendChild(tr);
       });
 
       layout.style.display = 'grid';
+      renderSummaryStrip();
 
       const persona = personaSelect.value || '(none)';
       const msg = `Loaded: ${col.name || col.id} → ${set.name || set.id} • Songs: ${CURRENT_UID_ORDER.length}` +
@@ -677,7 +720,6 @@
       if (song?.files && typeof song.files === 'object'){
         if (persona && song.files[persona]) return song.files[persona];
         if (song.files["_default"]) return song.files["_default"];
-
         const keys = Object.keys(song.files);
         if (keys.length) return song.files[keys[0]];
       }
@@ -721,9 +763,7 @@
           continue;
         }
 
-        if (isTag(line)){
-          continue;
-        }
+        if (isTag(line)) continue;
 
         const html = escapeHtml(line).replace(/\[([^\]]+)\]/g, (_m, chord) => {
           return `<span class="chord">[${escapeHtml(chord)}]</span>`;
@@ -757,21 +797,26 @@
         const choText = await fetchText(url);
 
         const meta = parseChordProMeta(choText);
+
         const title = song.title || meta.title || '(untitled)';
         const artist = song.artist || meta.artist || '(unknown)';
-        const singer = song.singer || meta.singer || '—';
-        const capo = meta.capo || (song.capo ?? '');
-        const key = meta.key || (song.key ?? '');
-        const tempo = meta.tempo || (song.tempo ?? '');
-        const duration = meta.duration || (song.duration ?? '');
+
+        const singer = (meta.singer || song.singer || '—');
+        const capo = (meta.capo || song.capo || '');
+        const key = (meta.key || song.key || '');
+        const tempo = (meta.tempo || song.tempo || '');
+        const duration = (meta.duration || song.duration || '');
 
         songTitleEl.textContent = `${title} — ${artist}`;
+
+        // Stage-first ordering
         songMetaEl.textContent =
-          `Persona: ${persona || '—'} | Singer: ${singer}` +
+          `Singer: ${singer}` +
           (capo ? ` | Capo: ${capo}` : '') +
           (key ? ` | Key: ${key}` : '') +
           (tempo ? ` | Tempo: ${tempo}` : '') +
           (duration ? ` | Duration: ${duration}` : '') +
+          ` | Persona: ${persona || '—'}` +
           ` | UID: ${uid}`;
 
         songBodyEl.innerHTML = chordProToHtml(choText);
@@ -780,7 +825,6 @@
         CURRENT_UID = uid;
         selectRow(uid);
         setStatus(`Loaded: ${title} — ${artist}`);
-
       }catch(e){
         console.error(e);
         setStatus(`Failed to load song UID ${uid}: ${e.message}`);
@@ -795,7 +839,6 @@
       const uid = CURRENT_UID_ORDER[nextIndex];
       if (uid) openSong(uid);
     }
-
     prevBtn.addEventListener('click', () => navDelta(-1));
     nextBtn.addEventListener('click', () => navDelta(1));
 
@@ -804,29 +847,25 @@
       collectionSelect.disabled = true;
       setSelect.disabled = true;
       personaSelect.disabled = true;
-      summaryCards.style.display = 'none';
+      summaryStrip.style.display = 'none';
       layout.style.display = 'none';
       songPanel.style.display = 'none';
       songRows.innerHTML = '';
       CURRENT_UID = null;
       CURRENT_UID_ORDER = [];
 
-      const url = '../library/library.index.json';
-
       try{
-        LIB = await fetchJSON(url);
+        LIB = await fetchJSON('../library/library.index.json');
         buildSongMap();
 
-        // Move to collections-first model
         adaptLegacySetlistsToCollections();
         ensureSmartAllSongsCollection();
 
-        renderSummary();
         populatePersonaSelect();
         populateCollectionSelect();
         populateSetSelect();
 
-        // restore previous selections where possible
+        // Restore previous selections
         const savedCol = localStorage.getItem('cps_collection');
         if (savedCol && getCollections().some(c => String(c.id) === String(savedCol))){
           collectionSelect.value = savedCol;
@@ -836,11 +875,10 @@
 
         renderSongTable();
 
-        // Auto-open the first song (nice for iPad)
+        // Auto-open first song
         if (CURRENT_UID_ORDER.length){
           const first = CURRENT_UID_ORDER[0];
-          const exists = SONG_MAP.get(first);
-          if (exists) openSong(first);
+          if (SONG_MAP.get(first)) openSong(first);
         }
 
       }catch(e){
@@ -849,14 +887,12 @@
       }
     }
 
-    // Events
     refreshBtn.addEventListener('click', loadLibrary);
 
     collectionSelect.addEventListener('change', () => {
       CURRENT_COLLECTION_ID = collectionSelect.value;
       localStorage.setItem('cps_collection', CURRENT_COLLECTION_ID);
 
-      // reset set selection for this collection
       populateSetSelect();
       const savedKey = `cps_set_${String(CURRENT_COLLECTION_ID)}`;
       localStorage.removeItem(savedKey);
@@ -888,7 +924,6 @@
       else renderSongTable();
     });
 
-    // Init
     loadLibrary();
   </script>
 </body>

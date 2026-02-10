@@ -21,12 +21,10 @@ import argparse
 import json
 import os
 import re
-import sys
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-
 
 TAG_RE = re.compile(r"^\s*\{([a-zA-Z0-9_\-]+)\s*:\s*(.*?)\}\s*$")
 
@@ -151,7 +149,6 @@ def load_setlists(setlists_path: Path) -> dict:
 
             return migrated
 
-        # Unknown
         raise ValueError("setlists.json must contain either 'collections' or 'setlists'")
 
     except Exception as e:
@@ -198,7 +195,8 @@ def consolidate(repo_root: Path, verbose: bool = True) -> Tuple[dict, dict, dict
         setlists = load_setlists(setlists_path)
     except Exception as e:
         log["errors"].append(str(e))
-        setlists = {"version": 1, "setlists": []}
+        # IMPORTANT: match the "collections" shape used everywhere else
+        setlists = {"version": 1, "updated": now_iso_local(), "collections": []}
 
     log["counts"]["setlists"] = len(setlists.get("collections", []))
 
@@ -222,7 +220,6 @@ def consolidate(repo_root: Path, verbose: bool = True) -> Tuple[dict, dict, dict
             missing_uid_files.append(relpath(repo_root, f))
             continue
 
-        # Create / merge record
         rec = songs_by_uid.get(uid)
         if rec is None:
             rec = {
@@ -239,7 +236,7 @@ def consolidate(repo_root: Path, verbose: bool = True) -> Tuple[dict, dict, dict
             }
             songs_by_uid[uid] = rec
 
-        # Prefer first non-empty metadata (stable), but fill gaps
+        # Fill gaps only (stable)
         for k, v in [
             ("title", meta.title),
             ("artist", meta.artist),
@@ -253,13 +250,12 @@ def consolidate(repo_root: Path, verbose: bool = True) -> Tuple[dict, dict, dict
                 rec[k] = v
 
         # Track persona -> file
+        this_path = relpath(repo_root, f)
         if persona:
             if persona not in rec["personas"]:
                 rec["personas"].append(persona)
 
             existing = rec["files"].get(persona)
-            this_path = relpath(repo_root, f)
-
             if existing and existing != this_path:
                 log["counts"]["uidCollisionsPersona"] += 1
                 log["warnings"].append(
@@ -268,20 +264,17 @@ def consolidate(repo_root: Path, verbose: bool = True) -> Tuple[dict, dict, dict
             else:
                 rec["files"][persona] = this_path
         else:
-            # Persona missing - still allow file discovery under a fallback key
             fallback_key = "_default"
-            this_path = relpath(repo_root, f)
             if fallback_key not in rec["files"]:
                 rec["files"][fallback_key] = this_path
                 log["warnings"].append(
                     f"UID {uid} file missing persona tag. Using fallback '_default': {this_path}"
                 )
 
-        # Basic metadata warnings
         if not meta.title:
-            log["warnings"].append(f"UID {uid} missing {{title:}} in {relpath(repo_root, f)}")
+            log["warnings"].append(f"UID {uid} missing {{title:}} in {this_path}")
         if not meta.artist:
-            log["warnings"].append(f"UID {uid} missing {{artist:}} in {relpath(repo_root, f)}")
+            log["warnings"].append(f"UID {uid} missing {{artist:}} in {this_path}")
 
     log["counts"]["uidsMissing"] = len(missing_uid_files)
     if missing_uid_files:
@@ -290,8 +283,12 @@ def consolidate(repo_root: Path, verbose: bool = True) -> Tuple[dict, dict, dict
         if len(missing_uid_files) > 50:
             log["warnings"].append(f"...and {len(missing_uid_files) - 50} more files missing UID")
 
-    # Build songs.index.json (derived)
-    songs_list = sorted(songs_by_uid.values(), key=lambda r: ((r.get("title") or ""), (r.get("artist") or ""), r["uid"]))
+    # Build songs.index.json
+    songs_list = sorted(
+        songs_by_uid.values(),
+        key=lambda r: ((r.get("title") or ""), (r.get("artist") or ""), r["uid"])
+    )
+
     songs_index = {
         "generated": now_iso_local(),
         "songCount": len(songs_list),
@@ -304,14 +301,14 @@ def consolidate(repo_root: Path, verbose: bool = True) -> Tuple[dict, dict, dict
     referenced = 0
 
     for col in setlists.get("collections", []):
-    sets = col.get("sets", [])
-    for s in sets:
-        uids = s.get("songs", [])
-        if isinstance(uids, list):
-            for uid in uids:
-                referenced += 1
-                if uid not in songs_by_uid:
-                    missing_uids.append(str(uid))
+        sets = col.get("sets", [])
+        for s in sets:
+            uids = s.get("songs", [])
+            if isinstance(uids, list):
+                for uid in uids:
+                    referenced += 1
+                    if uid not in songs_by_uid:
+                        missing_uids.append(str(uid))
 
     log["counts"]["setlistSongsReferenced"] = referenced
     log["counts"]["setlistMissingUids"] = len(missing_uids)
@@ -323,17 +320,15 @@ def consolidate(repo_root: Path, verbose: bool = True) -> Tuple[dict, dict, dict
         if len(uniq) > 50:
             log["warnings"].append(f"...and {len(uniq) - 50} more missing UIDs referenced by setlists")
 
-    # Build library.index.json (derived master)
- library_index = {
-    "version": 1,
-    "lastConsolidated": now_iso_local(),
-    "songs": songs_list,
-    "collections": setlists.get("collections", []),
-}
+    # Build library.index.json (master)
+    library_index = {
+        "version": 1,
+        "lastConsolidated": now_iso_local(),
+        "songs": songs_list,
+        "collections": setlists.get("collections", []),
+    }
 
-    finished = now_iso_local()
-    log["finished"] = finished
-
+    log["finished"] = now_iso_local()
     return songs_index, library_index, log
 
 
@@ -351,12 +346,10 @@ def main() -> int:
     out_library = library_dir / "library.index.json"
     out_log = library_dir / "consolidate.log.json"
 
-    # If fatal errors occurred (e.g. missing songs folder), don't write partial indexes
     if log.get("errors"):
         print("❌ Consolidation failed:")
         for e in log["errors"]:
             print(" -", e)
-        # Still write log for diagnostics
         library_dir.mkdir(parents=True, exist_ok=True)
         out_log.write_text(json.dumps(log, indent=2), encoding="utf-8")
         print(f"Log written: {out_log}")
@@ -371,7 +364,7 @@ def main() -> int:
         print(f" - Songs indexed: {log['counts']['songsIndexed']}")
         print(f" - .cho files found: {log['counts']['choFilesFound']}")
         print(f" - Missing UID files: {log['counts']['uidsMissing']}")
-        print(f" - Setlists: {log['counts']['setlists']}")
+        print(f" - Collections: {log['counts']['setlists']}")
         print(f" - Setlist missing UIDs: {log['counts']['setlistMissingUids']}")
         print("Outputs:")
         print(f" - {out_songs}")

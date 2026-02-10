@@ -68,6 +68,14 @@
       gap:10px;
       align-items:center;
       flex-wrap:wrap;
+      transition: transform 180ms ease, opacity 180ms ease;
+    }
+
+    /* Auto-hide top bar when in stageMode (menu hidden) */
+    body.stageMode header.autoHidden{
+      transform: translateY(-120%);
+      opacity: 0;
+      pointer-events:none;
     }
 
     .brand{
@@ -120,6 +128,7 @@
       padding: 8px 12px;
       max-width: 1200px;
       margin: 0 auto;
+      display:none; /* we’re hiding the redundant “Loaded…” line */
     }
 
     /* App layout */
@@ -129,7 +138,7 @@
       max-width: 1400px;
       margin: 0 auto;
       padding: 12px;
-      padding-top: 6px;
+      padding-top: 10px;
     }
 
     /* Sidebar */
@@ -252,6 +261,9 @@
       padding:12px 14px;
       background:var(--card);
       border-bottom:1px solid var(--border);
+      position: sticky;
+      top: 0; /* inside panel it will “pin” nicely */
+      z-index: 5;
     }
     .songTitle{
       font-weight:900;
@@ -285,6 +297,8 @@
       white-space:pre-wrap;
       word-break:break-word;
       overflow-x:auto;
+      max-height: calc(100vh - 150px);
+      overflow-y:auto;
     }
 
     .line{
@@ -306,7 +320,7 @@
       font-weight:800;
     }
 
-    /* Collapsed sidebar (Stage Mode) */
+    /* Collapsed sidebar (menu hidden) */
     body.stageMode .sidebar{
       display:none;
     }
@@ -410,13 +424,29 @@
 </head>
 
 <body>
-  <header>
+  <header id="topHeader">
     <div class="brand">
       <button id="menuBtn" title="Show/hide menu">☰ Menu</button>
       <span>Stage Viewer</span>
     </div>
 
-    <label>
+    <!-- Collections mode (preferred) -->
+    <label id="collectionWrap" style="display:none;">
+      Collection:
+      <select id="collectionSelect" disabled>
+        <option>Loading…</option>
+      </select>
+    </label>
+
+    <label id="setWrap" style="display:none;">
+      Set:
+      <select id="setSelect" disabled>
+        <option>Loading…</option>
+      </select>
+    </label>
+
+    <!-- Fallback setlist mode -->
+    <label id="setlistWrap" style="display:none;">
       Setlist:
       <select id="setlistSelect" disabled>
         <option>Loading…</option>
@@ -430,11 +460,7 @@
       </select>
     </label>
 
-    <button id="prevBtn" title="Previous song">« Prev</button>
-    <button id="nextBtn" title="Next song" class="btnPrimary">Next »</button>
-
     <button id="infoBtn" title="Info">i</button>
-    <button id="stageBtn" title="Stage Mode (hide menu)">Stage</button>
     <button id="refreshBtn" title="Reload library index">Refresh</button>
     <button id="themeBtn" title="Toggle light/dark">Toggle Theme</button>
   </header>
@@ -450,10 +476,10 @@
       <div class="sidebarBody">
         <div class="miniRow">
           <span class="pill" id="songsCountPill">Songs: —</span>
-          <span class="pill" id="setlistsCountPill">Setlists: —</span>
+          <span class="pill" id="setlistsCountPill">Lists: —</span>
         </div>
 
-        <div class="sectionTitle">Songs in setlist</div>
+        <div class="sectionTitle">Songs</div>
         <div class="songList" id="songList"></div>
       </div>
     </aside>
@@ -465,7 +491,11 @@
             <div class="songTitle" id="songTitle">—</div>
             <div class="songMeta" id="songMeta">—</div>
           </div>
+
+          <!-- Prev/Next ALWAYS visible here (survives header auto-hide) -->
           <div class="songHeaderRight">
+            <button id="prevBtn" title="Previous song">« Prev</button>
+            <button id="nextBtn" title="Next song" class="btnPrimary">Next »</button>
             <span class="pill pillAccent" id="capoPill" style="display:none;">CAPO —</span>
             <span class="pill" id="setPill" style="display:none;">—</span>
           </div>
@@ -515,16 +545,23 @@
     })();
 
     // --- DOM ---
+    const topHeader = document.getElementById('topHeader');
+
     const statusEl = document.getElementById('status');
-    const setlistSelect = document.getElementById('setlistSelect');
-    const personaSelect = document.getElementById('personaSelect');
     const refreshBtn = document.getElementById('refreshBtn');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
 
     const menuBtn = document.getElementById('menuBtn');
-    const stageBtn = document.getElementById('stageBtn');
-    const sidebar = document.getElementById('sidebar');
+
+    // Selects
+    const collectionWrap = document.getElementById('collectionWrap');
+    const collectionSelect = document.getElementById('collectionSelect');
+    const setWrap = document.getElementById('setWrap');
+    const setSelect = document.getElementById('setSelect');
+
+    const setlistWrap = document.getElementById('setlistWrap');
+    const setlistSelect = document.getElementById('setlistSelect');
+
+    const personaSelect = document.getElementById('personaSelect');
 
     const songListEl = document.getElementById('songList');
     const songPanel = document.getElementById('songPanel');
@@ -535,6 +572,9 @@
     const capoPill = document.getElementById('capoPill');
     const setPill = document.getElementById('setPill');
 
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
     const floatNav = document.getElementById('floatNav');
     const scrollUpBtn = document.getElementById('scrollUpBtn');
     const scrollDownBtn = document.getElementById('scrollDownBtn');
@@ -543,20 +583,36 @@
     const songsCountPill = document.getElementById('songsCountPill');
     const setlistsCountPill = document.getElementById('setlistsCountPill');
 
+    // Info modal
     const infoBtn = document.getElementById('infoBtn');
     const modalBackdrop = document.getElementById('modalBackdrop');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const infoKv = document.getElementById('infoKv');
 
     // --- State ---
-    let LIB = null;             // library.index.json
-    let SONG_MAP = new Map();   // uid -> song record
+    let LIB = null;
+    let SONG_MAP = new Map();
+
+    // Two modes:
+    // 1) Collections mode: LIB.collections exists. User chooses collection + set; we render songs from that set.
+    // 2) Fallback setlist mode: LIB.setlists exists. User chooses setlist; we render songs from its sets.
+    let USING_COLLECTIONS = false;
+
+    let CURRENT_COLLECTION_ID = null;
+    let CURRENT_SET_ID = null;
+
     let CURRENT_SETLIST_ID = null;
 
     let CURRENT_UID_ORDER = [];
     let CURRENT_UID = null;
 
-    function setStatus(msg){ statusEl.textContent = msg; }
+    // Header auto-hide timer when stageMode
+    let headerHideTimer = null;
+
+    function setStatus(msg){
+      // status line is hidden; keep for debugging if you want later
+      statusEl.textContent = msg;
+    }
 
     async function fetchJSON(url){
       const res = await fetch(url, { cache: 'no-store' });
@@ -599,89 +655,6 @@
         }
       });
       return unique(p).sort((a,b)=>a.localeCompare(b));
-    }
-
-    function ensureVirtualAllSongsSetlist(){
-      // If no setlists exist, create an in-memory virtual setlist so viewer still works.
-      if (!Array.isArray(LIB.setlists) || !LIB.setlists.length){
-        const uids = Array.from(SONG_MAP.keys());
-        uids.sort((a,b)=>{
-          const sa = SONG_MAP.get(a), sb = SONG_MAP.get(b);
-          const ta = (sa?.title||"").toLowerCase(), tb = (sb?.title||"").toLowerCase();
-          const aa = (sa?.artist||"").toLowerCase(), ab = (sb?.artist||"").toLowerCase();
-          if (ta !== tb) return ta.localeCompare(tb);
-          if (aa !== ab) return aa.localeCompare(ab);
-          return a.localeCompare(b);
-        });
-
-        LIB.setlists = [{
-          id: "_all_songs",
-          name: "All Songs",
-          notes: "Virtual (auto-generated)",
-          sets: [{ id: "main", name: "All Songs", songs: uids }]
-        }];
-      }
-    }
-
-    function populatePersonaSelect(){
-      const personas = computePersonas();
-      personaSelect.innerHTML = '';
-      if (!personas.length){
-        personaSelect.innerHTML = '<option value="">(none)</option>';
-        personaSelect.disabled = true;
-        return;
-      }
-      personas.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p;
-        opt.textContent = p;
-        personaSelect.appendChild(opt);
-      });
-
-      const saved = localStorage.getItem('cps_persona');
-      if (saved && personas.includes(saved)) personaSelect.value = saved;
-
-      personaSelect.disabled = false;
-    }
-
-    function populateSetlistSelect(){
-      setlistSelect.innerHTML = '';
-      const setlists = Array.isArray(LIB.setlists) ? LIB.setlists : [];
-      if (!setlists.length){
-        setlistSelect.innerHTML = '<option value="">(no setlists)</option>';
-        setlistSelect.disabled = true;
-        return;
-      }
-
-      setlists.forEach(sl => {
-        const opt = document.createElement('option');
-        opt.value = String(sl.id || sl.name || '');
-        opt.textContent = sl.name || sl.id || '(unnamed)';
-        setlistSelect.appendChild(opt);
-      });
-
-      const saved = localStorage.getItem('cps_setlist');
-      const values = setlists.map(sl => String(sl.id || sl.name || ''));
-      const pick = (saved && values.includes(saved)) ? saved : values[0];
-
-      setlistSelect.value = pick;
-      CURRENT_SETLIST_ID = pick;
-      setlistSelect.disabled = false;
-    }
-
-    function findSetlistById(id){
-      const setlists = Array.isArray(LIB.setlists) ? LIB.setlists : [];
-      return setlists.find(sl => String(sl.id || sl.name || '') === String(id));
-    }
-
-    function buildUidOrderFromSetlist(setlist){
-      const uids = [];
-      const sets = Array.isArray(setlist?.sets) ? setlist.sets : [];
-      sets.forEach(s => {
-        const arr = Array.isArray(s.songs) ? s.songs : [];
-        arr.forEach(uid => uids.push(String(uid)));
-      });
-      return uids;
     }
 
     function resolveChoPathForPersona(song, persona){
@@ -743,33 +716,170 @@
 
     function renderSidebarStats(){
       const songCount = (LIB.songs || []).length;
-      const setlistCount = (LIB.setlists || []).length;
       songsCountPill.textContent = `Songs: ${songCount}`;
-      setlistsCountPill.textContent = `Setlists: ${setlistCount}`;
+
+      const listCount = USING_COLLECTIONS
+        ? (Array.isArray(LIB.collections) ? LIB.collections.length : 0)
+        : (Array.isArray(LIB.setlists) ? LIB.setlists.length : 0);
+
+      setlistsCountPill.textContent = USING_COLLECTIONS ? `Collections: ${listCount}` : `Lists: ${listCount}`;
       libMiniPill.textContent = LIB.lastConsolidated ? `Updated: ${LIB.lastConsolidated}` : `Updated: —`;
     }
 
+    // ---------- Selection Model (Collections mode) ----------
+    function getCollectionById(id){
+      return (LIB.collections || []).find(c => String(c.id) === String(id));
+    }
+    function getSetFromCollection(collection, setId){
+      const sets = Array.isArray(collection?.sets) ? collection.sets : [];
+      return sets.find(s => String(s.id) === String(setId));
+    }
+
+    function populateCollectionSelect(){
+      const cols = Array.isArray(LIB.collections) ? LIB.collections : [];
+      collectionSelect.innerHTML = '';
+      cols.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = String(c.id);
+        opt.textContent = c.name || c.id || '(collection)';
+        collectionSelect.appendChild(opt);
+      });
+
+      const saved = localStorage.getItem('cps_collection');
+      const ids = cols.map(c => String(c.id));
+      const pick = (saved && ids.includes(saved)) ? saved : (ids[0] || null);
+
+      if (pick){
+        collectionSelect.value = pick;
+        CURRENT_COLLECTION_ID = pick;
+      }
+
+      collectionSelect.disabled = !pick;
+    }
+
+    function populateSetSelect(){
+      const col = getCollectionById(CURRENT_COLLECTION_ID);
+      const sets = Array.isArray(col?.sets) ? col.sets : [];
+
+      setSelect.innerHTML = '';
+      sets.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = String(s.id);
+        opt.textContent = s.name || s.id || '(set)';
+        setSelect.appendChild(opt);
+      });
+
+      const savedKey = `cps_set_${CURRENT_COLLECTION_ID || ''}`;
+      const saved = localStorage.getItem(savedKey);
+      const ids = sets.map(s => String(s.id));
+      const pick = (saved && ids.includes(saved)) ? saved : (ids[0] || null);
+
+      if (pick){
+        setSelect.value = pick;
+        CURRENT_SET_ID = pick;
+      } else {
+        CURRENT_SET_ID = null;
+      }
+
+      setSelect.disabled = !pick;
+    }
+
+    function buildUidOrderFromCurrentSelection(){
+      if (USING_COLLECTIONS){
+        const col = getCollectionById(CURRENT_COLLECTION_ID);
+        if (!col) return [];
+        const set = getSetFromCollection(col, CURRENT_SET_ID);
+        const uids = Array.isArray(set?.songs) ? set.songs.map(x => String(x)) : [];
+        return uids;
+      } else {
+        const sl = findSetlistById(CURRENT_SETLIST_ID);
+        if (!sl) return [];
+        return buildUidOrderFromSetlist(sl);
+      }
+    }
+
+    // ---------- Fallback Setlist mode ----------
+    function ensureVirtualAllSongsSetlist(){
+      if (!Array.isArray(LIB.setlists) || !LIB.setlists.length){
+        const uids = Array.from(SONG_MAP.keys());
+        uids.sort((a,b)=>{
+          const sa = SONG_MAP.get(a), sb = SONG_MAP.get(b);
+          const ta = (sa?.title||"").toLowerCase(), tb = (sb?.title||"").toLowerCase();
+          const aa = (sa?.artist||"").toLowerCase(), ab = (sb?.artist||"").toLowerCase();
+          if (ta !== tb) return ta.localeCompare(tb);
+          if (aa !== ab) return aa.localeCompare(ab);
+          return a.localeCompare(b);
+        });
+
+        LIB.setlists = [{
+          id: "_all_songs",
+          name: "All Songs",
+          notes: "Virtual (auto-generated)",
+          sets: [{ id: "main", name: "All Songs", songs: uids }]
+        }];
+      }
+    }
+
+    function populateSetlistSelect(){
+      setlistSelect.innerHTML = '';
+      const setlists = Array.isArray(LIB.setlists) ? LIB.setlists : [];
+      setlists.forEach(sl => {
+        const opt = document.createElement('option');
+        opt.value = String(sl.id || sl.name || '');
+        opt.textContent = sl.name || sl.id || '(unnamed)';
+        setlistSelect.appendChild(opt);
+      });
+
+      const saved = localStorage.getItem('cps_setlist');
+      const values = setlists.map(sl => String(sl.id || sl.name || ''));
+      const pick = (saved && values.includes(saved)) ? saved : values[0];
+
+      setlistSelect.value = pick;
+      CURRENT_SETLIST_ID = pick;
+      setlistSelect.disabled = false;
+    }
+
+    function findSetlistById(id){
+      const setlists = Array.isArray(LIB.setlists) ? LIB.setlists : [];
+      return setlists.find(sl => String(sl.id || sl.name || '') === String(id));
+    }
+
+    function buildUidOrderFromSetlist(setlist){
+      const uids = [];
+      const sets = Array.isArray(setlist?.sets) ? setlist.sets : [];
+      sets.forEach(s => {
+        const arr = Array.isArray(s.songs) ? s.songs : [];
+        arr.forEach(uid => uids.push(String(uid)));
+      });
+      return uids;
+    }
+
+    // ---------- Shared rendering ----------
+    function renderSetPill(){
+      if (USING_COLLECTIONS){
+        const col = getCollectionById(CURRENT_COLLECTION_ID);
+        const set = col ? getSetFromCollection(col, CURRENT_SET_ID) : null;
+        const label = col
+          ? `${(col.name || col.id)} • ${(set?.name || set?.id || 'Set')}`
+          : '—';
+        setPill.style.display = 'inline-block';
+        setPill.textContent = label;
+      } else {
+        const sl = findSetlistById(CURRENT_SETLIST_ID);
+        setPill.style.display = 'inline-block';
+        setPill.textContent = sl ? (sl.name || sl.id || 'Setlist') : '—';
+      }
+    }
+
     function renderSongList(){
-      const setlist = findSetlistById(CURRENT_SETLIST_ID);
-      if (!setlist){
-        setStatus('No setlist selected.');
-        songListEl.innerHTML = `<div style="padding:12px;color:var(--muted)">No setlist selected.</div>`;
+      CURRENT_UID_ORDER = buildUidOrderFromCurrentSelection();
+      songListEl.innerHTML = '';
+
+      if (!CURRENT_UID_ORDER.length){
+        songListEl.innerHTML = `<div style="padding:12px;color:var(--muted)">No songs in this selection.</div>`;
         return;
       }
 
-      CURRENT_UID_ORDER = buildUidOrderFromSetlist(setlist);
-      songListEl.innerHTML = '';
-
-      // For display: also capture which set each song came from (first match)
-      const uidToSetName = new Map();
-      (setlist.sets || []).forEach(st => {
-        (st.songs || []).forEach(uid => {
-          const k = String(uid);
-          if (!uidToSetName.has(k)) uidToSetName.set(k, st.name || st.id || 'Set');
-        });
-      });
-
-      let missing = 0;
       CURRENT_UID_ORDER.forEach(uid => {
         const s = SONG_MAP.get(uid);
         const div = document.createElement('div');
@@ -777,7 +887,6 @@
         div.setAttribute('data-uid', uid);
 
         if (!s){
-          missing++;
           div.innerHTML = `
             <div class="songTop">
               <div class="songTitleMini warn">Missing song</div>
@@ -785,14 +894,13 @@
             </div>
             <div class="songMetaMini">—</div>
           `;
-          div.addEventListener('click', () => setStatus(`Missing song UID: ${uid}`));
+          div.addEventListener('click', () => {});
         } else {
           const title = s.title || '(untitled)';
           const artist = s.artist || '(unknown)';
           const singer = s.singer || '—';
           const duration = s.duration || '—';
           const tempo = (s.tempo !== null && s.tempo !== undefined && s.tempo !== "") ? s.tempo : '—';
-          const setName = uidToSetName.get(uid) || (setlist.name || 'Setlist');
 
           div.innerHTML = `
             <div class="songTop">
@@ -800,10 +908,9 @@
                 <div class="songTitleMini">${escapeHtml(title)}</div>
                 <div class="songArtistMini">${escapeHtml(artist)}</div>
               </div>
-              <span class="pill">${escapeHtml(setName)}</span>
+              <span class="pill">🎤 ${escapeHtml(singer)}</span>
             </div>
             <div class="songMetaMini">
-              <span>🎤 ${escapeHtml(singer)}</span>
               <span>⏱ ${escapeHtml(String(duration))}</span>
               <span>🎛 ${escapeHtml(String(tempo))}</span>
             </div>
@@ -814,14 +921,7 @@
         songListEl.appendChild(div);
       });
 
-      setPill.style.display = 'inline-block';
-      setPill.textContent = setlist.name || setlist.id || 'Setlist';
-
-      const persona = personaSelect.value || '(none)';
-      const msg = `Loaded: ${setlist.name || setlist.id} • Songs: ${CURRENT_UID_ORDER.length}` +
-                  (missing ? ` • Missing: ${missing}` : '') +
-                  ` • Persona: ${persona}`;
-      setStatus(msg);
+      renderSetPill();
     }
 
     function selectSidebarRow(uid){
@@ -831,22 +931,14 @@
 
     async function openSong(uid){
       const song = SONG_MAP.get(uid);
-      if (!song){
-        setStatus(`Missing song UID: ${uid}`);
-        return;
-      }
+      if (!song) return;
 
       const persona = personaSelect.value || '';
       const choRel = resolveChoPathForPersona(song, persona);
-      if (!choRel){
-        setStatus(`No .cho file found for UID ${uid} (persona "${persona}")`);
-        return;
-      }
+      if (!choRel) return;
 
       try{
         const url = choRel.startsWith("../") ? choRel : ("../" + choRel);
-
-        setStatus(`Loading song…`);
         const choText = await fetchText(url);
 
         const meta = parseChordProMeta(choText);
@@ -860,8 +952,8 @@
 
         songTitleEl.textContent = `${title} — ${artist}`;
 
-        // Minimal always-visible meta (no UID)
-        let metaBits = [];
+        // Keep this minimal (no UID)
+        const metaBits = [];
         metaBits.push(`Persona: ${persona || '—'}`);
         metaBits.push(`Singer: ${singer || '—'}`);
         if (key) metaBits.push(`Key: ${key}`);
@@ -869,7 +961,6 @@
         if (duration) metaBits.push(`Duration: ${duration}`);
         songMetaEl.textContent = metaBits.join('  •  ');
 
-        // Capo pill
         if (capo){
           capoPill.style.display = 'inline-block';
           capoPill.textContent = `CAPO ${capo}`;
@@ -885,11 +976,9 @@
 
         CURRENT_UID = uid;
         selectSidebarRow(uid);
-        setStatus(`Loaded: ${title} — ${artist}`);
 
       }catch(e){
         console.error(e);
-        setStatus(`Failed to load song UID ${uid}: ${e.message}`);
       }
     }
 
@@ -902,7 +991,6 @@
     }
 
     function scrollByScreen(dir){
-      // Scroll the song body panel by ~80% viewport height
       const amt = Math.round(window.innerHeight * 0.8);
       const delta = dir === 'up' ? -amt : amt;
       songBodyEl.scrollBy({ top: delta, left: 0, behavior: 'smooth' });
@@ -913,41 +1001,75 @@
     scrollUpBtn.addEventListener('click', () => scrollByScreen('up'));
     scrollDownBtn.addEventListener('click', () => scrollByScreen('down'));
 
-    // Sidebar/menu controls
-    menuBtn.addEventListener('click', () => {
-      // On desktop/tablet, we toggle stageMode off/on
-      document.body.classList.toggle('stageMode');
-      localStorage.setItem('cps_stageMode', document.body.classList.contains('stageMode') ? '1' : '0');
-    });
+    // Menu toggle (this is your “hide menu / show menu”)
+    function setStageMode(enabled){
+      document.body.classList.toggle('stageMode', !!enabled);
+      localStorage.setItem('cps_stageMode', enabled ? '1' : '0');
 
-    stageBtn.addEventListener('click', () => {
-      document.body.classList.toggle('stageMode');
-      localStorage.setItem('cps_stageMode', document.body.classList.contains('stageMode') ? '1' : '0');
+      // When entering stageMode, auto-hide the top header after a short delay
+      if (enabled){
+        scheduleHeaderAutoHide();
+      } else {
+        topHeader.classList.remove('autoHidden');
+        clearTimeout(headerHideTimer);
+      }
+    }
+
+    menuBtn.addEventListener('click', () => {
+      const enabled = !document.body.classList.contains('stageMode');
+      setStageMode(enabled);
     });
 
     (function initStageMode(){
       const s = localStorage.getItem('cps_stageMode');
-      if (s === '1') document.body.classList.add('stageMode');
+      if (s === '1') setStageMode(true);
     })();
+
+    function scheduleHeaderAutoHide(){
+      clearTimeout(headerHideTimer);
+      // show immediately, then hide after 1.8s
+      topHeader.classList.remove('autoHidden');
+      headerHideTimer = setTimeout(() => {
+        if (document.body.classList.contains('stageMode')){
+          topHeader.classList.add('autoHidden');
+        }
+      }, 1800);
+    }
+
+    function nudgeHeaderVisible(){
+      if (!document.body.classList.contains('stageMode')) return;
+      topHeader.classList.remove('autoHidden');
+      scheduleHeaderAutoHide();
+    }
+
+    // Tap/move to reveal header in stageMode
+    window.addEventListener('mousemove', nudgeHeaderVisible, { passive:true });
+    window.addEventListener('touchstart', nudgeHeaderVisible, { passive:true });
+    window.addEventListener('scroll', nudgeHeaderVisible, { passive:true });
 
     // Info modal
     function openInfoModal(){
       if (!LIB) return;
 
-      const setlist = findSetlistById(CURRENT_SETLIST_ID);
       const persona = personaSelect.value || '';
       const song = CURRENT_UID ? SONG_MAP.get(CURRENT_UID) : null;
 
       const rows = [];
 
-      // Library
       rows.push(['Library songs', String((LIB.songs || []).length)]);
-      rows.push(['Library setlists', String((LIB.setlists || []).length)]);
       rows.push(['Last consolidated', LIB.lastConsolidated || '—']);
-      rows.push(['Selected setlist', setlist ? (setlist.name || setlist.id) : '—']);
       rows.push(['Selected persona', persona || '—']);
 
-      // Song
+      if (USING_COLLECTIONS){
+        const col = getCollectionById(CURRENT_COLLECTION_ID);
+        const set = col ? getSetFromCollection(col, CURRENT_SET_ID) : null;
+        rows.push(['Collection', col ? (col.name || col.id) : '—']);
+        rows.push(['Set', set ? (set.name || set.id) : '—']);
+      } else {
+        const sl = findSetlistById(CURRENT_SETLIST_ID);
+        rows.push(['Setlist', sl ? (sl.name || sl.id) : '—']);
+      }
+
       rows.push(['—', '—']);
       rows.push(['Current song', song ? (song.title || '(untitled)') : '—']);
       rows.push(['Artist', song ? (song.artist || '—') : '—']);
@@ -956,7 +1078,6 @@
       rows.push(['Tempo', song ? (String(song.tempo ?? '—')) : '—']);
       rows.push(['UID', CURRENT_UID || '—']);
 
-      // File paths (helpful for debugging)
       if (song && song.files){
         const p = persona && song.files[persona] ? song.files[persona] : (song.files._default || '');
         rows.push(['Resolved file', p || '—']);
@@ -995,16 +1116,41 @@
     modalBackdrop.addEventListener('click', (e) => {
       if (e.target === modalBackdrop) closeInfoModal();
     });
+
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeInfoModal();
       if (e.key === 'ArrowLeft') navDelta(-1);
       if (e.key === 'ArrowRight') navDelta(1);
     });
 
+    function populatePersonaSelect(){
+      const personas = computePersonas();
+      personaSelect.innerHTML = '';
+      if (!personas.length){
+        personaSelect.innerHTML = '<option value="">(none)</option>';
+        personaSelect.disabled = true;
+        return;
+      }
+      personas.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        personaSelect.appendChild(opt);
+      });
+
+      const saved = localStorage.getItem('cps_persona');
+      if (saved && personas.includes(saved)) personaSelect.value = saved;
+
+      personaSelect.disabled = false;
+    }
+
+    personaSelect.addEventListener('change', () => {
+      localStorage.setItem('cps_persona', personaSelect.value);
+      if (CURRENT_UID) openSong(CURRENT_UID);
+    });
+
     async function loadLibrary(){
-      setStatus('Loading library index…');
-      setlistSelect.disabled = true;
-      personaSelect.disabled = true;
+      // Reset
       songListEl.innerHTML = '';
       emptyState.style.display = 'block';
       songPanel.style.display = 'none';
@@ -1012,27 +1158,90 @@
       CURRENT_UID = null;
       CURRENT_UID_ORDER = [];
 
+      // Hide/select control blocks until we know which mode
+      collectionWrap.style.display = 'none';
+      setWrap.style.display = 'none';
+      setlistWrap.style.display = 'none';
+
+      collectionSelect.disabled = true;
+      setSelect.disabled = true;
+      setlistSelect.disabled = true;
+      personaSelect.disabled = true;
+
       const url = '../library/library.index.json';
 
       try{
         LIB = await fetchJSON(url);
         buildSongMap();
-        ensureVirtualAllSongsSetlist();
 
-        renderSidebarStats();
-        populatePersonaSelect();
-        populateSetlistSelect();
+        // Decide mode
+        USING_COLLECTIONS = Array.isArray(LIB.collections) && LIB.collections.length > 0;
 
-        // restore previous selection if possible
-        const saved = localStorage.getItem('cps_setlist');
-        if (saved) {
-          setlistSelect.value = saved;
-          CURRENT_SETLIST_ID = saved;
+        if (USING_COLLECTIONS){
+          collectionWrap.style.display = '';
+          setWrap.style.display = '';
+
+          populateCollectionSelect();
+          populateSetSelect();
+
+          collectionSelect.addEventListener('change', () => {
+            CURRENT_COLLECTION_ID = collectionSelect.value;
+            localStorage.setItem('cps_collection', CURRENT_COLLECTION_ID);
+
+            populateSetSelect();
+
+            CURRENT_UID = null;
+            renderSidebarStats();
+            renderSongList();
+
+            if (CURRENT_UID_ORDER.length){
+              const first = CURRENT_UID_ORDER[0];
+              if (SONG_MAP.get(first)) openSong(first);
+            }
+          }, { once:false });
+
+          setSelect.addEventListener('change', () => {
+            CURRENT_SET_ID = setSelect.value;
+            const key = `cps_set_${CURRENT_COLLECTION_ID || ''}`;
+            localStorage.setItem(key, CURRENT_SET_ID);
+
+            CURRENT_UID = null;
+            renderSidebarStats();
+            renderSongList();
+
+            if (CURRENT_UID_ORDER.length){
+              const first = CURRENT_UID_ORDER[0];
+              if (SONG_MAP.get(first)) openSong(first);
+            }
+          }, { once:false });
+
+        } else {
+          // fallback to setlists
+          ensureVirtualAllSongsSetlist();
+
+          setlistWrap.style.display = '';
+          populateSetlistSelect();
+
+          setlistSelect.addEventListener('change', () => {
+            CURRENT_SETLIST_ID = setlistSelect.value;
+            localStorage.setItem('cps_setlist', CURRENT_SETLIST_ID);
+
+            CURRENT_UID = null;
+            renderSidebarStats();
+            renderSongList();
+
+            if (CURRENT_UID_ORDER.length){
+              const first = CURRENT_UID_ORDER[0];
+              if (SONG_MAP.get(first)) openSong(first);
+            }
+          }, { once:false });
         }
 
+        populatePersonaSelect();
+        renderSidebarStats();
         renderSongList();
 
-        // Auto-open first song (nice on iPad)
+        // Auto-open first song
         if (CURRENT_UID_ORDER.length){
           const first = CURRENT_UID_ORDER[0];
           if (SONG_MAP.get(first)) openSong(first);
@@ -1040,29 +1249,10 @@
 
       }catch(e){
         console.error(e);
-        setStatus(`Failed to load library: ${e.message}`);
       }
     }
 
     refreshBtn.addEventListener('click', loadLibrary);
-
-    setlistSelect.addEventListener('change', () => {
-      CURRENT_SETLIST_ID = setlistSelect.value;
-      localStorage.setItem('cps_setlist', CURRENT_SETLIST_ID);
-      CURRENT_UID = null;
-      renderSongList();
-
-      // Auto-open first song in new setlist
-      if (CURRENT_UID_ORDER.length){
-        const first = CURRENT_UID_ORDER[0];
-        if (SONG_MAP.get(first)) openSong(first);
-      }
-    });
-
-    personaSelect.addEventListener('change', () => {
-      localStorage.setItem('cps_persona', personaSelect.value);
-      if (CURRENT_UID) openSong(CURRENT_UID);
-    });
 
     // Init
     loadLibrary();

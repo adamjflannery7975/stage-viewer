@@ -1214,27 +1214,54 @@ function nvCreate(){
   const ed = document.getElementById('editor');
   if (!ed) return;
 
-  if (!/\{uid:/i.test(ed.value)){
+  // 1) Ensure the editor text contains the current meta fields BEFORE forking
+  const meta = {
+    title:   (document.getElementById('mTitle')?.value || '').trim(),
+    artist:  (document.getElementById('mArtist')?.value || '').trim(),
+    singer:  (document.getElementById('mSinger')?.value || '').trim(),
+    key:     (document.getElementById('mKey')?.value || '').trim(),
+    capo:    (document.getElementById('mCapo')?.value || '').trim(),
+    tempo:   (document.getElementById('mTempo')?.value || '').trim(),
+    dur:     (document.getElementById('mDur')?.value || '').trim()
+  };
+
+  // Upsert core tags (only if value exists)
+  if (meta.title)  ed.value = __upsertTag(ed.value, 'title', meta.title);
+  if (meta.artist) ed.value = __upsertTag(ed.value, 'artist', meta.artist);
+  if (meta.singer) ed.value = __upsertTag(ed.value, 'singer', meta.singer);
+  if (meta.key)    ed.value = __upsertTag(ed.value, 'key', meta.key);
+  if (meta.capo)   ed.value = __upsertTag(ed.value, 'capo', meta.capo);
+  if (meta.tempo)  ed.value = __upsertTag(ed.value, 'tempo', meta.tempo);
+  if (meta.dur)    ed.value = __upsertTag(ed.value, 'duration', meta.dur);
+
+  // 2) Ensure UID exists, then replace it with a new one (fork)
+  if (!/\{uid:/i.test(ed.value)) {
     ed.value = `{uid: ${generateUid()}}\n` + ed.value;
   }
   ed.value = ed.value.replace(/\{uid:\s*.*?\}/i, `{uid: ${generateUid()}}`);
 
-  // Standardised tag
+  // 3) Set version for the fork + remove legacy persona to avoid duplicates
   ed.value = __upsertTag(ed.value, 'version', ver);
   ed.value = ed.value.replace(/\{persona:\s*.*?\}\s*\n?/ig, '');
 
+  // 4) Re-populate meta inputs from the editor (so UI shows original values)
+  populateMetaFromChordProText(ed.value);
+
+  // 5) Update dropdown if option exists
   const vSel = document.getElementById('mPersona');
-  if (vSel){
+  if (vSel) {
     const has = Array.from(vSel.options).some(o => o.value === ver);
     if (has) vSel.value = ver;
   }
 
+  // 6) SAFETY: clear file handle so you can't overwrite the original
   __fsHandle = null;
   __fsLastModified = null;
   __openedFileName = null;
   const sb = document.getElementById('saveBackBtn');
   if (sb) sb.style.display = 'none';
 
+  // 7) Force Save As prompt (Chrome/Edge)
   __needsSaveAsPrompt = true;
   __showSaveAsBanner();
 

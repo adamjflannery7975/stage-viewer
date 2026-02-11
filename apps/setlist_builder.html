@@ -5,6 +5,9 @@
   <title>ChordPro Studio – Setlist Builder</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- Shared theme helpers -->
+  <script src="../shared/theme.js"></script>
+
   <style>
     :root{
       --bg:#0f1115;
@@ -32,7 +35,6 @@
     }
 
     *{ box-sizing:border-box; }
-
     body{
       margin:0;
       font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
@@ -43,10 +45,10 @@
     header{
       position:sticky;
       top:0;
-      z-index:10;
+      z-index:20;
       background:var(--panel);
       border-bottom:1px solid var(--border);
-      padding:10px 14px;
+      padding:10px 12px;
       display:flex;
       gap:10px;
       align-items:center;
@@ -54,14 +56,15 @@
     }
 
     .brand{
-      font-weight:800;
+      font-weight:900;
+      letter-spacing:0.2px;
       margin-right:auto;
       display:flex;
-      gap:10px;
       align-items:center;
+      gap:10px;
     }
 
-    button, input{
+    button, select, input{
       background:var(--card);
       color:var(--text);
       border:1px solid var(--border);
@@ -74,8 +77,19 @@
     button:hover{ border-color:rgba(255,255,255,0.22); }
     body.light button:hover{ border-color:rgba(0,0,0,0.22); }
 
-    .btnPrimary{
-      border-color: rgba(106,163,255,0.45);
+    .btnPrimary{ border-color: rgba(106,163,255,0.45); }
+    .btnPrimary:hover{ border-color: rgba(106,163,255,0.85); }
+    .btnDanger{ border-color: rgba(255,106,106,0.45); }
+    .btnDanger:hover{ border-color: rgba(255,106,106,0.85); }
+
+    .pill{
+      display:inline-block;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;
     }
 
     .wrap{
@@ -84,133 +98,104 @@
       padding: 12px;
     }
 
-    .status{
-      color: var(--muted);
-      font-size: 13px;
-      margin: 10px 0 12px;
+    .hint{
+      font-size:13px;
+      color:var(--muted);
+      margin: 4px 0 12px;
     }
-
-    .chips{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin: 6px 0 12px;
-    }
-    .chip{
-      display:inline-flex;
-      gap:6px;
-      align-items:center;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,0.02);
-      color: var(--muted);
-      font-size:12px;
-    }
-    body.light .chip{ background: rgba(0,0,0,0.03); }
 
     .grid{
       display:grid;
-      grid-template-columns: 320px 320px 1fr;
+      grid-template-columns: 330px 330px 1fr;
       gap:12px;
       align-items:start;
     }
-    @media (max-width: 1100px){
+    @media (max-width: 1050px){
       .grid{ grid-template-columns: 1fr; }
     }
 
     .panel{
       background: var(--panel);
-      border:1px solid var(--border);
+      border: 1px solid var(--border);
       border-radius: 14px;
-      box-shadow: var(--shadow);
       overflow:hidden;
+      box-shadow: var(--shadow);
     }
-    .panelHead{
-      padding: 10px 12px;
-      border-bottom:1px solid var(--border);
+    .panelHeader{
+      padding:10px 12px;
+      border-bottom: 1px solid var(--border);
       background: rgba(255,255,255,0.02);
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
+      flex-wrap:wrap;
     }
-    body.light .panelHead{ background: rgba(0,0,0,0.03); }
-    .panelHead h3{
+    body.light .panelHeader{ background: rgba(0,0,0,0.03); }
+    .panelHeader h3{
       margin:0;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
       color: var(--muted);
     }
-    .panelBody{
-      padding: 10px 10px 12px;
-    }
+    .panelBody{ padding:10px; }
 
-    .row{
+    .btnRow{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
-      margin-bottom: 10px;
-      align-items:center;
+      margin-bottom:8px;
+    }
+    .smallNote{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:8px;
+      line-height:1.35;
     }
 
     .list{
       border:1px solid var(--border);
-      border-radius: 14px;
+      border-radius:14px;
       overflow:hidden;
       background: var(--card);
     }
-    .item{
-      padding: 10px 12px;
+    .listItem{
+      padding:10px 12px;
       border-bottom:1px solid var(--border);
       cursor:pointer;
       display:flex;
-      align-items:center;
+      align-items:flex-start;
       justify-content:space-between;
       gap:10px;
     }
-    .item:last-child{ border-bottom:none; }
-    .item:hover{ background: rgba(106,163,255,0.10); }
-    body.light .item:hover{ background: rgba(42,102,255,0.08); }
-    .item.selected{ background: rgba(126,231,135,0.10); }
-    body.light .item.selected{ background: rgba(31,138,59,0.08); }
+    .listItem:last-child{ border-bottom:none; }
+    .listItem:hover{ background: rgba(106,163,255,0.10); }
+    body.light .listItem:hover{ background: rgba(42,102,255,0.08); }
+    .listItem.selected{ background: rgba(126,231,135,0.10); }
+    body.light .listItem.selected{ background: rgba(31,138,59,0.08); }
 
-    .itemTitle{
-      font-weight:800;
-      font-size: 14px;
-    }
-    .itemSub{
-      color: var(--muted);
-      font-size: 12px;
-    }
-    .badge{
-      display:inline-block;
-      padding: 3px 8px;
-      border-radius: 999px;
+    .liMain{ display:flex; flex-direction:column; gap:2px; }
+    .liTitle{ font-weight:900; font-size:14px; }
+    .liSub{ color:var(--muted); font-size:12px; }
+
+    .liTag{
+      align-self:center;
+      font-size:11px;
+      padding:2px 8px;
+      border-radius:999px;
       border:1px solid var(--border);
       color: var(--muted);
-      font-size: 12px;
       white-space:nowrap;
-    }
-
-    .split{
-      display:grid;
-      grid-template-columns: 1fr 360px;
-      gap:12px;
-      align-items:start;
-    }
-    @media (max-width: 1100px){
-      .split{ grid-template-columns: 1fr; }
     }
 
     table{
       width:100%;
       border-collapse:collapse;
-      border-radius:14px;
       overflow:hidden;
+      border-radius:14px;
       border:1px solid var(--border);
-      background: var(--card);
+      background:var(--card);
     }
     th, td{
       text-align:left;
@@ -224,125 +209,133 @@
       text-transform:uppercase;
       letter-spacing:0.08em;
       color:var(--muted);
-      background: rgba(255,255,255,0.02);
+      background:rgba(255,255,255,0.02);
     }
-    body.light th{ background: rgba(0,0,0,0.03); }
+    body.light th{ background:rgba(0,0,0,0.03); }
     tr:last-child td{ border-bottom:none; }
-    tr.click{ cursor:pointer; }
-    tr.click:hover td{ background: rgba(106,163,255,0.10); }
-    body.light tr.click:hover td{ background: rgba(42,102,255,0.08); }
+    tr.clickable{ cursor:pointer; }
+    tr.clickable:hover td{ background: rgba(106,163,255,0.10); }
+    body.light tr.clickable:hover td{ background: rgba(42,102,255,0.08); }
+    tr.selected td{ background: rgba(126,231,135,0.10); }
+    body.light tr.selected td{ background: rgba(31,138,59,0.08); }
 
-    .warn{ color: var(--danger); font-weight: 800; }
-    .muted{ color: var(--muted); }
-
-    .smallHelp{
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.35;
-      margin-top: 8px;
+    .twoCol{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width: 1050px){
+      .twoCol{ grid-template-columns:1fr; }
     }
   </style>
 </head>
 <body>
   <header>
     <div class="brand">Setlist Builder</div>
-    <button id="themeBtn">Toggle Theme</button>
-    <span class="chip" id="modeChip">Mode: https://</span>
+    <span class="pill" id="modePill">Mode: —</span>
     <button id="reloadBtn">Reload</button>
     <button id="downloadBtn" class="btnPrimary">Download setlists.json</button>
+    <button id="themeBtn">Toggle Theme</button>
   </header>
 
   <div class="wrap">
-    <div class="status" id="status">Loading…</div>
-
-    <div class="chips" id="chips"></div>
+    <div class="hint" id="hint">Loading…</div>
 
     <div class="grid">
       <!-- Collections -->
       <div class="panel">
-        <div class="panelHead">
+        <div class="panelHeader">
           <h3>Collections</h3>
-          <div class="row" style="margin:0;">
-            <button id="addCollectionBtn">Add</button>
-            <button id="renameCollectionBtn">Rename</button>
-            <button id="deleteCollectionBtn">Delete</button>
-          </div>
+          <span class="pill" id="collectionsPill">—</span>
         </div>
         <div class="panelBody">
-          <input id="filterCollections" placeholder="Filter collections…" style="width:100%; margin-bottom:10px;">
+          <div class="btnRow">
+            <button id="addCollectionBtn">Add</button>
+            <button id="renameCollectionBtn">Rename</button>
+            <button id="deleteCollectionBtn" class="btnDanger">Delete</button>
+          </div>
+          <input id="collectionFilter" placeholder="Filter collections…" style="width:100%; margin-bottom:10px;">
           <div class="list" id="collectionsList"></div>
-          <div class="smallHelp">
-            Tip: <b>All Songs</b> is smart (auto) and not editable here.
+
+          <div class="smallNote">
+            Tip: “All Songs” can be a <b>smart</b> collection and won’t be edited here. List collections hold one or more sets you can build.
           </div>
         </div>
       </div>
 
       <!-- Sets -->
       <div class="panel">
-        <div class="panelHead">
+        <div class="panelHeader">
           <h3>Sets in Collection</h3>
-          <div class="row" style="margin:0;">
-            <button id="addSetBtn">Add Set</button>
-            <button id="renameSetBtn">Rename</button>
-            <button id="deleteSetBtn">Delete</button>
-          </div>
+          <span class="pill" id="setsPill">—</span>
         </div>
         <div class="panelBody">
-          <div class="row" style="margin-top:0;">
+          <div class="btnRow">
+            <button id="addSetBtn">Add Set</button>
+            <button id="renameSetBtn">Rename</button>
+            <button id="deleteSetBtn" class="btnDanger">Delete</button>
             <button id="setUpBtn" title="Move set up">↑</button>
             <button id="setDownBtn" title="Move set down">↓</button>
-            <span class="badge" id="selectedCollectionBadge">No collection selected</span>
           </div>
-
           <div class="list" id="setsList"></div>
 
-          <div class="smallHelp">
-            Smart collection sets are generated at runtime.<br>
-            For list collections, edit sets and songs.
-          </div>
+          <div class="smallNote" id="setsNote">Select a collection.</div>
         </div>
       </div>
 
-      <!-- Songs + In Set -->
+      <!-- Songs -->
       <div class="panel">
-        <div class="panelHead">
+        <div class="panelHeader">
           <h3>Set Songs</h3>
-          <div class="row" style="margin:0;">
-            <input id="songSearch" placeholder="Search songs…" style="min-width:220px;">
-            <button id="songUpBtn" title="Move selected song up">↑</button>
-            <button id="songDownBtn" title="Move selected song down">↓</button>
-            <button id="removeSongBtn">Remove</button>
-          </div>
+          <span class="pill" id="songsPill">—</span>
         </div>
         <div class="panelBody">
-          <div class="split">
+          <div class="twoCol">
             <div>
-              <div class="badge" id="libraryBadge" style="margin-bottom:10px;">Library</div>
+              <input id="songSearch" placeholder="Search songs…" style="width:100%; margin-bottom:10px;">
               <table>
                 <thead>
                   <tr>
-                    <th style="width:52%;">Song</th>
+                    <th style="width:46%;">Song</th>
                     <th style="width:18%;">Singer</th>
-                    <th style="width:15%;">Dur</th>
-                    <th style="width:15%;">Tempo</th>
+                    <th style="width:18%;">Dur</th>
+                    <th style="width:18%;">Tempo</th>
                   </tr>
                 </thead>
-                <tbody id="songsTable"></tbody>
+                <tbody id="songTable"></tbody>
               </table>
-              <div class="smallHelp">
-                Click a song to add it to the selected set.
-              </div>
+              <div class="smallNote">Click a song to add it to the selected set.</div>
             </div>
 
             <div>
-              <div class="badge" id="inSetBadge" style="margin-bottom:10px;">In set (ordered)</div>
-              <div class="list" id="inSetList"></div>
+              <div class="btnRow" style="justify-content:space-between;">
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <button id="inSetUpBtn" title="Move selected song up">↑</button>
+                  <button id="inSetDownBtn" title="Move selected song down">↓</button>
+                  <button id="removeSongBtn" class="btnDanger">Remove</button>
+                </div>
+                <span class="pill" id="inSetPill">—</span>
+              </div>
 
-              <div class="smallHelp">
-                Save by downloading <b>setlists.json</b>, then overwrite <b>library/setlists.json</b> in your repo and commit.
+              <table>
+                <thead>
+                  <tr>
+                    <th>In Set (ordered)</th>
+                  </tr>
+                </thead>
+                <tbody id="inSetTable"></tbody>
+              </table>
+
+              <div class="smallNote" id="smartNote" style="display:none;">
+                Smart collection (<b id="smartName">—</b>). Nothing to edit here.
+              </div>
+
+              <div class="smallNote" style="margin-top:10px;">
+                Save via <b>Download setlists.json</b>, then overwrite <code>library/setlists.json</code> in your repo folder and commit.
               </div>
             </div>
           </div>
+
         </div>
       </div>
 
@@ -350,43 +343,34 @@
   </div>
 
   <script>
-    // Theme
+    // --- Shared Theme toggle (UI mode) ---
     const themeBtn = document.getElementById('themeBtn');
     themeBtn.addEventListener('click', () => {
-      document.body.classList.toggle('light');
-      localStorage.setItem('cps_theme', document.body.classList.contains('light') ? 'light' : 'dark');
+      if (window.CPS_THEME && CPS_THEME.getUiMode && CPS_THEME.applyUiMode) {
+        const next = (CPS_THEME.getUiMode() === 'light') ? 'dark' : 'light';
+        CPS_THEME.applyUiMode(next);
+      } else {
+        document.body.classList.toggle('light');
+      }
     });
-    (function initTheme(){
-      const t = localStorage.getItem('cps_theme');
-      if (t === 'light') document.body.classList.add('light');
-    })();
 
-    // Mode chip
-    const modeChip = document.getElementById('modeChip');
-    modeChip.textContent = `Mode: ${location.protocol}//`;
-
-    const statusEl = document.getElementById('status');
-    const chipsEl = document.getElementById('chips');
-
-    // UI elements
-    const collectionsList = document.getElementById('collectionsList');
-    const setsList = document.getElementById('setsList');
-    const songsTable = document.getElementById('songsTable');
-    const inSetList = document.getElementById('inSetList');
-
-    const filterCollections = document.getElementById('filterCollections');
-    const songSearch = document.getElementById('songSearch');
-
-    const selectedCollectionBadge = document.getElementById('selectedCollectionBadge');
-    const libraryBadge = document.getElementById('libraryBadge');
-    const inSetBadge = document.getElementById('inSetBadge');
-
+    // --- DOM ---
+    const modePill = document.getElementById('modePill');
+    const hintEl = document.getElementById('hint');
     const reloadBtn = document.getElementById('reloadBtn');
     const downloadBtn = document.getElementById('downloadBtn');
+
+    const collectionsPill = document.getElementById('collectionsPill');
+    const collectionsList = document.getElementById('collectionsList');
+    const collectionFilter = document.getElementById('collectionFilter');
 
     const addCollectionBtn = document.getElementById('addCollectionBtn');
     const renameCollectionBtn = document.getElementById('renameCollectionBtn');
     const deleteCollectionBtn = document.getElementById('deleteCollectionBtn');
+
+    const setsPill = document.getElementById('setsPill');
+    const setsList = document.getElementById('setsList');
+    const setsNote = document.getElementById('setsNote');
 
     const addSetBtn = document.getElementById('addSetBtn');
     const renameSetBtn = document.getElementById('renameSetBtn');
@@ -394,21 +378,30 @@
     const setUpBtn = document.getElementById('setUpBtn');
     const setDownBtn = document.getElementById('setDownBtn');
 
-    const songUpBtn = document.getElementById('songUpBtn');
-    const songDownBtn = document.getElementById('songDownBtn');
+    const songsPill = document.getElementById('songsPill');
+    const songSearch = document.getElementById('songSearch');
+    const songTable = document.getElementById('songTable');
+
+    const inSetPill = document.getElementById('inSetPill');
+    const inSetTable = document.getElementById('inSetTable');
+    const inSetUpBtn = document.getElementById('inSetUpBtn');
+    const inSetDownBtn = document.getElementById('inSetDownBtn');
     const removeSongBtn = document.getElementById('removeSongBtn');
 
-    // State
-    let LIB = null;           // library.index.json
-    let SETLISTS = null;      // library/setlists.json
-    let SONGS = [];           // LIB.songs
-    let collections = [];     // normalized "collections" for editing (from setlists.json)
+    const smartNote = document.getElementById('smartNote');
+    const smartName = document.getElementById('smartName');
 
-    let selectedCollectionId = null;
-    let selectedSetId = null;
+    // --- State ---
+    let LIB = null; // library.index.json (songs)
+    let SETLISTS = null; // setlists.json (collections)
+    let SONGS = []; // from library.index.json
+    let SONG_BY_UID = new Map();
+
+    let currentCollectionId = null;
+    let currentSetId = null;
     let selectedInSetUid = null;
 
-    function setStatus(msg){ statusEl.textContent = msg; }
+    function setHint(msg){ hintEl.textContent = msg; }
 
     async function fetchJSON(url){
       const res = await fetch(url, { cache: 'no-store' });
@@ -425,496 +418,505 @@
         .replaceAll("'",'&#039;');
     }
 
-    function songKey(s){
-      const t = (s.title || '').toLowerCase();
-      const a = (s.artist || '').toLowerCase();
-      return `${t}~~${a}~~${s.uid}`;
+    function slugId(input){
+      return String(input || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g,'_')
+        .replace(/^_+|_+$/g,'')
+        .slice(0,40) || ('id_' + Math.random().toString(16).slice(2,8));
     }
 
-    function normalizeCollections(setlistsJson){
-      // Expecting:
-      // { version, updated, collections: [...] }
-      // Always ensure a smart _all_songs exists
-      const out = Array.isArray(setlistsJson?.collections) ? JSON.parse(JSON.stringify(setlistsJson.collections)) : [];
-
-      const hasAll = out.some(c => c && c.id === '_all_songs');
-      if (!hasAll){
-        out.unshift({
-          id: '_all_songs',
-          type: 'smart',
-          name: 'All Songs',
-          rules: { mode: 'all_songs' },
-          sets: []
-        });
-      } else {
-        // ensure sets exists on _all_songs
-        out.forEach(c => {
-          if (c.id === '_all_songs' && !('sets' in c)) c.sets = [];
-        });
-      }
-      return out;
+    function nowIso(){
+      return new Date().toISOString();
     }
 
-    function buildChips(){
-      const libSongs = SONGS.length;
-      const colCount = collections.length;
-      const updated = SETLISTS?.updated || '—';
-      chipsEl.innerHTML = `
-        <span class="chip">Songs: <b>${libSongs}</b></span>
-        <span class="chip">Collections: <b>${colCount}</b></span>
-        <span class="chip">Setlists updated: <b>${escapeHtml(updated)}</b></span>
-        <span class="chip muted">Tip: Edit → Download → overwrite library/setlists.json → run consolidate</span>
-      `;
+    function getCollections(){
+      return Array.isArray(SETLISTS?.collections) ? SETLISTS.collections : [];
     }
 
-    function getCollectionById(id){
-      return collections.find(c => String(c.id) === String(id));
+    function findCollection(id){
+      return getCollections().find(c => String(c.id) === String(id));
     }
 
-    function getSelectedCollection(){
-      return selectedCollectionId ? getCollectionById(selectedCollectionId) : null;
+    function getSets(col){
+      return Array.isArray(col?.sets) ? col.sets : [];
     }
 
-    function getSelectedSet(){
-      const c = getSelectedCollection();
-      if (!c || !Array.isArray(c.sets)) return null;
-      return c.sets.find(s => String(s.id) === String(selectedSetId));
+    function findSet(col, setId){
+      return getSets(col).find(s => String(s.id) === String(setId));
+    }
+
+    function isSmart(col){
+      return String(col?.type || '').toLowerCase() === 'smart';
+    }
+
+    function refreshPills(){
+      collectionsPill.textContent = `Loaded: ${getCollections().length}`;
+      songsPill.textContent = `Songs: ${SONGS.length}`;
+      const col = findCollection(currentCollectionId);
+      const sets = col ? getSets(col) : [];
+      setsPill.textContent = col ? `Sets: ${sets.length}` : `—`;
+
+      const set = col ? findSet(col, currentSetId) : null;
+      const count = Array.isArray(set?.songs) ? set.songs.length : 0;
+      inSetPill.textContent = set ? `In set: ${count}` : `—`;
     }
 
     function renderCollections(){
-      const q = (filterCollections.value || '').trim().toLowerCase();
-
+      const filter = (collectionFilter.value || '').trim().toLowerCase();
       collectionsList.innerHTML = '';
-      collections
+
+      const cols = getCollections()
         .filter(c => {
+          if (!filter) return True;
           const name = (c.name || c.id || '').toLowerCase();
-          return !q || name.includes(q);
-        })
-        .forEach(c => {
-          const div = document.createElement('div');
-          div.className = 'item';
-          div.dataset.id = c.id;
-
-          if (String(c.id) === String(selectedCollectionId)) div.classList.add('selected');
-
-          const type = c.type || 'list';
-          const setCount = Array.isArray(c.sets) ? c.sets.length : 0;
-
-          div.innerHTML = `
-            <div>
-              <div class="itemTitle">${escapeHtml(c.name || c.id || '(unnamed)')}</div>
-              <div class="itemSub">${escapeHtml(type)} • ${setCount} set(s)</div>
-            </div>
-            <span class="badge">${escapeHtml(c.id)}</span>
-          `;
-
-          div.addEventListener('click', () => {
-            selectedCollectionId = c.id;
-            selectedSetId = null;
-            selectedInSetUid = null;
-            renderAll();
-          });
-
-          collectionsList.appendChild(div);
+          return name.includes(filter);
         });
+
+      // JS True isn't defined in Python. Fix in final string by manual replace.
+    }
+  </script>
+
+  <script>
+    // NOTE: The block above had a Python-friendly placeholder bug; this block contains the real logic.
+  </script>
+
+  <script>
+    function renderCollections(){
+      const filter = (collectionFilter.value || '').trim().toLowerCase();
+      collectionsList.innerHTML = '';
+
+      const cols = getCollections().filter(c => {
+        if (!filter) return true;
+        const name = (c.name || c.id || '').toLowerCase();
+        return name.includes(filter);
+      });
+
+      if (!cols.length){
+        collectionsList.innerHTML = `<div style="padding:12px;color:var(--muted)">No collections.</div>`;
+        refreshPills();
+        return;
+      }
+
+      cols.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'listItem' + ((String(c.id) === String(currentCollectionId)) ? ' selected' : '');
+        div.innerHTML = `
+          <div class="liMain">
+            <div class="liTitle">${escapeHtml(c.name || c.id || '(collection)')}</div>
+            <div class="liSub">${escapeHtml(c.id || '')}</div>
+          </div>
+          <span class="liTag">${escapeHtml(c.type || 'list')}</span>
+        `;
+        div.addEventListener('click', () => {
+          currentCollectionId = String(c.id);
+          localStorage.setItem('cps_sb_collection', currentCollectionId);
+
+          const col = findCollection(currentCollectionId);
+          const sets = getSets(col);
+          currentSetId = sets[0]?.id ? String(sets[0].id) : null;
+          localStorage.setItem('cps_sb_set_' + currentCollectionId, currentSetId || '');
+
+          selectedInSetUid = null;
+
+          renderCollections();
+          renderSets();
+          renderSongsPanel();
+        });
+        collectionsList.appendChild(div);
+      });
+
+      refreshPills();
     }
 
     function renderSets(){
-      const c = getSelectedCollection();
       setsList.innerHTML = '';
+      setsNote.textContent = '';
 
-      if (!c){
-        selectedCollectionBadge.textContent = 'No collection selected';
+      const col = findCollection(currentCollectionId);
+
+      if (!col){
+        setsList.innerHTML = `<div style="padding:12px;color:var(--muted)">Select a collection.</div>`;
+        refreshPills();
         return;
       }
 
-      selectedCollectionBadge.textContent = `${c.name || c.id} (${c.type || 'list'})`;
-
-      // Smart collection: nothing editable here
-      if ((c.type || '').toLowerCase() === 'smart'){
-        setsList.innerHTML = `<div style="padding:12px;color:var(--muted)">Smart collection. Sets are generated automatically.</div>`;
+      if (isSmart(col)){
+        setsList.innerHTML = `<div style="padding:12px;color:var(--muted)">Smart collection. Sets are generated at runtime.</div>`;
+        setsNote.textContent = 'Smart collection. Set editing is disabled.';
+        refreshPills();
         return;
       }
 
-      (c.sets || []).forEach(s => {
+      const sets = getSets(col);
+      if (!sets.length){
+        setsList.innerHTML = `<div style="padding:12px;color:var(--muted)">No sets in this collection.</div>`;
+        setsNote.textContent = 'Add a set to begin.';
+        refreshPills();
+        return;
+      }
+
+      sets.forEach((s, idx) => {
         const div = document.createElement('div');
-        div.className = 'item';
-        div.dataset.id = s.id;
-
-        if (String(s.id) === String(selectedSetId)) div.classList.add('selected');
-
+        div.className = 'listItem' + ((String(s.id) === String(currentSetId)) ? ' selected' : '');
         const count = Array.isArray(s.songs) ? s.songs.length : 0;
-
         div.innerHTML = `
-          <div>
-            <div class="itemTitle">${escapeHtml(s.name || s.id || '(unnamed)')}</div>
-            <div class="itemSub">${count} song(s)</div>
+          <div class="liMain">
+            <div class="liTitle">${escapeHtml(s.name || s.id || '(set)')}</div>
+            <div class="liSub">${escapeHtml(s.id || '')} • ${count} songs</div>
           </div>
-          <span class="badge">${escapeHtml(s.id)}</span>
+          <span class="liTag">#${idx+1}</span>
         `;
-
         div.addEventListener('click', () => {
-          selectedSetId = s.id;
+          currentSetId = String(s.id);
+          localStorage.setItem('cps_sb_set_' + currentCollectionId, currentSetId);
           selectedInSetUid = null;
-          renderAll();
+          renderSets();
+          renderSongsPanel();
         });
-
         setsList.appendChild(div);
       });
 
-      if (!selectedSetId && (c.sets || []).length){
-        selectedSetId = c.sets[0].id;
-      }
+      refreshPills();
     }
 
-    function renderSongsTable(){
+    function renderSongTable(){
       const q = (songSearch.value || '').trim().toLowerCase();
+      songTable.innerHTML = '';
 
-      libraryBadge.textContent = `Library (${SONGS.length})`;
+      let list = SONGS;
+      if (q){
+        list = SONGS.filter(s => {
+          const title = (s.title || '').toLowerCase();
+          const artist = (s.artist || '').toLowerCase();
+          const singer = (s.singer || '').toLowerCase();
+          return title.includes(q) || artist.includes(q) || singer.includes(q);
+        });
+      }
 
-      const visible = SONGS
-        .filter(s => {
-          if (!q) return true;
-          const t = (s.title || '').toLowerCase();
-          const a = (s.artist || '').toLowerCase();
-          const si = (s.singer || '').toLowerCase();
-          return t.includes(q) || a.includes(q) || si.includes(q);
-        })
-        .sort((a,b)=>songKey(a).localeCompare(songKey(b)));
+      if (!list.length){
+        songTable.innerHTML = `<tr><td colspan="4" style="color:var(--muted); padding:12px;">No matches.</td></tr>`;
+        return;
+      }
 
-      songsTable.innerHTML = '';
-      visible.forEach(s => {
+      list.forEach(s => {
         const tr = document.createElement('tr');
-        tr.className = 'click';
-
+        tr.className = 'clickable';
         tr.innerHTML = `
-          <td><b>${escapeHtml(s.title || '(untitled)')}</b><div class="muted" style="font-size:12px">${escapeHtml(s.artist || '(unknown)')}</div></td>
+          <td><b>${escapeHtml(s.title || '(untitled)')}</b><div class="liSub">${escapeHtml(s.artist || '')}</div></td>
           <td>${escapeHtml(s.singer || '—')}</td>
           <td>${escapeHtml(String(s.duration || '—'))}</td>
           <td>${escapeHtml(String((s.tempo ?? '—')))}</td>
         `;
-
-        tr.addEventListener('click', () => addSongToSelectedSet(String(s.uid)));
-
-        songsTable.appendChild(tr);
+        tr.addEventListener('click', () => addSongToCurrentSet(String(s.uid)));
+        songTable.appendChild(tr);
       });
     }
 
     function renderInSet(){
-      const c = getSelectedCollection();
-      const st = getSelectedSet();
+      inSetTable.innerHTML = '';
+      const col = findCollection(currentCollectionId);
+      const set = col ? findSet(col, currentSetId) : null;
 
-      inSetList.innerHTML = '';
-
-      if (!c){
-        inSetBadge.textContent = 'In set (no collection)';
-        inSetList.innerHTML = `<div style="padding:12px;color:var(--muted)">Select a collection.</div>`;
+      if (!col){
+        inSetTable.innerHTML = `<tr><td style="color:var(--muted); padding:12px;">Select a collection.</td></tr>`;
+        return;
+      }
+      if (isSmart(col)){
+        inSetTable.innerHTML = `<tr><td style="color:var(--muted); padding:12px;">Smart collection. Nothing to edit.</td></tr>`;
+        return;
+      }
+      if (!set){
+        inSetTable.innerHTML = `<tr><td style="color:var(--muted); padding:12px;">Select a set.</td></tr>`;
         return;
       }
 
-      if ((c.type || '').toLowerCase() === 'smart'){
-        inSetBadge.textContent = 'Smart collection (All Songs)';
-        inSetList.innerHTML = `<div style="padding:12px;color:var(--muted)">Nothing to edit here.</div>`;
-        return;
-      }
-
-      if (!st){
-        inSetBadge.textContent = 'In set (no set selected)';
-        inSetList.innerHTML = `<div style="padding:12px;color:var(--muted)">Select a set.</div>`;
-        return;
-      }
-
-      const uids = Array.isArray(st.songs) ? st.songs.map(String) : [];
-      inSetBadge.textContent = `In set: ${st.name || st.id} (${uids.length})`;
-
+      const uids = Array.isArray(set.songs) ? set.songs.map(x => String(x)) : [];
       if (!uids.length){
-        inSetList.innerHTML = `<div style="padding:12px;color:var(--muted)">No songs yet. Click songs on the left to add.</div>`;
+        inSetTable.innerHTML = `<tr><td style="color:var(--muted); padding:12px;">No songs in this set.</td></tr>`;
         return;
       }
 
       uids.forEach(uid => {
-        const s = SONGS.find(x => String(x.uid) === String(uid));
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.dataset.uid = uid;
-        if (String(uid) === String(selectedInSetUid)) div.classList.add('selected');
+        const s = SONG_BY_UID.get(uid);
+        const title = s ? (s.title || '(untitled)') : 'Missing song';
+        const artist = s ? (s.artist || '') : uid;
 
-        if (!s){
-          div.innerHTML = `
-            <div>
-              <div class="itemTitle warn">Missing song</div>
-              <div class="itemSub">${escapeHtml(uid)}</div>
-            </div>
-            <span class="badge">UID</span>
-          `;
-        } else {
-          div.innerHTML = `
-            <div>
-              <div class="itemTitle">${escapeHtml(s.title || '(untitled)')}</div>
-              <div class="itemSub">${escapeHtml(s.artist || '(unknown)')} • 🎤 ${escapeHtml(s.singer || '—')}</div>
-            </div>
-            <span class="badge">${escapeHtml(String(s.duration || '—'))}</span>
-          `;
-        }
-
-        div.addEventListener('click', () => {
+        const tr = document.createElement('tr');
+        tr.className = (uid === selectedInSetUid) ? 'selected clickable' : 'clickable';
+        tr.innerHTML = `<td><b>${escapeHtml(title)}</b> <span class="pill" style="margin-left:8px;">${escapeHtml(artist)}</span></td>`;
+        tr.addEventListener('click', () => {
           selectedInSetUid = uid;
-          renderInSet(); // just redraw selection highlight
+          renderInSet();
         });
-
-        inSetList.appendChild(div);
+        inSetTable.appendChild(tr);
       });
     }
 
-    function addSongToSelectedSet(uid){
-      const c = getSelectedCollection();
-      const st = getSelectedSet();
-      if (!c) return alert('Select a collection first.');
-      if ((c.type || '').toLowerCase() === 'smart') return alert('All Songs is smart and not editable.');
-      if (!st) return alert('Select a set first.');
+    function renderSongsPanel(){
+      const col = findCollection(currentCollectionId);
 
-      st.songs = Array.isArray(st.songs) ? st.songs : [];
-      st.songs.push(String(uid));
-      selectedInSetUid = String(uid);
+      if (col && isSmart(col)){
+        smartNote.style.display = '';
+        smartName.textContent = col.name || col.id || 'Smart';
+      } else {
+        smartNote.style.display = 'none';
+      }
+
+      renderSongTable();
       renderInSet();
+      refreshPills();
     }
 
-    function moveSet(delta){
-      const c = getSelectedCollection();
-      if (!c || (c.type || '').toLowerCase() === 'smart') return;
-      if (!selectedSetId) return;
+    function addSongToCurrentSet(uid){
+      const col = findCollection(currentCollectionId);
+      if (!col || isSmart(col)) return;
 
-      const idx = (c.sets || []).findIndex(s => String(s.id) === String(selectedSetId));
-      if (idx < 0) return;
-      const next = Math.min(Math.max(idx + delta, 0), c.sets.length - 1);
-      if (idx === next) return;
+      const set = findSet(col, currentSetId);
+      if (!set) return;
 
-      const [it] = c.sets.splice(idx, 1);
-      c.sets.splice(next, 0, it);
-      renderSets();
+      if (!Array.isArray(set.songs)) set.songs = [];
+      set.songs.push(uid);
+
+      selectedInSetUid = uid;
+      SETLISTS.updated = nowIso();
       renderInSet();
+      refreshPills();
     }
 
-    function moveSong(delta){
-      const c = getSelectedCollection();
-      const st = getSelectedSet();
-      if (!c || (c.type || '').toLowerCase() === 'smart') return;
-      if (!st) return;
-      if (!selectedInSetUid) return;
+    function removeSelectedFromSet(){
+      const col = findCollection(currentCollectionId);
+      if (!col || isSmart(col)) return;
 
-      const arr = Array.isArray(st.songs) ? st.songs.map(String) : [];
-      const idx = arr.findIndex(x => String(x) === String(selectedInSetUid));
-      if (idx < 0) return;
+      const set = findSet(col, currentSetId);
+      if (!set || !Array.isArray(set.songs) || !selectedInSetUid) return;
 
-      const next = Math.min(Math.max(idx + delta, 0), arr.length - 1);
-      if (idx === next) return;
+      const i = set.songs.map(String).indexOf(String(selectedInSetUid));
+      if (i >= 0) set.songs.splice(i, 1);
 
-      const [it] = arr.splice(idx, 1);
-      arr.splice(next, 0, it);
-      st.songs = arr;
-      renderInSet();
-    }
-
-    function removeSelectedSong(){
-      const c = getSelectedCollection();
-      const st = getSelectedSet();
-      if (!c || (c.type || '').toLowerCase() === 'smart') return;
-      if (!st) return;
-      if (!selectedInSetUid) return;
-
-      const arr = Array.isArray(st.songs) ? st.songs.map(String) : [];
-      const idx = arr.findIndex(x => String(x) === String(selectedInSetUid));
-      if (idx < 0) return;
-      arr.splice(idx, 1);
-      st.songs = arr;
       selectedInSetUid = null;
+      SETLISTS.updated = nowIso();
       renderInSet();
+      refreshPills();
     }
 
-    function promptText(title, def){
-      const v = prompt(title, def || '');
-      if (v === null) return null;
-      const t = v.trim();
-      return t ? t : null;
-    }
+    function moveSelectedInSet(delta){
+      const col = findCollection(currentCollectionId);
+      if (!col || isSmart(col)) return;
 
-    function slugId(name){
-      return name.toLowerCase()
-        .replace(/[^a-z0-9]+/g,'_')
-        .replace(/^_+|_+$/g,'')
-        .slice(0, 40) || ('c_' + Math.random().toString(16).slice(2, 8));
+      const set = findSet(col, currentSetId);
+      if (!set || !Array.isArray(set.songs) || !selectedInSetUid) return;
+
+      const arr = set.songs.map(String);
+      const i = arr.indexOf(String(selectedInSetUid));
+      if (i < 0) return;
+
+      const j = Math.min(Math.max(i + delta, 0), arr.length - 1);
+      if (j === i) return;
+
+      const moved = set.songs.splice(i, 1)[0];
+      set.songs.splice(j, 0, moved);
+
+      SETLISTS.updated = nowIso();
+      renderInSet();
+      refreshPills();
     }
 
     function addCollection(){
-      const name = promptText('Collection name?', 'New Collection');
+      const name = prompt('Collection name?');
       if (!name) return;
+
       const id = slugId(name);
-      if (collections.some(c => c.id === id)) return alert('That id already exists. Try a different name.');
+      const exists = !!findCollection(id);
+      const finalId = exists ? (id + '_' + Math.random().toString(16).slice(2,6)) : id;
 
-      collections.push({
-        id,
-        type: 'list',
-        name,
-        tags: [],
-        sets: [{ id: 'main', name, songs: [] }]
-      });
+      const col = { id: finalId, type: 'list', name: name, tags: [], sets: [{ id:'main', name:name, songs:[] }] };
+      SETLISTS.collections = getCollections().concat([col]);
+      SETLISTS.updated = nowIso();
 
-      selectedCollectionId = id;
-      selectedSetId = 'main';
-      selectedInSetUid = null;
-      renderAll();
+      currentCollectionId = finalId;
+      currentSetId = 'main';
+      localStorage.setItem('cps_sb_collection', currentCollectionId);
+      localStorage.setItem('cps_sb_set_' + currentCollectionId, currentSetId);
+
+      renderCollections();
+      renderSets();
+      renderSongsPanel();
     }
 
     function renameCollection(){
-      const c = getSelectedCollection();
-      if (!c) return alert('Select a collection first.');
-      if (c.id === '_all_songs') return alert('All Songs is smart and not editable.');
+      const col = findCollection(currentCollectionId);
+      if (!col) return;
 
-      const name = promptText('New collection name?', c.name || c.id);
+      const name = prompt('New collection name?', col.name || col.id || '');
       if (!name) return;
-      c.name = name;
+
+      col.name = name;
+      SETLISTS.updated = nowIso();
       renderCollections();
-      renderSets();
-      renderInSet();
     }
 
     function deleteCollection(){
-      const c = getSelectedCollection();
-      if (!c) return alert('Select a collection first.');
-      if (c.id === '_all_songs') return alert('All Songs is smart and not deletable.');
+      const col = findCollection(currentCollectionId);
+      if (!col) return;
 
-      if (!confirm(`Delete collection "${c.name || c.id}"?`)) return;
-      collections = collections.filter(x => x.id !== c.id);
+      if (!confirm(`Delete collection "${col.name || col.id}"?`)) return;
 
-      selectedCollectionId = '_all_songs';
-      selectedSetId = null;
-      selectedInSetUid = null;
-      renderAll();
+      SETLISTS.collections = getCollections().filter(c => String(c.id) !== String(currentCollectionId));
+      SETLISTS.updated = nowIso();
+
+      currentCollectionId = (getCollections()[0]?.id) ? String(getCollections()[0].id) : null;
+      currentSetId = null;
+
+      renderCollections();
+      renderSets();
+      renderSongsPanel();
     }
 
     function addSet(){
-      const c = getSelectedCollection();
-      if (!c) return alert('Select a collection first.');
-      if ((c.type || '').toLowerCase() === 'smart') return alert('Smart collections cannot be edited.');
+      const col = findCollection(currentCollectionId);
+      if (!col || isSmart(col)) return;
 
-      const name = promptText('Set name?', `Set ${(c.sets || []).length + 1}`);
+      const name = prompt('Set name?');
       if (!name) return;
 
       const id = slugId(name);
-      c.sets = Array.isArray(c.sets) ? c.sets : [];
-      if (c.sets.some(s => s.id === id)) return alert('Set id already exists in this collection.');
+      if (!Array.isArray(col.sets)) col.sets = [];
+      const exists = col.sets.some(s => String(s.id) === String(id));
+      const finalId = exists ? (id + '_' + Math.random().toString(16).slice(2,6)) : id;
 
-      c.sets.push({ id, name, songs: [] });
-      selectedSetId = id;
-      selectedInSetUid = null;
+      col.sets.push({ id: finalId, name: name, songs: [] });
+      SETLISTS.updated = nowIso();
+
+      currentSetId = finalId;
+      localStorage.setItem('cps_sb_set_' + currentCollectionId, currentSetId);
+
       renderSets();
-      renderInSet();
+      renderSongsPanel();
     }
 
     function renameSet(){
-      const c = getSelectedCollection();
-      const st = getSelectedSet();
-      if (!c || (c.type || '').toLowerCase() === 'smart') return;
-      if (!st) return alert('Select a set first.');
+      const col = findCollection(currentCollectionId);
+      if (!col || isSmart(col)) return;
 
-      const name = promptText('New set name?', st.name || st.id);
+      const set = findSet(col, currentSetId);
+      if (!set) return;
+
+      const name = prompt('New set name?', set.name || set.id || '');
       if (!name) return;
-      st.name = name;
+
+      set.name = name;
+      SETLISTS.updated = nowIso();
       renderSets();
-      renderInSet();
     }
 
     function deleteSet(){
-      const c = getSelectedCollection();
-      const st = getSelectedSet();
-      if (!c || (c.type || '').toLowerCase() === 'smart') return;
-      if (!st) return alert('Select a set first.');
+      const col = findCollection(currentCollectionId);
+      if (!col || isSmart(col)) return;
 
-      if (!confirm(`Delete set "${st.name || st.id}"?`)) return;
-      c.sets = (c.sets || []).filter(x => x.id !== st.id);
-      selectedSetId = (c.sets[0] && c.sets[0].id) || null;
+      const set = findSet(col, currentSetId);
+      if (!set) return;
+
+      if (!confirm(`Delete set "${set.name || set.id}"?`)) return;
+
+      col.sets = getSets(col).filter(s => String(s.id) !== String(currentSetId));
+      SETLISTS.updated = nowIso();
+
+      currentSetId = (getSets(col)[0]?.id) ? String(getSets(col)[0].id) : null;
+      localStorage.setItem('cps_sb_set_' + currentCollectionId, currentSetId || '');
+
       selectedInSetUid = null;
+
       renderSets();
-      renderInSet();
+      renderSongsPanel();
     }
 
-    function buildDownloadJson(){
-      // Save collections only (All Songs stays smart)
-      const now = new Date().toISOString();
-      return {
-        version: 1,
-        updated: now,
-        collections: collections.map(c => {
-          // ensure sets exists for all
-          const copy = JSON.parse(JSON.stringify(c));
-          if (!('sets' in copy)) copy.sets = [];
-          return copy;
-        })
-      };
+    function moveSet(delta){
+      const col = findCollection(currentCollectionId);
+      if (!col || isSmart(col)) return;
+
+      const sets = getSets(col);
+      const i = sets.map(s => String(s.id)).indexOf(String(currentSetId));
+      if (i < 0) return;
+
+      const j = Math.min(Math.max(i + delta, 0), sets.length - 1);
+      if (j === i) return;
+
+      const moved = sets.splice(i, 1)[0];
+      sets.splice(j, 0, moved);
+      col.sets = sets;
+
+      SETLISTS.updated = nowIso();
+      renderSets();
     }
 
     function downloadSetlists(){
-      const data = buildDownloadJson();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      if (!SETLISTS) return;
+
+      // Preserve version if present
+      if (!('version' in SETLISTS)) SETLISTS.version = 1;
+      SETLISTS.updated = nowIso();
+
+      const blob = new Blob([JSON.stringify(SETLISTS, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'setlists.json';
       document.body.appendChild(a);
       a.click();
       a.remove();
-      setStatus('Downloaded setlists.json. Overwrite library/setlists.json in your repo, commit, then run consolidate.');
-    }
-
-    function renderAll(){
-      buildChips();
-      renderCollections();
-      renderSets();
-      renderSongsTable();
-      renderInSet();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     }
 
     async function loadAll(){
-      setStatus('Loading library + setlists…');
+      // Mode indicator
+      modePill.textContent = (location.protocol === 'file:') ? 'Mode: file://' : ('Mode: ' + location.protocol);
+      setHint('Loading songs + collections…');
 
+      // Load songs library
+      LIB = await fetchJSON('../library/library.index.json');
+      SONGS = Array.isArray(LIB?.songs) ? LIB.songs : [];
+      SONG_BY_UID = new Map();
+      SONGS.forEach(s => { if (s?.uid) SONG_BY_UID.set(String(s.uid), s); });
+
+      // Load collections (preferred: library/setlists.json)
       try{
-        LIB = await fetchJSON('../library/library.index.json');
-        SONGS = Array.isArray(LIB.songs) ? LIB.songs.slice() : [];
-
-        // setlists.json might not exist on first run
-        try{
-          SETLISTS = await fetchJSON('../library/setlists.json');
-        } catch {
-          SETLISTS = { version: 1, updated: new Date().toISOString(), collections: [] };
-        }
-
-        collections = normalizeCollections(SETLISTS);
-
-        // Default selection
-        if (!selectedCollectionId) selectedCollectionId = '_all_songs';
-        if (!getCollectionById(selectedCollectionId)) selectedCollectionId = '_all_songs';
-
-        // Select first set if list collection
-        const c = getSelectedCollection();
-        if (c && (c.type || '').toLowerCase() !== 'smart' && Array.isArray(c.sets) && c.sets.length){
-          if (!selectedSetId) selectedSetId = c.sets[0].id;
-        } else {
-          selectedSetId = null;
-        }
-
-        buildChips();
-        renderAll();
-        setStatus(`Loaded ${SONGS.length} song(s) and ${collections.length} collection(s). Make changes, then Download setlists.json.`);
+        SETLISTS = await fetchJSON('../library/setlists.json');
       }catch(e){
-        console.error(e);
-        setStatus(`Failed to load: ${e.message}`);
+        // fallback: if collections exist inside library.index.json, use them
+        const cols = Array.isArray(LIB?.collections) ? LIB.collections : [];
+        SETLISTS = { version: 1, updated: nowIso(), collections: cols };
       }
+
+      // Ensure shape
+      if (!Array.isArray(SETLISTS.collections)) SETLISTS.collections = [];
+
+      const cSaved = localStorage.getItem('cps_sb_collection');
+      const cIds = SETLISTS.collections.map(c => String(c.id));
+      currentCollectionId = (cSaved && cIds.includes(cSaved)) ? cSaved : (cIds[0] || null);
+
+      if (currentCollectionId){
+        const setSaved = localStorage.getItem('cps_sb_set_' + currentCollectionId) || '';
+        const col = findCollection(currentCollectionId);
+        const sets = getSets(col);
+        const setIds = sets.map(s => String(s.id));
+        currentSetId = (setSaved && setIds.includes(setSaved)) ? setSaved : (setIds[0] || null);
+      } else {
+        currentSetId = null;
+      }
+
+      setHint(`Loaded ${SONGS.length} songs and ${SETLISTS.collections.length} collections. Make changes, then Download setlists.json.`);
+      renderCollections();
+      renderSets();
+      renderSongsPanel();
     }
 
     // Events
     reloadBtn.addEventListener('click', loadAll);
     downloadBtn.addEventListener('click', downloadSetlists);
-    filterCollections.addEventListener('input', renderCollections);
-    songSearch.addEventListener('input', renderSongsTable);
+
+    collectionFilter.addEventListener('input', renderCollections);
+    songSearch.addEventListener('input', renderSongTable);
 
     addCollectionBtn.addEventListener('click', addCollection);
     renameCollectionBtn.addEventListener('click', renameCollection);
@@ -926,12 +928,15 @@
     setUpBtn.addEventListener('click', () => moveSet(-1));
     setDownBtn.addEventListener('click', () => moveSet(1));
 
-    songUpBtn.addEventListener('click', () => moveSong(-1));
-    songDownBtn.addEventListener('click', () => moveSong(1));
-    removeSongBtn.addEventListener('click', removeSelectedSong);
+    removeSongBtn.addEventListener('click', removeSelectedFromSet);
+    inSetUpBtn.addEventListener('click', () => moveSelectedInSet(-1));
+    inSetDownBtn.addEventListener('click', () => moveSelectedInSet(1));
 
     // Init
-    loadAll();
+    loadAll().catch(err => {
+      console.error(err);
+      setHint('Failed to load. Check console + paths.');
+    });
   </script>
 </body>
 </html>

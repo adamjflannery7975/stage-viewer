@@ -748,7 +748,11 @@
 
       for (let raw of lines){
         const line = raw.replace(/\r$/, '');
-
+      // Editor-only page break marker used for PDF export.
+      // Example: "---PAGE BREAK--- [Chorus]". Never render in Stage Viewer.
+      if (/^\s*---\s*PAGE\s*BREAK\s*---/i.test(line)) {
+        continue;
+      }
         if (/^\s*\{soc\}\s*$/i.test(line) || /^\s*\{start_of_chorus\}\s*$/i.test(line)){
           inChorus = true;
           out.push(`<span class="section">Chorus</span>`);

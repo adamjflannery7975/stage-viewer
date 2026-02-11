@@ -153,7 +153,14 @@ body.font-serif { --song-font: Georgia, "Times New Roman", Times, serif; }
             background: var(--accent); 
             box-shadow: 0 0 18px rgba(0,188,212,.6);
         }
-        .btn-group { display: flex; gap: 8px; align-items: center; }
+        .btn-group{
+          display:flex;
+          gap:8px;
+          row-gap:8px;
+          align-items:center;
+          flex-wrap:wrap;          /* ✅ wrap buttons, not text */
+          justify-content:flex-end;/* keeps it neat on the right */
+        }
         .theme-select { 
             appearance: none;
             border: 1px solid #2a3a50;
@@ -192,31 +199,36 @@ body.font-serif { --song-font: Georgia, "Times New Roman", Times, serif; }
         }
 
         button { 
-            appearance: none;
-            border: 1px solid #2a3a50;
-            background: linear-gradient(180deg, #1b2a3d 0%, #152234 100%);
-            color: var(--text);
-            padding: 9px 12px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 13px;
-            box-shadow: 0 8px 20px rgba(0,0,0,.25);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            user-select: none;
-            min-width: 100px;
-            text-align: center;
-            height: 36px;
-            justify-content: center;
-            box-sizing: border-box;
+          white-space: nowrap;     /* ✅ no text wrapping */
+          display: inline-flex;    /* ✅ consistent icon+text alignment */
+          align-items: center;
+          gap: 8px;
+          appearance: none;
+          border: 1px solid #2a3a50;
+          background: linear-gradient(180deg, #1b2a3d 0%, #152234 100%);
+          color: var(--text);
+          padding: 9px 12px;
+          border-radius: 10px;
+          cursor: pointer;
+          font-weight: 700;
+          font-size: 13px;
+          box-shadow: 0 8px 20px rgba(0,0,0,.25);
+          user-select: none;
+          min-width: 100px;
+          text-align: center;
+          height: 36px;
+          justify-content: center;
+          box-sizing: border-box;
         }
         button:hover { filter: brightness(1.08); }
         button:active { transform: translateY(1px); }
         button.primary {
             border-color: rgba(0,188,212,.45);
             background: linear-gradient(180deg, rgba(0,188,212,.28) 0%, rgba(0,188,212,.18) 100%);
+        }
+        #saveBackBtn,
+        #newVersionBtn{
+        min-width: 160px;
         }
         button.danger {
             border-color: rgba(225,29,72,.4);

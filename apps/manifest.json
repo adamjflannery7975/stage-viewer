@@ -1,8 +1,8 @@
 {
-  "name": "ChordPro Stage Viewer",
-  "short_name": "Stage Viewer",
-  "description": "Offline-first Stage Viewer for ChordPro Studio",
-  "start_url": "./Stage_Viewer_Styled_v5_songcards_singer_PWA.html",
+  "name": "ChordPro Studio",
+  "short_name": "ChordPro",
+  "description": "Offline-first ChordPro Studio (Viewer, Setlist Builder, Editor)",
+  "start_url": "./apps/stage_viewer.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0b0f14",

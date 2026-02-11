@@ -1,10 +1,10 @@
 {
-  "runId": "20260210T064236Z",
-  "started": "2026-02-10T17:42:36+11:00",
-  "repoRoot": "/Users/adamflannery/Documents/GitHub/stage-viewer",
+  "runId": "20260211T100445Z",
+  "started": "2026-02-11T10:04:45+00:00",
+  "repoRoot": "/home/runner/work/stage-viewer/stage-viewer",
   "inputs": {
-    "songsDir": "/Users/adamflannery/Documents/GitHub/stage-viewer/songs",
-    "setlists": "/Users/adamflannery/Documents/GitHub/stage-viewer/library/setlists.json"
+    "songsDir": "/home/runner/work/stage-viewer/stage-viewer/songs",
+    "setlists": "/home/runner/work/stage-viewer/stage-viewer/library/setlists.json"
   },
   "counts": {
     "choFilesFound": 1,
@@ -17,5 +17,5 @@
   },
   "warnings": [],
   "errors": [],
-  "finished": "2026-02-10T17:42:38+11:00"
+  "finished": "2026-02-11T10:04:45+00:00"
 }

@@ -738,7 +738,7 @@
         if (isTag(line)) continue;
 
         const html = escapeHtml(line).replace(/\[([^\]]+)\]/g, (_m, chord) => {
-          return `<span class="chord">[${escapeHtml(chord)}]</span>`;
+          return `<span class="chord">${escapeHtml(chord)}</span>`;
         });
 
         const cls = inChorus ? "line chorusLine" : "line";

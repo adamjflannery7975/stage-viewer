@@ -29,6 +29,9 @@
       --chord:#ffd479;
 
       --shadow: 0 10px 30px rgba(0,0,0,0.25);
+
+      /* Song font (per-device) */
+      --song-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
     body.light{
       --bg:#f2f3f6;
@@ -47,6 +50,12 @@
 
       --shadow: 0 10px 30px rgba(0,0,0,0.12);
     }
+
+    /* Font presets (per-device) */
+    body.font-mono { --song-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    body.font-system { --song-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body.font-readable { --song-font: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body.font-serif { --song-font: Georgia, "Times New Roman", Times, serif; }
 
     * { box-sizing:border-box; }
 
@@ -302,7 +311,7 @@
 
     .songBody{
       padding:16px 16px 80px 16px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-family: var(--song-font);
       font-size: var(--cp-font-size);
       line-height: var(--cp-line-height);
       white-space:pre-wrap;
@@ -480,14 +489,24 @@
       </select>
     </label>
 
- <a href="./index.html" style="text-decoration:none">
-  <button title="Apps">Apps</button>
-</a>
+    <!-- NEW: Per-device font chooser -->
+    <label>
+      Font:
+      <select id="fontSelect">
+        <option value="mono">Mono</option>
+        <option value="system">System</option>
+        <option value="readable">Readable</option>
+        <option value="serif">Serif</option>
+      </select>
+    </label>
 
-<button id="infoBtn" title="Info">i</button>
-<button id="refreshBtn" title="Reload library index">Refresh</button>
-<button id="themeBtn" title="Toggle light/dark">Toggle Theme</button>
+    <a href="./index.html" style="text-decoration:none">
+      <button title="Apps">Apps</button>
+    </a>
 
+    <button id="infoBtn" title="Info">i</button>
+    <button id="refreshBtn" title="Reload library index">Refresh</button>
+    <button id="themeBtn" title="Toggle light/dark">Toggle Theme</button>
   </header>
 
   <div class="status" id="status">Loading library…</div>
@@ -588,6 +607,9 @@
 
     const personaSelect = document.getElementById('personaSelect');
 
+    // NEW: Font select
+    const fontSelect = document.getElementById('fontSelect');
+
     const songListEl = document.getElementById('songList');
     const songPanel = document.getElementById('songPanel');
     const emptyState = document.getElementById('emptyState');
@@ -613,6 +635,22 @@
     const modalBackdrop = document.getElementById('modalBackdrop');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const infoKv = document.getElementById('infoKv');
+
+    // --- Per-device font preference ---
+    function applyFontChoice(choice){
+      document.body.classList.remove('font-mono','font-system','font-readable','font-serif');
+      const c = (choice || 'mono');
+      document.body.classList.add(`font-${c}`);
+      localStorage.setItem('cps_font', c);
+    }
+    (function initFont(){
+      const saved = localStorage.getItem('cps_font') || 'mono';
+      if (fontSelect) fontSelect.value = saved;
+      applyFontChoice(saved);
+    })();
+    if (fontSelect){
+      fontSelect.addEventListener('change', () => applyFontChoice(fontSelect.value));
+    }
 
     // --- State ---
     let LIB = null;

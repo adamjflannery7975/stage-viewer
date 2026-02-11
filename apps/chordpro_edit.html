@@ -26,6 +26,9 @@
   --radius: 12px;
   --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* ✅ Shared per-device preview font (matches viewer key cps_font) */
+  --song-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 *{ box-sizing:border-box; }
 body{
@@ -36,6 +39,13 @@ body{
 }
 a{ color: var(--accent2); }
 button, select, input, textarea{ font-family:inherit; }
+
+/* ✅ Font presets (same class names as viewer) */
+body.font-mono { --song-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+body.font-system { --song-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+body.font-readable { --song-font: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+body.font-serif { --song-font: Georgia, "Times New Roman", Times, serif; }
+
 :root {
             --bg-dark: #000000; --sec-dark: #ffff00; --cho-dark: #00ffff; --chorus-dark: #ff6b6b;
             --bg-light: #ffffff; --sec-light: #d00000; --cho-light: #0056b3; --chorus-light: #d00000;
@@ -157,6 +167,28 @@ button, select, input, textarea{ font-family:inherit; }
             box-shadow: 0 8px 20px rgba(0,0,0,.25);
             height: 36px;
             width: 100%;
+        }
+
+        /* ✅ Header Font select styling to match buttons */
+        .header-select {
+            appearance: none;
+            border: 1px solid #2a3a50;
+            background: linear-gradient(180deg, #1b2a3d 0%, #152234 100%);
+            color: var(--text);
+            padding: 9px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 13px;
+            box-shadow: 0 8px 20px rgba(0,0,0,.25);
+            height: 36px;
+            min-width: 140px;
+        }
+        body.light-theme .header-select{
+            border: 1px solid #d1d5db;
+            background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+            color: #1f2937;
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
         }
 
         button { 
@@ -329,6 +361,7 @@ button, select, input, textarea{ font-family:inherit; }
             font-size: var(--font-size); 
             position: relative; 
             min-height: 1500px; 
+            font-family: var(--song-font); /* ✅ apply per-device font to preview + PDF */
         }
 
         .p-section { color: var(--section-clr) !important; font-weight: bold; display: block; margin-top: 1.2em; border-bottom: none; width: fit-content; padding-right: 40px; }
@@ -409,6 +442,7 @@ button, select, input, textarea{ font-family:inherit; }
                 padding: 50px !important;
                 background: var(--ipad-bg) !important;
                 color: var(--lyric-clr) !important;
+                font-family: var(--song-font) !important; /* ✅ ensure font applies in PDF */
             }
 
             /* Explicit colors */
@@ -632,6 +666,15 @@ button, select, input, textarea{ font-family:inherit; }
         <a href="./index.html" style="text-decoration:none">
           <button title="Apps">Apps</button>
         </a>
+
+        <!-- ✅ Font picker (shared key cps_font) -->
+        <select id="fontSelect" class="header-select" title="Preview font">
+            <option value="mono">Mono</option>
+            <option value="system">System</option>
+            <option value="readable">Readable</option>
+            <option value="serif">Serif</option>
+        </select>
+
         <button id="themeToggleBtn" onclick="toggleTheme()">🌙 Theme</button>
         <button onclick="newSong()">📄 New</button>
         <button onclick="clearAllFields()" style="background:#d9534f;">🗑️ Clear</button>
@@ -742,6 +785,23 @@ const APP_VERSION = 'Build 2026-02-08';
         light: { bg: '#ffffff', cho: '#0056b3', sec: '#d00000', chorus: '#d00000', size: 18, line: 1.4 }
     };
 
+    // ✅ Per-device preview font (shared with viewer)
+    function applyFontChoice(choice){
+        document.body.classList.remove('font-mono','font-system','font-readable','font-serif');
+        const c = (choice || 'mono');
+        document.body.classList.add(`font-${c}`);
+        localStorage.setItem('cps_font', c);
+    }
+    function initFontSelect(){
+        const fontSelect = document.getElementById('fontSelect');
+        const saved = localStorage.getItem('cps_font') || 'mono';
+        if (fontSelect) fontSelect.value = saved;
+        applyFontChoice(saved);
+        if (fontSelect){
+            fontSelect.addEventListener('change', () => applyFontChoice(fontSelect.value));
+        }
+    }
+
     // NOTE: META_IDS used only for clearing in some flows. We include mSinger here for completeness.
     const META_IDS = ['mTitle', 'mArtist', 'mSinger', 'mKey', 'mCapo', 'mTempo', 'mDur', 'mPersona'];
 
@@ -838,7 +898,9 @@ const APP_VERSION = 'Build 2026-02-08';
             if (p === "") return "<div>&nbsp;</div>";
             
             let lineClass = inChorus ? "p-chorus-text" : "";
-            return `<div class="${lineClass}">${p.replace(/\[([^\]]+)\]/g, `<span class="p-chord">[$1]</span>`)}</div>`;
+
+            // ✅ FIX: hide chord brackets in preview + PDF preview (keep chord text)
+            return `<div class="${lineClass}">${p.replace(/\[([^\]]+)\]/g, `<span class="p-chord">$1</span>`)}</div>`;
         }).join("");
 
         document.getElementById('preview').innerHTML = headerHtml + bodyHtml;
@@ -1174,7 +1236,8 @@ const APP_VERSION = 'Build 2026-02-08';
         });
     }
 
-    window.onload = () => { loadThemeSettings(); render(); t2cWire(); };
+    // ✅ Call initFontSelect on load (alongside your existing init)
+    window.onload = () => { initFontSelect(); loadThemeSettings(); render(); t2cWire(); };
 
     // ===============================
     // v2.7: Save back to file (Chrome / Edge) + New Persona Sheet

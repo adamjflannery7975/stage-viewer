@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+echo "🔄 Rebuilding library index..."
+
+# Ensure Node is found when committing from GitHub Desktop
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+node tools/rebuild_library_index.js --repo .
+
+git add library/songs.index.json
+git add library/library.index.json
+
+echo "✅ Library index updated."

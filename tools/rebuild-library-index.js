@@ -22,8 +22,23 @@ const path = require("path");
 const TAG_RE = /^\s*\{([a-zA-Z0-9_\-]+)\s*:\s*(.*?)\}\s*$/;
 
 function nowIsoLocal() {
-  // includes local offset
-  return new Date().toISOString(); // OK for generated timestamps; if you prefer local offset, we can add it
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+
+  const year = d.getFullYear();
+  const month = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+  const seconds = pad(d.getSeconds());
+
+  const offsetMin = -d.getTimezoneOffset();
+  const sign = offsetMin >= 0 ? "+" : "-";
+  const abs = Math.abs(offsetMin);
+  const offH = pad(Math.floor(abs / 60));
+  const offM = pad(abs % 60);
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${sign}${offH}:${offM}`;
 }
 
 function toPosix(p) {
@@ -110,15 +125,15 @@ async function loadSetlists(setlistsPath) {
     throw new Error("setlists.json is not a JSON object");
   }
 
-  // New format
-  if ("collections" in data) {
-    if (!Array.isArray(data.collections)) {
-      throw new Error("setlists.json 'collections' must be an array");
-    }
-    if (!("version" in data)) data.version = 1;
-    if (!("updated" in data)) data.updated = nowIsoLocal();
-    return data;
+// New format
+if ("collections" in data) {
+  if (!Array.isArray(data.collections)) {
+    throw new Error("setlists.json 'collections' must be an array");
   }
+  if (!("version" in data)) data.version = 1;
+  // IMPORTANT: do not inject timestamps here (keeps rebuild deterministic across machines/CI)
+  return data;
+}
 
   // Old format -> migrate
   if ("setlists" in data) {
@@ -314,18 +329,16 @@ async function main() {
   for (const uid of uniqMissing.slice(0, 50)) log.warnings.push(`Setlists reference missing UID: ${uid}`);
   if (uniqMissing.length > 50) log.warnings.push(`...and ${uniqMissing.length - 50} more missing UIDs referenced`);
 
-  const songsIndex = {
-    generated: nowIsoLocal(),
-    songCount: songsList.length,
-    songs: songsList,
-  };
+ const songsIndex = {
+  songCount: songsList.length,
+  songs: songsList,
+};
 
-  const libraryIndex = {
-    version: 1,
-    lastConsolidated: nowIsoLocal(),
-    songs: songsList,
-    collections: setlists.collections || [],
-  };
+const libraryIndex = {
+  version: 1,
+  songs: songsList,
+  collections: setlists.collections || [],
+};
 
   log.finished = nowIsoLocal();
 

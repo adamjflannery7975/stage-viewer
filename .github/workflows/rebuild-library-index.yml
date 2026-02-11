@@ -1,21 +1,21 @@
-name: Rebuild library index
+name: Rebuild library index (verify)
 
 on:
   push:
     branches:
       - "**"
+  pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  rebuild:
+  verify:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -26,14 +26,19 @@ jobs:
         run: |
           node tools/rebuild_library_index.js --repo .
 
-      - name: Commit changes if needed
+      - name: Verify no changes
         run: |
           if [ -n "$(git status --porcelain)" ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add library/songs.index.json library/library.index.json library/consolidate.log.json
-            git commit -m "chore: rebuild library index"
-            git push
-          else
-            echo "No changes to commit."
+            echo ""
+            echo "❌ Library index is out of date."
+            echo "Run this locally, then commit the generated files:"
+            echo "  node tools/rebuild_library_index.js --repo ."
+            echo ""
+            echo "Changed files:"
+            git status --porcelain
+            echo ""
+            echo "Diff (first 200 lines):"
+            git diff | sed -n '1,200p'
+            exit 1
           fi
+          echo "✅ Library index is up to date."

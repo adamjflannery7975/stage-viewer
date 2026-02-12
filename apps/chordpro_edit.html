@@ -770,6 +770,9 @@ body.light-theme #saveAsBanner button{ border-color: rgba(0,0,0,0.25); }
 </head>
 <body>
 
+<!-- Shared Apps Launcher (Modal) -->
+<script src="../shared/apps_nav.js"></script>
+
 <div class="header">
   <div class="brand" id="brandHome" title="Back to Apps">
     <div class="dot"></div>
@@ -1902,15 +1905,24 @@ function __wireBrandHome(){
   b.addEventListener('click', (e) => {
     // avoid toggling any parent collapse accidentally
     e.preventDefault();
-    // Most ChordPro Studio apps live under /apps/<app>/, with the launcher at /apps/index.html.
-    // When this file is opened directly (file://) or hosted under a subfolder, ./index.html may not exist.
-    // Use the parent index by default, with a safe fallback.
-    const candidates = ['../index.html', './index.html', '../../index.html'];
-    // pick the first sensible candidate based on current path depth
-    let target = candidates[0];
-    const p = (window.location && window.location.pathname) ? window.location.pathname : '';
-    if (p && /\/apps\//i.test(p)) target = '../index.html';
-    window.location.href = target;
+    // Preferred behavior: open Apps launcher modal (shared component)
+    if (window.CPSNav && typeof window.CPSNav.open === 'function'){
+      window.CPSNav.open();
+      return;
+    }
+
+    // Fallback: navigate to /apps/index.html (robust for GitHub Pages)
+    try{
+      const url = new URL(window.location.href);
+      const p = (url.pathname || '');
+      const idx = p.toLowerCase().indexOf('/apps/');
+      if (idx >= 0){
+        const root = p.substring(0, idx);
+        window.location.href = url.origin + root + '/apps/index.html';
+        return;
+      }
+    }catch(ex){}
+    window.location.href = '../index.html';
   });
 }
 
@@ -1935,6 +1947,8 @@ function nvWire(){
 }
 
 __onReady(() => {
+  // Initialise shared Apps launcher (modal). We bind our own click handler in __wireBrandHome().
+  try{ if (window.CPSNav && typeof window.CPSNav.init === 'function') window.CPSNav.init({ bindTrigger: false }); }catch(e){}
   __wireBrandHome();
   initFontSelect();
     // Load last session (if present)

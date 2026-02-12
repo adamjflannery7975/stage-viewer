@@ -953,6 +953,31 @@ body.light-theme #saveAsBanner button{ border-color: rgba(0,0,0,0.25); }
 </div>
 
 <script>
+
+// --- Debug: surface fatal errors on-screen (remove when stable) ---
+(function(){
+  function showErr(msg){
+    try{
+      let el = document.getElementById('__fatalErrorOverlay');
+      if (!el){
+        el = document.createElement('div');
+        el.id = '__fatalErrorOverlay';
+        el.style.cssText = 'position:fixed;inset:10px;z-index:999999;background:rgba(120,0,0,.95);color:#fff;padding:12px;border-radius:12px;font:12px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;white-space:pre-wrap;overflow:auto;';
+        document.body.appendChild(el);
+      }
+      el.textContent = msg;
+    }catch(e){}
+  }
+  window.addEventListener('error', (e)=>{
+    const err = e.error ? (e.error.stack || String(e.error)) : (e.message || 'Unknown error');
+    showErr('JavaScript Error\n' + err);
+  });
+  window.addEventListener('unhandledrejection', (e)=>{
+    const err = e.reason ? (e.reason.stack || String(e.reason)) : 'Unknown rejection';
+    showErr('Unhandled Promise Rejection\n' + err);
+  });
+})();
+
 const APP_NAME = 'ChordPro Edit';
 const APP_VERSION = 'Build 2026-02-08';
 
@@ -1273,7 +1298,7 @@ function saveAndRender(){
     render(rawText);
 }
 
-function render(){
+function render(rawText){
   const title = document.getElementById('mTitle').value || 'Song';
   const artist = document.getElementById('mArtist').value || 'Artist';
   const capo = document.getElementById('mCapo').value;
@@ -1284,7 +1309,10 @@ function render(){
   headerHtml += `</div>`;
 
   let inChorus = false;
-  let bodyHtml = document.getElementById('editor').value.split('\n').map(line => {
+    const __full = (rawText != null) ? String(rawText) : __getRawEditorText();
+  const bodyText = __stripMetaBlock(__full);
+
+  let bodyHtml = bodyText.split('\n').map(line => {
     let p = line.trim();
 
     if (p.includes("---PAGE BREAK---")) return '<div class="page-break"></div>';
@@ -1340,7 +1368,7 @@ function updateUI(){
 
   document.getElementById('v-size').innerText = s.size + 'px';
   document.getElementById('v-line').innerText = s.line;
-  render();
+  render(__getRawEditorText());
 }
 
 function loadThemeSettings(){
@@ -1535,8 +1563,7 @@ function newSong(){
 [G] Lyrics here...`;
 
   // Optional leading blank line before body
-  let raw = "
-" + skeletonBody;
+  let raw = "\n" + skeletonBody;
 
   // Ensure required tags exist
   raw = ensureCoreTagsInRaw(raw);

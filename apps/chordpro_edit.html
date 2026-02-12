@@ -349,6 +349,14 @@ body.light-theme .meta-field select{
   min-height:0;
   padding: 0 12px 12px 12px;
 }
+
+.left-col{display:flex;flex-direction:column;gap:12px;min-height:0;}
+.theme-card{margin:0;border:1px solid var(--line);border-radius:var(--radius);background:rgba(15,22,32,.88);box-shadow:var(--shadow);overflow:hidden;}
+.theme-card>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;font-weight:800;color:var(--text);}
+.theme-card>summary::-webkit-details-marker{display:none;}
+.theme-card .theme-body{padding:12px 14px 14px 14px;}
+body.light-theme .theme-card{background:#ffffff;border-color:#e5e7eb;}
+body.light-theme .theme-card>summary{color:#111827;}
 .editor-container{
   display:flex;
   flex-direction:column;
@@ -665,7 +673,9 @@ body.light-theme #saveAsBanner button{ border-color: rgba(0,0,0,0.25); }
   <button type="button" id="saveAsBannerHideBtn" title="Hide this message">✕</button>
 </div>
 
-<details class="meta-card" id="metaDetails" open>
+<div class="main-layout">
+  <div class="left-col">
+    <details class="meta-card" id="metaDetails" open>
   <summary>
     <div class="meta-title">
       <span class="chev">▶</span>
@@ -739,11 +749,10 @@ body.light-theme #saveAsBanner button{ border-color: rgba(0,0,0,0.25); }
   </div>
 </details>
 
-</div>
-
-<div class="main-layout">
-  <div class="editor-container">
-    <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px;">THEME FOR PREVIEW AND EXPORT TO PDF:</div>
+    <details class="theme-card" open>
+      <summary>🎛️ Theme (Preview + PDF)</summary>
+      <div class="theme-body">
+        <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px;">THEME FOR PREVIEW AND EXPORT TO PDF:</div>
     <div class="styling-controls">
       <div class="slider-group">STYLE PROFILE:
         <select id="userTheme" class="theme-select" onchange="loadThemeSettings()">
@@ -759,7 +768,12 @@ body.light-theme #saveAsBanner button{ border-color: rgba(0,0,0,0.25); }
       <div class="slider-group">LINE <input type="range" id="lineSpacing" min="1.0" max="3.0" step="0.1" value="1.4" oninput="updateUI()"><span class="val-badge" id="v-line">1.4</span></div>
       <button onclick="resetSliders()" style="min-width:unset; width:100%; font-size:9px; height:24px; align-self:end;">♻️ Reset</button>
     </div>
-    <textarea id="editor" oninput="saveAndRender()" placeholder="Paste ChordPro here..."></textarea>
+      </div>
+    </details>
+
+    <div class="editor-container">
+      <textarea id="editor" oninput="saveAndRender()" placeholder="Paste ChordPro here..."></textarea>
+    </div>
   </div>
 
   <div class="preview-pane">
@@ -805,11 +819,24 @@ const APP_VERSION = 'Build 2026-02-08';
 
 const scale = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 const DEFAULTS = {
+
   dark:  { bg:'#000000', cho:'#00ffff', sec:'#ffff00', chorus:'#ff6b6b', size:18, line:1.4 },
   light: { bg:'#ffffff', cho:'#0056b3', sec:'#d00000', chorus:'#d00000', size:18, line:1.4 }
 };
 
-// ✅ Per-device preview font (shared with viewer)
+function __normalizeTheme(obj, mode){
+        const d = DEFAULTS[mode] || DEFAULTS.dark;
+        const out = Object.assign({}, d, obj || {});
+        ['bg','cho','sec','chorus'].forEach(k=>{
+            const v = String(out[k] || '').trim();
+            if (!/^#([0-9a-f]{6})$/i.test(v)) out[k] = d[k];
+        });
+        if (out.size === undefined || isNaN(parseInt(out.size, 10))) out.size = d.size;
+        if (out.line === undefined || isNaN(parseFloat(out.line))) out.line = d.line;
+        return out;
+    }
+
+    // ✅ Per-device preview font (shared with viewer)
 function applyFontChoice(choice){
   document.body.classList.remove('font-mono','font-system','font-readable','font-serif');
   const c = (choice || 'mono');
@@ -1092,7 +1119,8 @@ function loadThemeSettings(){
   const themeUser = document.getElementById('userTheme').value;
   const mode = document.body.classList.contains('light-theme') ? 'light' : 'dark';
   const settings = JSON.parse(localStorage.getItem('theme_settings')) || {};
-  const s = (settings[themeUser] && settings[themeUser][mode]) ? settings[themeUser][mode] : DEFAULTS[mode];
+  let s = (settings[themeUser] && settings[themeUser][mode]) ? settings[themeUser][mode] : DEFAULTS[mode];
+        s = __normalizeTheme(s, mode);
 
   document.getElementById('bgColor').value = s.bg;
   document.getElementById('choColor').value = s.cho;

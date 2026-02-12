@@ -1898,11 +1898,19 @@ function nvCreate(){
 function __wireBrandHome(){
   const b = document.getElementById('brandHome');
   if (!b) return;
-  b.title = 'Apps';
+  b.title = 'Back to Apps';
   b.addEventListener('click', (e) => {
     // avoid toggling any parent collapse accidentally
     e.preventDefault();
-    window.location.href = './index.html';
+    // Most ChordPro Studio apps live under /apps/<app>/, with the launcher at /apps/index.html.
+    // When this file is opened directly (file://) or hosted under a subfolder, ./index.html may not exist.
+    // Use the parent index by default, with a safe fallback.
+    const candidates = ['../index.html', './index.html', '../../index.html'];
+    // pick the first sensible candidate based on current path depth
+    let target = candidates[0];
+    const p = (window.location && window.location.pathname) ? window.location.pathname : '';
+    if (p && /\/apps\//i.test(p)) target = '../index.html';
+    window.location.href = target;
   });
 }
 
@@ -1927,6 +1935,7 @@ function nvWire(){
 }
 
 __onReady(() => {
+  __wireBrandHome();
   initFontSelect();
     // Load last session (if present)
   try{

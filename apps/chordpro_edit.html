@@ -98,6 +98,8 @@ body.light-theme{
 }
 
 /* Header */
+.brand{cursor:pointer;color:var(--text);} .brand span{color:var(--text);} body.light-theme .brand, body.light-theme .brand span{color:#111827;}
+
 .header {
   display:flex;
   justify-content:space-between;
@@ -768,7 +770,7 @@ body.light-theme #saveAsBanner button{ border-color: rgba(0,0,0,0.25); }
     <button id="btnTextToCho" title="Convert plain text to ChordPro">🧩 Text → .cho</button>
     <button onclick="exportPdf()">📄 PDF</button>
     <button onclick="downloadCho()" class="primary" title="Save .cho (downloads). After New version, this prompts Save As.">💾 Save .cho</button>
-    <button id="saveBackBtn" class="primary" onclick="saveBackToFile()" style="display:none;" title="Overwrite the currently opened file (Chrome/Edge only)">💾 Save back</button>
+    <button type="button" id="saveBackBtn" onclick="saveBackToFile()" style="display:none;" title="Overwrite the currently opened file (Chrome/Edge only)" class="primary">💾 Save back</button>
     <button id="newVersionBtn" onclick="nvShow()" title="Create a new version (new UID). Requires Save .cho to save a new file.">🧬 New version</button>
     <input type="file" id="fileInput" style="display:none">
   </div>
@@ -987,7 +989,7 @@ let __rawEditorText = ''; // always includes tags
 
 function __stripMetaBlock(text){
     const lines = String(text || '').split(/\r?\n/);
-    const known = /^(\{\s*(uid|title|t|artist|a|singer|persona|version|key|k|capo|ca|tempo|bpm|duration)\s*:)/i;
+  const known = /^(\{\s*(song_uid|uid|title|t|artist|a|singer|persona|version|key|k|capo|ca|tempo|bpm|duration)\s*:)/i;
     let i = 0;
     // skip initial blank/comment lines
     while (i < lines.length && (lines[i].trim()==='' || lines[i].trim().startsWith('#'))) i++;
@@ -1708,6 +1710,18 @@ function nvCreate(){
   saveAndRender();
   nvHide();
   __toast('New version created: ' + ver);
+}
+
+
+function __wireBrandHome(){
+  const b = document.getElementById('brandHome');
+  if (!b) return;
+  b.title = 'Apps';
+  b.addEventListener('click', (e) => {
+    // avoid toggling any parent collapse accidentally
+    e.preventDefault();
+    window.location.href = './index.html';
+  });
 }
 
 function __onReady(fn){

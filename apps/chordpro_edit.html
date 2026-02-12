@@ -4,1334 +4,1543 @@
   <meta charset="UTF-8">
   <title id="pageTitle">ChordPro Edit v2.7.5</title>
   <style>
-/* =========================
-   GLOBAL THEME BLOCK (Shared)
-   ========================= */
-:root{
-  --bg:#0b0f14;
-  --panel:#0f1620;
-  --panel2:#0c121b;
-  --text:#e8eef7;
-  --muted:#9fb0c7;
-  --line:#223144;
-  --accent:#00bcd4;
-  --accent2:#3b82f6;
-  --danger:#e11d48;
-  --ok:#22c55e;
-  --shadow: 0 10px 30px rgba(0,0,0,.35);
-  --radius: 12px;
-  --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    /* =========================
+       GLOBAL THEME BLOCK (Shared)
+       - Used by: Editor, Gig Builder, Stage Viewer, Catalog Manager
+       - Safe to edit: colours, radii, shadows, fonts
+       - Do NOT change variable names (other CSS relies on them)
+       ========================= */
+    :root{
+      --bg:#0b0f14;
+      --panel:#0f1620;
+      --panel2:#0c121b;
+      --text:#e8eef7;
+      --muted:#9fb0c7;
+      --line:#223144;
+      --accent:#00bcd4;
+      --accent2:#3b82f6;
+      --danger:#e11d48;
+      --ok:#22c55e;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 12px;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-  /* Preview/export theme vars */
-  --bg-dark:#000000; --sec-dark:#ffff00; --cho-dark:#00ffff; --chorus-dark:#ff6b6b;
-  --bg-light:#ffffff; --sec-light:#d00000; --cho-light:#0056b3; --chorus-light:#d00000;
+      /* Per-device preview font (matches viewer key cps_font) */
+      --song-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-  --ipad-bg: var(--bg-dark);
-  --section-clr: var(--sec-dark);
-  --chord-clr: var(--cho-dark);
-  --chorus-clr: var(--chorus-dark);
-  --lyric-clr:#ffffff;
-  --font-size:16px;
-  --line-height:1.4;
+      /* Preview/export styling vars */
+      --bg-dark: #000000;
+      --sec-dark: #ffff00;
+      --cho-dark: #00ffff;
+      --chorus-dark: #ff6b6b;
 
-  --a4-width: 820px;
-  --btn-grey: #1b2a3d;
-  --btn-accent: var(--accent);
-  --page-height: 1050px;
+      --bg-light: #ffffff;
+      --sec-light: #d00000;
+      --cho-light: #0056b3;
+      --chorus-light: #d00000;
 
-  /* ✅ Shared per-device preview font (matches viewer key cps_font) */
-  --song-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-}
+      --ipad-bg: var(--bg-dark);
+      --section-clr: var(--sec-dark);
+      --chord-clr: var(--cho-dark);
+      --chorus-clr: var(--chorus-dark);
+      --lyric-clr: #ffffff;
+      --font-size: 16px;
+      --line-height: 1.4;
 
-*{ box-sizing:border-box; }
+      /* App sizing */
+      --a4-width: 820px;
+      --page-height: 1050px;
 
-body{
-  margin:0;
-  font-family:var(--sans);
-  background:linear-gradient(180deg, #07101a 0%, #05070b 100%);
-  color:var(--text);
-  height: 100vh;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-}
+      /* Button accents */
+      --btn-grey: #1b2a3d;
+      --btn-accent: var(--accent);
+    }
 
-a{ color: var(--accent2); }
-button, select, input, textarea{ font-family:inherit; }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:linear-gradient(180deg, #07101a 0%, #05070b 100%);
+      color:var(--text);
+      height: 100vh;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    body.light-theme{
+      background:#f0f2f5;
+      --lyric-clr: #000000;
+      --text: #222222;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --panel: #ffffff;
+      --panel2: #f8f9fa;
+      --btn-grey: #e5e7eb;
+    }
 
-/* ✅ Font presets (same class names as viewer) */
-body.font-mono { --song-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-body.font-system { --song-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-body.font-readable { --song-font: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-body.font-serif { --song-font: Georgia, "Times New Roman", Times, serif; }
+    a{ color: var(--accent2); }
+    button, select, input, textarea{ font-family:inherit; }
 
-body.light-theme{
-  --lyric-clr:#000000;
-  --text:#222222;
-  --muted:#6b7280;
-  --line:#e5e7eb;
-  --btn-grey:#e5e7eb;
-  background:#f0f2f5;
-}
+    /* Font presets (same class names as viewer) */
+    body.font-mono { --song-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    body.font-system { --song-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body.font-readable { --song-font: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body.font-serif { --song-font: Georgia, "Times New Roman", Times, serif; }
 
-/* THE FIXED PHYSICAL CUTOFF */
-.static-page-marker {
-  position: absolute;
-  top: var(--page-height);
-  left: 0;
-  width: 100%;
-  border-top: 3px dashed #ff0000;
-  z-index: 100;
-  pointer-events: none;
-}
-.static-page-marker::after {
-  content: "PAGE 1 PHYSICAL CUTOFF";
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  top: -12px;
-  font-size: 12px;
-  font-weight: bold;
-  color: #ff0000;
-  background: var(--ipad-bg);
-  padding: 0 15px;
-}
+    /* =====================
+       Header (restructured)
+       ===================== */
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(10,16,24,.9);
+      backdrop-filter: blur(8px);
+      gap: 12px;
+    }
+    body.light-theme .header{
+      background: rgba(255,255,255,.85);
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+      letter-spacing:.2px;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .brand .dot{
+      width:10px;height:10px;border-radius:99px;
+      background: var(--accent);
+      box-shadow: 0 0 18px rgba(0,188,212,.6);
+    }
 
-/* Header */
-.header {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:14px 18px;
-  border-bottom:1px solid var(--line);
-  background: rgba(10,16,24,.9);
-  backdrop-filter: blur(8px);
-  margin-bottom:12px;
-}
-.brand{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-weight:800;
-  letter-spacing:.2px;
-  user-select:none;
-}
-.brand .dot{
-  width:10px;height:10px;border-radius:99px;
-  background: var(--accent);
-  box-shadow: 0 0 18px rgba(0,188,212,.6);
-}
-.btn-group{
-  display:flex;
-  gap:8px;
-  row-gap:8px;
-  align-items:center;
-  flex-wrap:wrap;          /* ✅ wrap buttons, not text */
-  justify-content:flex-end;
-}
+    .toolbar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .tool-group{
+      display:flex;
+      gap:8px;
+      row-gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      padding: 6px 8px;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      background: rgba(0,0,0,0.14);
+    }
+    body.light-theme .tool-group{
+      border: 1px solid rgba(0,0,0,0.08);
+      background: rgba(255,255,255,0.55);
+    }
 
-/* Selects */
-.theme-select, .header-select{
-  appearance:none;
-  border:1px solid #2a3a50;
-  background: linear-gradient(180deg, #1b2a3d 0%, #152234 100%);
-  color: var(--text);
-  padding: 9px 12px;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:700;
-  font-size:13px;
-  box-shadow: 0 8px 20px rgba(0,0,0,.25);
-  height:36px;
-}
-.theme-select{ width:100%; }
-.header-select{ min-width:140px; }
+    button{
+      white-space: nowrap;
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      appearance:none;
+      border: 1px solid #2a3a50;
+      background: linear-gradient(180deg, #1b2a3d 0%, #152234 100%);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 10px;
+      cursor:pointer;
+      font-weight:700;
+      font-size: 13px;
+      box-shadow: 0 8px 20px rgba(0,0,0,.25);
+      user-select:none;
+      min-width: 100px;
+      text-align:center;
+      height: 36px;
+      justify-content:center;
+      box-sizing:border-box;
+    }
+    button:hover{ filter: brightness(1.08); }
+    button:active{ transform: translateY(1px); }
+    button.primary{
+      border-color: rgba(0,188,212,.45);
+      background: linear-gradient(180deg, rgba(0,188,212,.28) 0%, rgba(0,188,212,.18) 100%);
+    }
+    button.danger{
+      border-color: rgba(225,29,72,.4);
+      background: linear-gradient(180deg, rgba(225,29,72,.22) 0%, rgba(225,29,72,.14) 100%);
+    }
+    body.light-theme button{
+      border: 1px solid #d1d5db;
+      background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+      color: #1f2937;
+      box-shadow: 0 2px 4px rgba(0,0,0,.1);
+    }
+    #saveBackBtn, #newVersionBtn { min-width: 160px; }
 
-body.light-theme .header-select{
-  border:1px solid #d1d5db;
-  background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
-  color:#1f2937;
-  box-shadow: 0 2px 4px rgba(0,0,0,.1);
-}
+    /* =====================
+       Collapsible Meta Panel
+       ===================== */
+    .meta-wrap{
+      margin: 12px 12px 0 12px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--line);
+      background: rgba(15,22,32,.88);
+    }
+    body.light-theme .meta-wrap{
+      background:#ffffff;
+      border-color:#e5e7eb;
+    }
+    .meta-summary{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 10px 12px;
+      cursor:pointer;
+      user-select:none;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    body.light-theme .meta-summary{
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .meta-summary .left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .meta-summary .badge{
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.18);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 42vw;
+    }
+    body.light-theme .meta-summary .badge{
+      border-color: rgba(0,0,0,0.12);
+      background: rgba(0,0,0,0.04);
+    }
+    details.meta-details > summary{
+      list-style:none;
+    }
+    details.meta-details > summary::-webkit-details-marker{ display:none; }
 
-/* Buttons */
-button{
-  white-space:nowrap;
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  appearance:none;
-  border:1px solid #2a3a50;
-  background: linear-gradient(180deg, #1b2a3d 0%, #152234 100%);
-  color: var(--text);
-  padding: 9px 12px;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:700;
-  font-size:13px;
-  box-shadow: 0 8px 20px rgba(0,0,0,.25);
-  user-select:none;
-  min-width:100px;
-  height:36px;
-  justify-content:center;
-  box-sizing:border-box;
-}
-button:hover{ filter:brightness(1.08); }
-button:active{ transform: translateY(1px); }
-button.primary{
-  border-color: rgba(0,188,212,.45);
-  background: linear-gradient(180deg, rgba(0,188,212,.28) 0%, rgba(0,188,212,.18) 100%);
-}
-button.danger{
-  border-color: rgba(225,29,72,.4);
-  background: linear-gradient(180deg, rgba(225,29,72,.22) 0%, rgba(225,29,72,.14) 100%);
-}
-body.light-theme button{
-  border:1px solid #d1d5db;
-  background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
-  color:#1f2937;
-  box-shadow: 0 2px 4px rgba(0,0,0,.1);
-}
-#saveBackBtn, #newVersionBtn{ min-width:160px; }
+    .meta-section{
+      display:grid;
+      grid-template-columns: 1.8fr 1.2fr 0.8fr 0.7fr 0.5fr 0.5fr 0.5fr 0.8fr 1fr;
+      gap:10px;
+      padding: 12px;
+    }
+    .meta-section input, .meta-section select{
+      background: rgba(4,8,12,.55);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 9px 10px;
+      border-radius: 10px;
+      width: 100%;
+      font-size: 13px;
+      height: 36px;
+      outline:none;
+    }
+    .meta-section input:focus, .meta-section select:focus{
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(0,188,212,.12);
+    }
+    body.light-theme .meta-section input,
+    body.light-theme .meta-section select{
+      background:#f9fafb;
+      border-color:#d1d5db;
+      color:#111827;
+    }
 
-/* Meta */
-.meta-section{
-  display:grid;
-  grid-template-columns: 1.8fr 1.2fr 0.8fr 0.7fr 0.5fr 0.5fr 0.5fr 0.8fr 1fr;
-  gap:10px;
-  background: rgba(15,22,32,.88);
-  border:1px solid var(--line);
-  padding:12px;
-  border-radius: var(--radius);
-  margin: 0 12px 12px 12px;
-  box-shadow: var(--shadow);
-}
-.meta-section input, .meta-section select{
-  background: rgba(4,8,12,.55);
-  border:1px solid var(--line);
-  color: var(--text);
-  padding: 9px 10px;
-  border-radius:10px;
-  width:100%;
-  font-size:13px;
-  height:36px;
-  outline:none;
-}
-.meta-section input:focus, .meta-section select:focus{
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(0,188,212,.12);
-}
-body.light-theme .meta-section{ background:#ffffff; border-color:#e5e7eb; }
-body.light-theme .meta-section input,
-body.light-theme .meta-section select{ background:#f9fafb; border-color:#d1d5db; color:#222; }
+    /* =====================
+       Main layout
+       ===================== */
+    .main-layout{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      flex-grow: 1;
+      min-height: 0;
+      padding: 12px;
+    }
+    .editor-container{
+      display:flex;
+      flex-direction:column;
+      background: rgba(15,22,32,.88);
+      border: 1px solid var(--line);
+      padding: 15px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      min-height: 0;
+    }
+    body.light-theme .editor-container{
+      background:#ffffff;
+      border-color:#e5e7eb;
+    }
 
-/* Layout */
-.main-layout{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:12px;
-  flex-grow:1;
-  min-height:0;
-  padding: 0 12px 12px 12px;
-}
-.editor-container{
-  display:flex;
-  flex-direction:column;
-  background: rgba(15,22,32,.88);
-  border:1px solid var(--line);
-  padding:15px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-body.light-theme .editor-container{ background:#fff; border-color:#e5e7eb; }
+    textarea{
+      flex-grow: 1;
+      background: rgba(4,8,12,.55);
+      color: var(--text);
+      border: 1px solid var(--line);
+      padding: 15px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      resize:none;
+      outline:none;
+      border-radius: 10px;
+      min-height: 0;
+    }
+    textarea:focus{
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(0,188,212,.12);
+    }
+    body.light-theme textarea{
+      background:#f9fafb;
+      border-color:#d1d5db;
+      color:#111827;
+    }
 
-.styling-controls{
-  display:grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap:10px;
-  margin-bottom:10px;
-  padding:12px;
-  border:1px solid var(--line);
-  border-radius:10px;
-  background: rgba(12,18,27,.5);
-}
-.slider-group{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  font-size:10px;
-  font-weight:bold;
-}
-.slider-group input[type="range"]{ accent-color: var(--accent); }
-.val-badge{
-  background: rgba(0,188,212,.18);
-  color: var(--accent);
-  padding: 2px 5px;
-  border-radius:6px;
-  font-size:10px;
-  text-align:center;
-  border: 1px solid rgba(0,188,212,.3);
-  font-weight:700;
-}
+    .preview-pane{
+      background: var(--ipad-bg);
+      border: 8px solid #000;
+      border-radius: var(--radius);
+      overflow-y: auto;
+      width: 100%;
+      max-width: var(--a4-width);
+      margin: 0 auto;
+      position: relative;
+      box-shadow: var(--shadow);
+    }
+    .preview-content{
+      padding: 50px;
+      color: var(--lyric-clr);
+      white-space: pre-wrap;
+      line-height: var(--line-height);
+      font-size: var(--font-size);
+      position: relative;
+      min-height: 1500px;
+      font-family: var(--song-font);
+    }
 
-textarea{
-  flex-grow:1;
-  background: rgba(4,8,12,.55);
-  color: var(--text);
-  border: 1px solid var(--line);
-  padding: 15px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size:14px;
-  line-height:1.5;
-  resize:none;
-  margin-top:10px;
-  outline:none;
-  border-radius:10px;
-}
-textarea:focus{
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(0,188,212,.12);
-}
-body.light-theme textarea{ background:#f9fafb; border-color:#d1d5db; color:#222; }
+    /* Physical cutoff marker */
+    .static-page-marker{
+      position:absolute;
+      top: var(--page-height);
+      left:0;
+      width:100%;
+      border-top: 3px dashed #ff0000;
+      z-index:100;
+      pointer-events:none;
+    }
+    .static-page-marker::after{
+      content:"PAGE 1 PHYSICAL CUTOFF";
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      top:-12px;
+      font-size:12px;
+      font-weight:bold;
+      color:#ff0000;
+      background: var(--ipad-bg);
+      padding: 0 15px;
+    }
 
-.preview-pane{
-  background: var(--ipad-bg);
-  border:8px solid #000;
-  border-radius: var(--radius);
-  overflow-y:auto;
-  width:100%;
-  max-width: var(--a4-width);
-  margin:0 auto;
-  position:relative;
-  box-shadow: var(--shadow);
-}
-.preview-content{
-  padding:50px;
-  color: var(--lyric-clr);
-  white-space: pre-wrap;
-  line-height: var(--line-height);
-  font-size: var(--font-size);
-  position:relative;
-  min-height:1500px;
-  font-family: var(--song-font);
-}
+    .p-section{ color: var(--section-clr) !important; font-weight:bold; display:block; margin-top:1.2em; width:fit-content; padding-right:40px; }
+    .p-chord{ color: var(--chord-clr) !important; font-weight:bold; }
+    .p-chorus-text{ color: var(--chorus-clr) !important; }
+    .capo-badge{ font-size:.7em; background: rgba(128,128,128,0.2); padding: 2px 8px; border-radius:4px; margin-left:10px; vertical-align:middle; }
 
-.p-section{ color: var(--section-clr) !important; font-weight:bold; display:block; margin-top:1.2em; width:fit-content; padding-right:40px; }
-.p-chord{ color: var(--chord-clr) !important; font-weight:bold; }
-.p-chorus-text{ color: var(--chorus-clr) !important; }
-.capo-badge{ font-size:.7em; background: rgba(128,128,128,0.2); padding:2px 8px; border-radius:4px; margin-left:10px; vertical-align:middle; }
+    /* Page break */
+    .page-break{
+      page-break-after: always;
+      break-after: page;
+      display:block;
+      height: 2px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--section-clr),
+        var(--section-clr) 10px,
+        transparent 10px,
+        transparent 20px
+      );
+      margin: 20px 0;
+      position: relative;
+    }
+    .page-break::after{
+      content:"PAGE BREAK";
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      background: var(--ipad-bg);
+      padding: 0 10px;
+      font-size:10px;
+      font-weight:bold;
+      color: var(--section-clr);
+      letter-spacing:1px;
+    }
 
-/* Page Break Styling */
-.page-break{
-  page-break-after:always;
-  break-after:page;
-  display:block;
-  height:2px;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--section-clr),
-    var(--section-clr) 10px,
-    transparent 10px,
-    transparent 20px
-  );
-  margin: 20px 0;
-  position: relative;
-}
-.page-break::after{
-  content:"PAGE BREAK";
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform: translate(-50%, -50%);
-  background: var(--ipad-bg);
-  padding: 0 10px;
-  font-size:10px;
-  font-weight:bold;
-  color: var(--section-clr);
-  letter-spacing:1px;
-}
+    @page{ size:A4; margin:0; }
 
-@page{ size:A4; margin:0; }
-@media print{
-  *{ -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  html, body{ margin:0 !important; padding:0 !important; background: var(--ipad-bg) !important; }
-  .header, .meta-section, .editor-container, .static-page-marker{ display:none !important; }
-  .main-layout{ display:block !important; }
-  .preview-pane{
-    border:none !important;
-    border-radius:0 !important;
-    max-width:100% !important;
-    width:100% !important;
-    min-height:297mm !important;
-    overflow:visible !important;
-    height:auto !important;
-    background: var(--ipad-bg) !important;
-  }
-  .preview-content{
-    width: var(--a4-width) !important;
-    min-height:297mm !important;
-    box-sizing:border-box !important;
-    margin:0 auto !important;
-    padding:50px !important;
-    background: var(--ipad-bg) !important;
-    color: var(--lyric-clr) !important;
-    font-family: var(--song-font) !important;
-  }
-  .p-chord{ color: var(--chord-clr) !important; }
-  .p-section{ color: var(--section-clr) !important; }
-  .p-chorus-text{ color: var(--chorus-clr) !important; }
-  .page-break{
-    page-break-after: always !important;
-    break-after: page !important;
-    display:block !important;
-    height:0 !important;
-    background:none !important;
-    margin:0 !important;
-  }
-  .page-break::after{ content:"" !important; display:none !important; }
-}
+    @media print{
+      *{ -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      html, body{ margin:0 !important; padding:0 !important; background: var(--ipad-bg) !important; }
+      .header, .meta-wrap, .editor-container, .static-page-marker { display:none !important; }
+      .main-layout{ display:block !important; padding:0 !important; }
+      .preview-pane{
+        border:none !important;
+        border-radius:0 !important;
+        max-width:100% !important;
+        width:100% !important;
+        min-height:297mm !important;
+        overflow:visible !important;
+        height:auto !important;
+        background: var(--ipad-bg) !important;
+      }
+      .preview-content{
+        width: var(--a4-width) !important;
+        min-height:297mm !important;
+        box-sizing:border-box !important;
+        margin:0 auto !important;
+        padding:50px !important;
+        background: var(--ipad-bg) !important;
+        color: var(--lyric-clr) !important;
+        font-family: var(--song-font) !important;
+      }
+      .p-chord{ color: var(--chord-clr) !important; }
+      .p-section{ color: var(--section-clr) !important; }
+      .p-chorus-text{ color: var(--chorus-clr) !important; }
+      .page-break{
+        page-break-after: always !important;
+        break-after: page !important;
+        display:block !important;
+        height:0 !important;
+        background:none !important;
+        margin:0 !important;
+      }
+      .page-break::after{ content:"" !important; display:none !important; }
+    }
 
-/* Modals / toast / banner */
-#textToChoModal, #newVersionModal{
-  position:fixed; inset:0;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  background: rgba(0,0,0,0.72);
-  z-index:9999;
-}
-#textToChoModal .t2c-box, #newVersionModal .nv-box{
-  width: min(920px, 92vw);
-  max-height:90vh;
-  overflow:hidden;
-  background:#1e1e1e;
-  border:1px solid #444;
-  border-radius:10px;
-  box-shadow: 0 20px 60px rgba(0,0,0,.6);
-  color:#eee;
-  display:flex;
-  flex-direction:column;
-}
-#newVersionModal .nv-box{ width: min(720px, 92vw); }
+    /* =====================
+       Modals (shared style)
+       ===================== */
+    .modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background: rgba(0,0,0,0.72);
+      z-index: 9999;
+    }
+    .modal .box{
+      width: min(920px, 92vw);
+      max-height: 90vh;
+      overflow:hidden;
+      background:#1e1e1e;
+      border: 1px solid #444;
+      border-radius: 10px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+      color:#eee;
+      display:flex;
+      flex-direction:column;
+    }
+    .modal .head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 12px 14px;
+      border-bottom: 1px solid #333;
+      font-weight: 800;
+    }
+    .modal .body{
+      padding: 14px;
+      overflow:auto;
+    }
+    .modal .actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      margin-top: 12px;
+    }
 
-#textToChoModal .t2c-head, #newVersionModal .nv-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:12px 14px;
-  border-bottom:1px solid #333;
-  font-weight:800;
-}
-#textToChoModal .t2c-body, #newVersionModal .nv-body{
-  padding:14px;
-  overflow:auto;
-  display:grid;
-  gap:10px;
-}
-#textToChoModal input, #textToChoModal textarea, #newVersionModal input{
-  width:100%;
-  box-sizing:border-box;
-  background:#111;
-  color:#eee;
-  border:1px solid #444;
-  border-radius:8px;
-  padding:10px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-#textToChoModal textarea{ min-height:260px; resize:vertical; }
-#textToChoModal .t2c-actions, #newVersionModal .nv-actions{
-  display:flex;
-  gap:10px;
-  justify-content:flex-end;
-  padding-top:6px;
-}
+    /* Display modal controls */
+    .display-grid{
+      display:grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 14px;
+      align-items:start;
+    }
+    .panel{
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.18);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .row{
+      display:grid;
+      grid-template-columns: 130px 1fr;
+      gap: 10px;
+      align-items:center;
+      margin-bottom: 10px;
+    }
+    .row label{
+      font-size: 12px;
+      font-weight: 800;
+      opacity: .9;
+    }
+    .theme-select, .header-select{
+      appearance:none;
+      border: 1px solid #2a3a50;
+      background: linear-gradient(180deg, #1b2a3d 0%, #152234 100%);
+      color: #fff;
+      padding: 9px 12px;
+      border-radius: 10px;
+      cursor:pointer;
+      font-weight:700;
+      font-size: 13px;
+      height: 36px;
+      width: 100%;
+    }
+    .val-badge{
+      background: rgba(0,188,212,.18);
+      color: var(--accent);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 11px;
+      text-align:center;
+      border: 1px solid rgba(0,188,212,.3);
+      font-weight: 800;
+      min-width: 54px;
+      display:inline-block;
+    }
+    input[type="range"]{ width:100%; }
+    input[type="color"]{
+      width:100%;
+      height: 36px;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 10px;
+      background: rgba(0,0,0,0.20);
+      padding: 2px 4px;
+    }
 
-#snToast{
-  position:fixed;
-  right:18px; bottom:18px;
-  background: rgba(20,20,20,0.95);
-  color:#fff;
-  padding:10px 12px;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,0.12);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
-  font-size:13px;
-  opacity:0;
-  transform: translateY(8px);
-  transition: opacity 160ms ease, transform 160ms ease;
-  z-index:10000;
-  pointer-events:none;
-  max-width: min(520px, 90vw);
-}
-#snToast.show{ opacity:1; transform: translateY(0); }
+    /* Toast */
+    #snToast{
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: rgba(20,20,20,0.95);
+      color:#fff;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+      font-size: 13px;
+      opacity:0;
+      transform: translateY(8px);
+      transition: opacity 160ms ease, transform 160ms ease;
+      z-index: 10000;
+      pointer-events:none;
+      max-width: min(520px, 90vw);
+    }
+    #snToast.show{
+      opacity:1;
+      transform: translateY(0);
+    }
 
-#saveAsBanner{
-  margin:10px 0 0 0;
-  padding:10px 12px;
-  border-radius:10px;
-  background: rgba(255,196,0,0.14);
-  border:1px solid rgba(255,196,0,0.35);
-  color: var(--text);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  font-size:13px;
-}
-#saveAsBanner button{
-  background: transparent;
-  border:1px solid rgba(255,255,255,0.25);
-  color: inherit;
-  border-radius:10px;
-  padding:4px 10px;
-  cursor:pointer;
-  min-width: unset;
-  height:28px;
-}
-body.light-theme #saveAsBanner button{ border-color: rgba(0,0,0,0.25); }
+    #saveAsBanner{
+      margin: 10px 12px 0 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255, 196, 0, 0.14);
+      border: 1px solid rgba(255, 196, 0, 0.35);
+      color: var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      font-size: 13px;
+      box-shadow: var(--shadow);
+    }
+    #saveAsBanner button{
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.25);
+      color: inherit;
+      border-radius: 10px;
+      padding: 4px 10px;
+      cursor: pointer;
+      min-width: unset;
+      height: 28px;
+      box-shadow:none;
+    }
+    body.light-theme #saveAsBanner button{ border-color: rgba(0,0,0,0.25); }
 
-.app-footer{
-  position:fixed;
-  left:10px; bottom:8px;
-  z-index:9999;
-  font-size:11px;
-  color: rgba(255,255,255,0.65);
-  background: rgba(0,0,0,0.35);
-  border:1px solid rgba(255,255,255,0.12);
-  padding:4px 8px;
-  border-radius:999px;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  user-select:none;
-  pointer-events:none;
-  max-width: calc(100% - 20px);
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
+    .app-footer{
+      position: fixed;
+      left: 10px;
+      bottom: 8px;
+      z-index: 9999;
+      font-size: 11px;
+      color: rgba(255,255,255,0.65);
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 4px 8px;
+      border-radius: 999px;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      user-select: none;
+      pointer-events: none;
+      max-width: calc(100% - 20px);
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
   </style>
+  <script src="../shared/theme.js" defer></script>
 </head>
 <body>
 
-<div class="header">
-  <div class="brand">
-    <div class="dot"></div>
-    <span>ChordPro Edit v2.7.5</span>
+  <div class="header">
+    <div class="brand">
+      <div class="dot"></div>
+      <span>ChordPro Edit v2.7.5</span>
+    </div>
+
+    <div class="toolbar">
+      <div class="tool-group">
+        <a href="./index.html" style="text-decoration:none">
+          <button title="Apps">Apps</button>
+        </a>
+        <button id="displayBtn" class="primary" title="Display settings (theme, font, preview)">🎛 Display</button>
+      </div>
+
+      <div class="tool-group">
+        <button onclick="newSong()">📄 New</button>
+        <button onclick="clearAllFields()" class="danger">🗑️ Clear</button>
+        <button onclick="insertPageBreak()">✂️ Break</button>
+        <button onclick="insertBlankLine()">➕ Blank Line</button>
+      </div>
+
+      <div class="tool-group">
+        <button onclick="openChoFile()">📂 Open</button>
+        <button id="btnTextToCho" title="Convert plain text to ChordPro">🧩 Text → .cho</button>
+        <button onclick="exportPdf()">📄 PDF</button>
+        <button onclick="downloadCho()" class="primary" title="Save .cho (downloads). After New version, this prompts Save As.">💾 Save .cho</button>
+        <button id="saveBackBtn" onclick="saveBackToFile()" style="display:none" class="primary" title="Overwrite the currently opened file (Chrome/Edge only)">💾 Save back</button>
+        <button id="newVersionBtn" onclick="nvShow()" title="Create a new version (new UID). Requires Save .cho to save a new file.">🧬 New version</button>
+        <input type="file" id="fileInput" style="display:none">
+      </div>
+    </div>
   </div>
-  <div class="btn-group">
-    <a href="./index.html" style="text-decoration:none">
-      <button title="Apps">Apps</button>
-    </a>
 
-    <select id="fontSelect" class="header-select" title="Preview font">
-      <option value="mono">Mono</option>
-      <option value="system">System</option>
-      <option value="readable">Readable</option>
-      <option value="serif">Serif</option>
-    </select>
-
-    <button id="themeToggleBtn" onclick="toggleTheme()">🌙 Theme</button>
-    <button onclick="newSong()">📄 New</button>
-    <button onclick="clearAllFields()" class="danger">🗑️ Clear</button>
-    <button onclick="insertPageBreak()">✂️ Break</button>
-    <button onclick="insertBlankLine()">➕ Blank Line</button>
-    <button onclick="openChoFile()">📂 Open</button>
-    <button id="btnTextToCho" title="Convert plain text to ChordPro">🧩 Text → .cho</button>
-    <button onclick="exportPdf()">📄 PDF</button>
-    <button onclick="downloadCho()" class="primary" style="background:var(--btn-accent);" title="Save .cho (downloads). After New version, this prompts Save As.">💾 Save .cho</button>
-    <button id="saveBackBtn" onclick="saveBackToFile()" style="display:none; background: var(--btn-accent);" title="Overwrite the currently opened file (Chrome/Edge only)">💾 Save back to file</button>
-    <button id="newVersionBtn" onclick="nvShow()" title="Create a new version (new UID). Requires Save .cho to save a new file.">🧬 New version</button>
-    <input type="file" id="fileInput" style="display:none">
+  <div id="saveAsBanner" style="display:none;">
+    🧬 New version created — click <b>💾 Save .cho</b> to save a new file.
+    <button type="button" id="saveAsBannerHideBtn" title="Hide this message">✕</button>
   </div>
-</div>
 
-<div id="saveAsBanner" style="display:none;">
-  🧬 New version created — click <b>💾 Save .cho</b> to save a new file.
-  <button type="button" id="saveAsBannerHideBtn" title="Hide this message">✕</button>
-</div>
+  <!-- Collapsible meta panel -->
+  <div class="meta-wrap">
+    <details class="meta-details">
+      <summary class="meta-summary">
+        <div class="left">📝 Song Info</div>
+        <div class="badge" id="metaBadge">Title • Artist • Key • Capo • BPM • Dur</div>
+      </summary>
 
-<div class="meta-section">
-  <input type="text" id="mTitle" placeholder="Title" oninput="updatePageTitle(); syncFieldsToEditor()">
-  <input type="text" id="mArtist" placeholder="Artist" oninput="updatePageTitle(); syncFieldsToEditor()">
-  <select id="mSinger" onchange="syncFieldsToEditor()">
-    <option value="Adam">Adam</option>
-    <option value="Pete">Pete</option>
-    <option value="Both">Both</option>
-  </select>
-  <input type="text" id="mKey" placeholder="Key" oninput="syncFieldsToEditor()">
-  <input type="text" id="mCapo" placeholder="Capo" oninput="syncFieldsToEditor()">
-  <input type="text" id="mTempo" placeholder="BPM" oninput="syncFieldsToEditor()">
-  <input type="text" id="mDur" placeholder="m:ss" oninput="syncFieldsToEditor()">
-  <select id="mPersona" onchange="syncFieldsToEditor()">
-    <option value="Adam">Adam</option>
-    <option value="Pete">Pete</option>
-  </select>
-  <div style="display:flex; gap:5px;">
-    <button onclick="transpose(-1)" style="min-width:35px; width:50%;">♭</button>
-    <button onclick="transpose(1)" style="min-width:35px; width:50%;">♯</button>
-  </div>
-</div>
-
-<div class="main-layout">
-  <div class="editor-container">
-    <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px;">THEME FOR PREVIEW AND EXPORT TO PDF:</div>
-    <div class="styling-controls">
-      <div class="slider-group">STYLE PROFILE:
-        <select id="userTheme" class="theme-select" onchange="loadThemeSettings()">
+      <div class="meta-section">
+        <input type="text" id="mTitle" placeholder="Title" oninput="updatePageTitle(); syncFieldsToEditor(); updateMetaBadge()">
+        <input type="text" id="mArtist" placeholder="Artist" oninput="updatePageTitle(); syncFieldsToEditor(); updateMetaBadge()">
+        <select id="mSinger" onchange="syncFieldsToEditor(); updateMetaBadge()">
+          <option value="Adam">Adam</option>
+          <option value="Pete">Pete</option>
+          <option value="Both">Both</option>
+        </select>
+        <input type="text" id="mKey" placeholder="Key" oninput="syncFieldsToEditor(); updateMetaBadge()">
+        <input type="text" id="mCapo" placeholder="Capo" oninput="syncFieldsToEditor(); updateMetaBadge()">
+        <input type="text" id="mTempo" placeholder="BPM" oninput="syncFieldsToEditor(); updateMetaBadge()">
+        <input type="text" id="mDur" placeholder="m:ss" oninput="syncFieldsToEditor(); updateMetaBadge()">
+        <select id="mPersona" onchange="syncFieldsToEditor(); updateMetaBadge()">
           <option value="Adam">Adam</option>
           <option value="Pete">Pete</option>
         </select>
-      </div>
-      <div class="slider-group">BG <input type="color" id="bgColor" oninput="updateUI()"></div>
-      <div class="slider-group">CHORD <input type="color" id="choColor" oninput="updateUI()"></div>
-      <div class="slider-group">SECTION <input type="color" id="secColor" oninput="updateUI()"></div>
-      <div class="slider-group">CHORUS <input type="color" id="chorusColor" oninput="updateUI()"></div>
-      <div class="slider-group">SIZE <input type="range" id="fontSize" min="12" max="50" value="18" oninput="updateUI()"><span class="val-badge" id="v-size">18px</span></div>
-      <div class="slider-group">LINE <input type="range" id="lineSpacing" min="1.0" max="3.0" step="0.1" value="1.4" oninput="updateUI()"><span class="val-badge" id="v-line">1.4</span></div>
-      <button onclick="resetSliders()" style="min-width:unset; width:100%; font-size:9px; height:24px; align-self:end;">♻️ Reset</button>
-    </div>
-    <textarea id="editor" oninput="saveAndRender()" placeholder="Paste ChordPro here..."></textarea>
-  </div>
-
-  <div class="preview-pane">
-    <div class="static-page-marker"></div>
-    <div id="preview" class="preview-content"></div>
-  </div>
-</div>
-
-<!-- Text → ChordPro Modal -->
-<div id="textToChoModal" aria-hidden="true">
-  <div class="t2c-box" role="dialog" aria-modal="true" aria-label="Text to ChordPro Converter">
-    <div class="t2c-head">
-      <div>🧩 Text → .cho Converter</div>
-      <button type="button" id="t2cCloseBtn" title="Close">Close</button>
-    </div>
-    <div class="t2c-body">
-      <div style="display:grid; gap:6px;">
-        <label style="opacity:.85; font-size:12px; font-weight:bold;">Optional filename (used to infer Title / Artist / Version)</label>
-        <input id="t2cFilename" placeholder="e.g. 3 A.M. - Matchbox Twenty (Adam)">
-        <div style="opacity:.7; font-size:12px;">If you use “Title - Artist (Version)”, tags will be auto-filled.</div>
-      </div>
-
-      <div style="display:grid; gap:6px;">
-        <label style="opacity:.85; font-size:12px; font-weight:bold;">Paste plain text (lyrics + chords)</label>
-        <textarea id="t2cInput" placeholder="Paste text here...&#10;&#10;Example:&#10;Verse 1&#10;D   C   G  Cadd9&#10;she says it's cold outside..."></textarea>
-        <div style="opacity:.7; font-size:12px;">
-          Converts section headers (Verse/Chorus/Bridge/etc) to <b>{comment: ...}</b> and wraps detected chords like <b>[D]</b>.
-          Bulk .docx conversion is still best done via your Automator script.
+        <div style="display:flex; gap:5px;">
+          <button onclick="transpose(-1)" style="min-width:35px; width:50%;">♭</button>
+          <button onclick="transpose(1)" style="min-width:35px; width:50%;">♯</button>
         </div>
       </div>
+    </details>
+  </div>
 
-      <div class="t2c-actions">
-        <button type="button" id="t2cCancelBtn">Cancel</button>
-        <button type="button" id="t2cConvertBtn" style="background: var(--btn-accent);">Convert & Load</button>
+  <div class="main-layout">
+    <div class="editor-container">
+      <textarea id="editor" oninput="saveAndRender()" placeholder="Paste ChordPro here..."></textarea>
+    </div>
+
+    <div class="preview-pane">
+      <div class="static-page-marker"></div>
+      <div id="preview" class="preview-content"></div>
+    </div>
+  </div>
+
+  <!-- ===============================
+       Display / Theme Modal (NEW)
+       =============================== -->
+  <div id="displayModal" class="modal" aria-hidden="true">
+    <div class="box" role="dialog" aria-modal="true" aria-label="Display settings">
+      <div class="head">
+        <div>🎛 Display</div>
+        <button type="button" id="displayCloseBtn" title="Close" style="min-width:unset;">Close</button>
+      </div>
+      <div class="body">
+        <div class="display-grid">
+          <div class="panel">
+            <div class="row">
+              <label>Mode</label>
+              <button id="themeToggleBtn" onclick="toggleTheme()" style="width:100%; min-width:unset;">🌙 Dark</button>
+            </div>
+
+            <div class="row">
+              <label>Font</label>
+              <select id="fontSelect" class="header-select" title="Preview font">
+                <option value="mono">Mono</option>
+                <option value="system">System</option>
+                <option value="readable">Readable</option>
+                <option value="serif">Serif</option>
+              </select>
+            </div>
+
+            <div class="row">
+              <label>Profile</label>
+              <select id="userTheme" class="theme-select" onchange="loadThemeSettings()">
+                <option value="Adam">Adam</option>
+                <option value="Pete">Pete</option>
+              </select>
+            </div>
+
+            <div class="row">
+              <label>Background</label>
+              <input type="color" id="bgColor" oninput="updateUI()">
+            </div>
+
+            <div class="row">
+              <label>Chord</label>
+              <input type="color" id="choColor" oninput="updateUI()">
+            </div>
+
+            <div class="row">
+              <label>Section</label>
+              <input type="color" id="secColor" oninput="updateUI()">
+            </div>
+
+            <div class="row" style="margin-bottom:0;">
+              <label>Chorus</label>
+              <input type="color" id="chorusColor" oninput="updateUI()">
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="row">
+              <label>Size</label>
+              <div style="display:flex; gap:10px; align-items:center;">
+                <input type="range" id="fontSize" min="12" max="50" value="18" oninput="updateUI()">
+                <span class="val-badge" id="v-size">18px</span>
+              </div>
+            </div>
+
+            <div class="row">
+              <label>Line</label>
+              <div style="display:flex; gap:10px; align-items:center;">
+                <input type="range" id="lineSpacing" min="1.0" max="3.0" step="0.1" value="1.4" oninput="updateUI()">
+                <span class="val-badge" id="v-line">1.4</span>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button type="button" onclick="resetSliders()" style="min-width:unset;">♻️ Reset</button>
+              <button type="button" id="displayDoneBtn" class="primary" style="min-width:unset;">Done</button>
+            </div>
+
+            <div style="opacity:.7; font-size:12px; margin-top:8px;">
+              These settings affect preview + PDF export. Profile settings are stored per user (Adam/Pete) and per mode (Light/Dark).
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<script>
-const APP_NAME = 'ChordPro Edit';
-const APP_VERSION = 'Build 2026-02-08';
+  <!-- Text → ChordPro Modal -->
+  <div id="textToChoModal" class="modal" aria-hidden="true">
+    <div class="box" role="dialog" aria-modal="true" aria-label="Text to ChordPro Converter" style="width:min(920px,92vw);">
+      <div class="head">
+        <div>🧩 Text → .cho Converter</div>
+        <button type="button" id="t2cCloseBtn" title="Close" style="min-width:unset;">Close</button>
+      </div>
+      <div class="body">
+        <div style="display:grid; gap:10px;">
+          <div style="display:grid; gap:6px;">
+            <label style="opacity:.85; font-size:12px; font-weight:bold;">Optional filename (used to infer Title / Artist / Version)</label>
+            <input id="t2cFilename" placeholder="e.g. 3 A.M. - Matchbox Twenty (Adam)" style="height:36px; padding:6px 8px; border-radius:8px; border:1px solid #444; background:#111; color:#eee;">
+            <div style="opacity:.7; font-size:12px;">If you use “Title - Artist (Version)”, tags will be auto-filled.</div>
+          </div>
 
-const scale = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
-const DEFAULTS = {
-  dark:  { bg:'#000000', cho:'#00ffff', sec:'#ffff00', chorus:'#ff6b6b', size:18, line:1.4 },
-  light: { bg:'#ffffff', cho:'#0056b3', sec:'#d00000', chorus:'#d00000', size:18, line:1.4 }
-};
+          <div style="display:grid; gap:6px;">
+            <label style="opacity:.85; font-size:12px; font-weight:bold;">Paste plain text (lyrics + chords)</label>
+            <textarea id="t2cInput" placeholder="Paste text here..." style="min-height:260px; resize:vertical; border-radius:8px; border:1px solid #444; background:#111; color:#eee; padding:10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;"></textarea>
+            <div style="opacity:.7; font-size:12px;">
+              Converts section headers (Verse/Chorus/Bridge/etc) to <b>{comment: ...}</b> and wraps detected chords like <b>[D]</b>.
+              Bulk .docx conversion is still best done via your Automator script.
+            </div>
+          </div>
 
-// ✅ Per-device preview font (shared with viewer)
-function applyFontChoice(choice){
-  document.body.classList.remove('font-mono','font-system','font-readable','font-serif');
-  const c = (choice || 'mono');
-  document.body.classList.add(`font-${c}`);
-  localStorage.setItem('cps_font', c);
-}
-function initFontSelect(){
-  const fontSelect = document.getElementById('fontSelect');
-  const saved = localStorage.getItem('cps_font') || 'mono';
-  if (fontSelect) fontSelect.value = saved;
-  applyFontChoice(saved);
-  if (fontSelect){
-    fontSelect.addEventListener('change', () => applyFontChoice(fontSelect.value));
-  }
-}
+          <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button type="button" id="t2cCancelBtn" style="min-width:unset;">Cancel</button>
+            <button type="button" id="t2cConvertBtn" class="primary" style="min-width:unset;">Convert & Load</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-const META_IDS = ['mTitle','mArtist','mSinger','mKey','mCapo','mTempo','mDur','mPersona'];
+  <!-- New Persona Sheet Modal -->
+  <div id="newVersionModal" class="modal" aria-hidden="true">
+    <div class="box" role="dialog" aria-modal="true" aria-label="Create new version" style="width:min(720px,92vw);">
+      <div class="head">
+        <div>🧬 Create new version</div>
+        <button type="button" id="nvCloseBtn" title="Close" style="min-width:unset;">Close</button>
+      </div>
+      <div class="body">
+        <div style="display:grid; gap:6px;">
+          <label style="opacity:.85; font-size:12px; font-weight:bold;">Version name (dropdown + free text)</label>
+          <input id="nvVersionText" list="nvVersionList" placeholder="e.g. Pete" style="height:36px; padding:6px 8px; border-radius:8px; border:1px solid #444; background:#111; color:#eee;">
+          <datalist id="nvVersionList">
+            <option value="Adam"></option>
+            <option value="Pete"></option>
+            <option value="Both"></option>
+          </datalist>
+        </div>
 
-// -------------------------------
-// Meta parsing helper
-// - Standardise on {version: ...}
-// - Still reads legacy {persona: ...}
-// -------------------------------
-function populateMetaFromChordProText(content){
-  META_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+        <div class="actions">
+          <button type="button" id="nvCreateBtn" class="primary" style="min-width:unset;">Create version</button>
+          <button type="button" id="nvCancelBtn" style="min-width:unset;">Cancel</button>
+        </div>
 
-  const tags = {
-    mTitle:  /\{t(?:itle)?:\s*(.*?)\}/i,
-    mArtist: /\{(?:artist|a):\s*(.*?)\}/i,
-    mSinger: /\{singer:\s*(.*?)\}/i,
-    // Prefer version tag, fall back to persona
-    mPersona:/\{version:\s*(.*?)\}/i,
-    mPersonaLegacy:/\{persona:\s*(.*?)\}/i,
-    mKey:    /\{k(?:ey)?:\s*(.*?)\}/i,
-    mCapo:   /\{ca(?:po)?:\s*(.*?)\}/i,
-    mTempo:  /\{(?:tempo|bpm):\s*(.*?)\}/i,
-    mDur:    /\{duration:\s*(.*?)\}/i
-  };
+        <div style="opacity:.7; font-size:12px; margin-top:8px;">
+          This creates a fork: new UID + updates {version}. It also clears the “Save back to file” handle to prevent overwriting the original.
+        </div>
+      </div>
+    </div>
+  </div>
 
-  for (let id in tags) {
-    if (id === 'mPersonaLegacy') continue;
-    const match = content.match(tags[id]);
-    const el = document.getElementById(id);
-    if (match && el) el.value = match[1].trim();
-  }
+  <script>
+    // App identity (UI only)
+    const APP_NAME = 'ChordPro Edit';
+    const APP_VERSION = 'Build 2026-02-08';
 
-  // Legacy persona → persona dropdown if version missing
-  const personaEl = document.getElementById('mPersona');
-  if (personaEl && (!personaEl.value || !personaEl.value.trim())){
-    const oldV = (content.match(tags.mPersonaLegacy) || [null,''])[1];
-    if (oldV) personaEl.value = String(oldV).trim();
-  }
-}
+    const scale = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+    const DEFAULTS = {
+      dark: { bg: '#000000', cho: '#00ffff', sec: '#ffff00', chorus: '#ff6b6b', size: 18, line: 1.4 },
+      light:{ bg: '#ffffff', cho: '#0056b3', sec: '#d00000', chorus: '#d00000', size: 18, line: 1.4 }
+    };
 
-function syncFieldsToEditor(){
-  let content = document.getElementById('editor').value;
-  const mappings = [
-    { id:'mTitle', tag:'title' },
-    { id:'mArtist', tag:'artist' },
-    { id:'mSinger', tag:'singer' },
-    { id:'mPersona', tag:'version' },  // ✅ standardised
-    { id:'mKey', tag:'key' },
-    { id:'mCapo', tag:'capo' },
-    { id:'mTempo', tag:'tempo' },
-    { id:'mDur', tag:'duration' }
-  ];
-  mappings.forEach(m => {
-    const el = document.getElementById(m.id);
-    if (!el) return;
-    const val = el.value;
-    const regex = new RegExp(`\\{${m.tag}:.*?\\}`, 'i');
-    if (content.match(regex)) content = content.replace(regex, `{${m.tag}: ${val}}`);
-    else if (val) content = `{${m.tag}: ${val}}\n` + content;
-  });
-
-  // If legacy persona exists, remove it to avoid duplicates
-  content = content.replace(/\{persona:\s*.*?\}\s*\n?/ig, '');
-
-  document.getElementById('editor').value = content;
-  saveAndRender();
-}
-
-function saveAndRender(){
-  const data = {
-    title: document.getElementById('mTitle').value,
-    artist: document.getElementById('mArtist').value,
-    singer: document.getElementById('mSinger').value,
-    version: document.getElementById('mPersona').value,
-    key: document.getElementById('mKey').value,
-    capo: document.getElementById('mCapo').value,
-    tempo: document.getElementById('mTempo').value,
-    duration: document.getElementById('mDur').value,
-    content: document.getElementById('editor').value
-  };
-  localStorage.setItem('chordpro_studio_save', JSON.stringify(data));
-  render();
-}
-
-function render(){
-  const title = document.getElementById('mTitle').value || 'Song';
-  const artist = document.getElementById('mArtist').value || 'Artist';
-  const capo = document.getElementById('mCapo').value;
-
-  let headerHtml = `<div style="text-align:center; font-weight:bold; border-bottom:1px solid #444; margin-bottom:15px; padding-bottom:10px; color:var(--lyric-clr)">`;
-  headerHtml += `${title} | ${artist}`;
-  if (capo) headerHtml += `<span class="capo-badge">CAPO ${capo}</span>`;
-  headerHtml += `</div>`;
-
-  let inChorus = false;
-  let bodyHtml = document.getElementById('editor').value.split('\n').map(line => {
-    let p = line.trim();
-
-    if (p.includes("---PAGE BREAK---")) return '<div class="page-break"></div>';
-
-    if (p.match(/\{(start_of_chorus|soc)\}/i)) { inChorus = true; return ""; }
-    if (p.match(/\{(end_of_chorus|eoc)\}/i)) { inChorus = false; return ""; }
-
-    let cMatch = p.match(/\{c(?:omment)?:\s*(.*?)\}/i);
-    if (cMatch) {
-      inChorus = cMatch[1].toLowerCase().includes("chorus");
-      return `<span class="p-section">${cMatch[1]}</span>`;
+    // Per-device preview font (shared with viewer)
+    function applyFontChoice(choice){
+      document.body.classList.remove('font-mono','font-system','font-readable','font-serif');
+      const c = (choice || 'mono');
+      document.body.classList.add(`font-${c}`);
+      localStorage.setItem('cps_font', c);
+    }
+    function initFontSelect(){
+      const fontSelect = document.getElementById('fontSelect');
+      const saved = localStorage.getItem('cps_font') || 'mono';
+      if (fontSelect) fontSelect.value = saved;
+      applyFontChoice(saved);
+      if (fontSelect){
+        fontSelect.addEventListener('change', () => applyFontChoice(fontSelect.value));
+      }
     }
 
-    if (p.startsWith('{')) return "";
-    if (p === "") return "<div>&nbsp;</div>";
+    // META_IDS used only for clearing in some flows. We include mSinger here for completeness.
+    const META_IDS = ['mTitle','mArtist','mSinger','mKey','mCapo','mTempo','mDur','mPersona'];
 
-    let lineClass = inChorus ? "p-chorus-text" : "";
-    return `<div class="${lineClass}">${p.replace(/\[([^\]]+)\]/g, `<span class="p-chord">$1</span>`)}</div>`;
-  }).join("");
-
-  document.getElementById('preview').innerHTML = headerHtml + bodyHtml;
-}
-
-function updateUI(){
-  const themeUser = document.getElementById('userTheme').value;
-  const mode = document.body.classList.contains('light-theme') ? 'light' : 'dark';
-  let settings = JSON.parse(localStorage.getItem('theme_settings')) || {};
-  settings[themeUser] = settings[themeUser] || {};
-  settings[themeUser][mode] = {
-    bg: document.getElementById('bgColor').value,
-    cho: document.getElementById('choColor').value,
-    sec: document.getElementById('secColor').value,
-    chorus: document.getElementById('chorusColor').value,
-    size: document.getElementById('fontSize').value,
-    line: document.getElementById('lineSpacing').value
-  };
-  localStorage.setItem('theme_settings', JSON.stringify(settings));
-
-  const root = document.documentElement;
-  const s = settings[themeUser][mode];
-  root.style.setProperty('--ipad-bg', s.bg);
-  root.style.setProperty('--chord-clr', s.cho);
-  root.style.setProperty('--section-clr', s.sec);
-  root.style.setProperty('--chorus-clr', s.chorus);
-  root.style.setProperty('--font-size', s.size + 'px');
-  root.style.setProperty('--line-height', s.line);
-
-  const hex = s.bg.replace('#','');
-  const r = parseInt(hex.substring(0,2),16),
-        g = parseInt(hex.substring(2,4),16),
-        b = parseInt(hex.substring(4,6),16);
-  root.style.setProperty('--lyric-clr', (r*0.299 + g*0.587 + b*0.114) < 128 ? '#ffffff' : '#000000');
-
-  document.getElementById('v-size').innerText = s.size + 'px';
-  document.getElementById('v-line').innerText = s.line;
-  render();
-}
-
-function loadThemeSettings(){
-  const themeUser = document.getElementById('userTheme').value;
-  const mode = document.body.classList.contains('light-theme') ? 'light' : 'dark';
-  const settings = JSON.parse(localStorage.getItem('theme_settings')) || {};
-  const s = (settings[themeUser] && settings[themeUser][mode]) ? settings[themeUser][mode] : DEFAULTS[mode];
-
-  document.getElementById('bgColor').value = s.bg;
-  document.getElementById('choColor').value = s.cho;
-  document.getElementById('secColor').value = s.sec;
-  document.getElementById('chorusColor').value = s.chorus;
-  document.getElementById('fontSize').value = s.size;
-  document.getElementById('lineSpacing').value = s.line;
-  updateUI();
-}
-
-function toggleTheme(){
-  document.body.classList.toggle('light-theme');
-  document.getElementById('themeToggleBtn').innerText =
-    document.body.classList.contains('light-theme') ? "☀️ Light" : "🌙 Dark";
-  loadThemeSettings();
-}
-
-function resetSliders(){
-  const mode = document.body.classList.contains('light-theme') ? 'light' : 'dark';
-  const s = DEFAULTS[mode];
-  document.getElementById('bgColor').value = s.bg;
-  document.getElementById('choColor').value = s.cho;
-  document.getElementById('secColor').value = s.sec;
-  document.getElementById('chorusColor').value = s.chorus;
-  document.getElementById('fontSize').value = s.size;
-  document.getElementById('lineSpacing').value = s.line;
-  updateUI();
-}
-
-// Legacy file input import
-function handleFileImport(input){
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const content = e.target.result;
-    document.getElementById('editor').value = content;
-    populateMetaFromChordProText(content);
-    saveAndRender();
-  };
-  reader.readAsText(input.files[0]);
-}
-
-function generateUid(){
-  try { return crypto.randomUUID(); } catch(e) {}
-  return 'uid-' + Math.random().toString(16).slice(2) + '-' + Date.now().toString(16);
-}
-function ensureUidInEditorText(){
-  const ed = document.getElementById('editor');
-  let text = ed.value || '';
-  if (/\{uid:\s*.+?\}/i.test(text)) return;
-  const uid = generateUid();
-  const lines = text.split(/\r?\n/);
-  let i = 0;
-  while (i < lines.length && (lines[i].trim() === '' || lines[i].trim().startsWith('#'))) i++;
-  lines.splice(i, 0, `{uid: ${uid}}`);
-  ed.value = lines.join('\n');
-}
-
-let __needsSaveAsPrompt = false;
-
-function __suggestChoName(){
-  const title = document.getElementById('mTitle')?.value || 'Song';
-  const artist = document.getElementById('mArtist')?.value || 'Artist';
-  const ver = document.getElementById('mPersona')?.value || 'Adam';
-  return `${title} - ${artist} (${ver}).cho`;
-}
-
-async function __saveChoViaPickerAlwaysPrompt(){
-  if (!window.showSaveFilePicker) return false;
-  try{
-    const handle = await window.showSaveFilePicker({
-      suggestedName: __suggestChoName(),
-      types: [{ description:'ChordPro', accept: { 'text/plain': ['.cho'] } }]
-    });
-
-    ensureUidInEditorText();
-
-    const w = await handle.createWritable();
-    await w.write(document.getElementById('editor').value);
-    await w.close();
-
-    __fsHandle = handle;
-    const f = await handle.getFile();
-    __fsLastModified = f.lastModified;
-    __openedFileName = f.name;
-
-    const sb = document.getElementById('saveBackBtn');
-    if (sb) sb.style.display = 'inline-block';
-
-    __needsSaveAsPrompt = false;
-    __hideSaveAsBanner();
-    __toast('Saved new file: ' + f.name);
-    return true;
-  }catch(e){
-    return false;
-  }
-}
-
-function downloadCho(){
-  if (__needsSaveAsPrompt && window.showSaveFilePicker) {
-    __saveChoViaPickerAlwaysPrompt();
-    return;
-  }
-  ensureUidInEditorText();
-  const title = document.getElementById('mTitle').value || 'Song';
-  const artist = document.getElementById('mArtist').value || 'Artist';
-  const ver = document.getElementById('mPersona').value || 'Adam';
-  const blob = new Blob([document.getElementById('editor').value], {type:"text/plain"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `${title} - ${artist} (${ver}).cho`;
-  a.click();
-}
-
-function clearAllFields(){
-  if (confirm("Clear all?")){
-    META_IDS.forEach(id => document.getElementById(id).value = "");
-    document.getElementById('editor').value = "";
-    saveAndRender();
-  }
-}
-
-function newSong(){
-  META_IDS.forEach(id => document.getElementById(id).value = "");
-  document.getElementById('mPersona').value = "Adam";
-  document.getElementById('editor').value =
-`{title: New Song}
-{artist: Artist}
-{singer: Adam}
-{version: Adam}
-
-{comment: Verse 1}
-[G] Lyrics here...`;
-  saveAndRender();
-}
-
-function transpose(dir){
-  const editor = document.getElementById('editor');
-  editor.value = editor.value.replace(/\[([A-G][b#]?)(.*?)\]/g, (m, n, s) => {
-    let clean = n.replace('Db','C#').replace('Eb','D#').replace('Gb','F#').replace('Ab','G#').replace('Bb','A#');
-    let idx = scale.indexOf(clean);
-    return `[${scale[(idx + dir + 12) % 12]}${s}]`;
-  });
-  saveAndRender();
-}
-
-function insertPageBreak(){
-  const s = prompt("Page turn to:", "Chorus");
-  if (s !== null){
-    document.getElementById('editor').value += `\n---PAGE BREAK--- [${s || 'Turn'}]\n`;
-    saveAndRender();
-  }
-}
-
-function insertBlankLine(){
-  const editor = document.getElementById('editor');
-  const cursorPos = editor.selectionStart;
-  const textBefore = editor.value.substring(0, cursorPos);
-  const textAfter = editor.value.substring(cursorPos);
-  editor.value = textBefore + '\n' + textAfter;
-  editor.selectionStart = editor.selectionEnd = cursorPos + 1;
-  saveAndRender();
-}
-
-function updatePageTitle(){
-  document.title = (document.getElementById('mTitle').value || "Song") +
-                   " - " +
-                   (document.getElementById('mArtist').value || "Artist");
-}
-
-function exportPdf(){
-  updatePageTitle();
-  window.print();
-}
-
-document.getElementById('fileInput').addEventListener('change', function(){
-  if (this.files && this.files[0]) handleFileImport(this);
-});
-
-// ===============================
-// Text → .cho Converter (unchanged)
-// ===============================
-function t2cShow(){
-  const m = document.getElementById('textToChoModal');
-  if (!m) return;
-  m.style.display = 'flex';
-  m.setAttribute('aria-hidden','false');
-  const ta = document.getElementById('t2cInput');
-  if (ta) setTimeout(() => ta.focus(), 50);
-}
-function t2cHide(){
-  const m = document.getElementById('textToChoModal');
-  if (!m) return;
-  m.style.display = 'none';
-  m.setAttribute('aria-hidden','true');
-}
-function t2cInferFromFilename(raw){
-  const s = (raw || '').trim().replace(/\.(docx|txt|cho)$/i, '').trim();
-  let version = '';
-  let base = s;
-
-  const verMatch = base.match(/\(([^)]+)\)\s*$/);
-  if (verMatch){
-    version = verMatch[1].trim();
-    base = base.replace(/\s*\([^)]+\)\s*$/, '').trim();
-  }
-
-  let title = '';
-  let artist = '';
-  if (base.includes(' - ')){
-    const parts = base.split(' - ');
-    title = (parts[0] || '').trim();
-    artist = (parts.slice(1).join(' - ') || '').trim();
-  } else {
-    title = base;
-  }
-  return { title, artist, version };
-}
-function t2cProcessChords(line){
-  const chordRegex = /(^|\s+)([A-G][#b]?(?:m7|maj7|maj|min|m|sus[24]|add[29]|dim|aug|[5679]|11|13)?(?:\/[A-G][#b]?(?:m7|maj7|maj|min|m|sus[24]|add[29]|dim|aug|[5679]|11|13)?)?)(?=\s+|$)/g;
-  return line.replace(chordRegex, '$1[$2]');
-}
-function t2cConvertPlainText(plainText, inferred){
-  const lines = (plainText || '').split(/\r?\n/);
-  const out = [];
-
-  out.push(`{uid: ${generateUid()}}`);
-  if (inferred && inferred.version) out.push(`{version: ${inferred.version}}`);
-  if (inferred && inferred.title) out.push(`{title: ${inferred.title}}`);
-  if (inferred && inferred.artist) out.push(`{artist: ${inferred.artist}}`);
-  out.push('');
-
-  const sectionKeys = /^(verse|chorus|bridge|solo|outro|intro|pre[\s\-]?chorus|page|guitar|adam|pete)\b/i;
-
-  for (let idx=0; idx<lines.length; idx++){
-    const raw = lines[idx] || '';
-    const trimmed = raw.trim();
-
-    if (!trimmed){ out.push(''); continue; }
-
-    const isTitleLine = idx < 5 && inferred && inferred.title && trimmed.toLowerCase().includes(inferred.title.toLowerCase());
-
-    if (sectionKeys.test(trimmed)){
-      const clean = trimmed.replace(/[\[\]{}]/g, '');
-      out.push(`{comment: ${clean}}`);
-    } else if (isTitleLine){
-      out.push(trimmed);
-    } else {
-      out.push(t2cProcessChords(raw.replace(/\s+$/,'')));
+    function updateMetaBadge(){
+      const t = (document.getElementById('mTitle')?.value || 'Title').trim() || 'Title';
+      const a = (document.getElementById('mArtist')?.value || 'Artist').trim() || 'Artist';
+      const k = (document.getElementById('mKey')?.value || '').trim();
+      const c = (document.getElementById('mCapo')?.value || '').trim();
+      const bpm = (document.getElementById('mTempo')?.value || '').trim();
+      const d = (document.getElementById('mDur')?.value || '').trim();
+      const bits = [`${t} • ${a}`];
+      if (k) bits.push(`Key ${k}`);
+      if (c) bits.push(`Capo ${c}`);
+      if (bpm) bits.push(`${bpm} BPM`);
+      if (d) bits.push(d);
+      const el = document.getElementById('metaBadge');
+      if (el) el.textContent = bits.join('  ·  ');
     }
-  }
-  return out.join('\n');
-}
-function t2cLoadIntoEditor(chordProText){
-  const ed = document.getElementById('editor');
-  ed.value = chordProText;
-  populateMetaFromChordProText(chordProText);
-  saveAndRender();
-}
-function t2cWire(){
-  const btn = document.getElementById('btnTextToCho');
-  const closeBtn = document.getElementById('t2cCloseBtn');
-  const cancelBtn = document.getElementById('t2cCancelBtn');
-  const convertBtn = document.getElementById('t2cConvertBtn');
-  const modal = document.getElementById('textToChoModal');
 
-  if (btn) btn.addEventListener('click', t2cShow);
-  if (closeBtn) closeBtn.addEventListener('click', t2cHide);
-  if (cancelBtn) cancelBtn.addEventListener('click', t2cHide);
+    // Meta parsing helper (used by Open + legacy import + text->cho)
+    function populateMetaFromChordProText(content) {
+      META_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
 
-  if (convertBtn){
-    convertBtn.addEventListener('click', () => {
-      const filenameRaw = (document.getElementById('t2cFilename')?.value || '');
-      const inputText = (document.getElementById('t2cInput')?.value || '');
-      const inferred = t2cInferFromFilename(filenameRaw);
-      const chordPro = t2cConvertPlainText(inputText, inferred);
-      t2cLoadIntoEditor(chordPro);
-      t2cHide();
-    });
-  }
+      const tags = {
+        mTitle:  /\{t(?:itle)?:\s*(.*?)\}/i,
+        mArtist: /\{(?:artist|a):\s*(.*?)\}/i,
+        mSinger: /\{singer:\s*(.*?)\}/i,
+        mPersona:/\{persona:\s*(.*?)\}/i,
+        mVersion:/\{version:\s*(.*?)\}/i,
+        mKey:    /\{k(?:ey)?:\s*(.*?)\}/i,
+        mCapo:   /\{ca(?:po)?:\s*(.*?)\}/i,
+        mTempo:  /\{(?:tempo|bpm):\s*(.*?)\}/i,
+        mDur:    /\{duration:\s*(.*?)\}/i
+      };
 
-  if (modal){
-    modal.addEventListener('click', (e) => { if (e.target === modal) t2cHide(); });
-  }
+      for (let id in tags) {
+        const match = content.match(tags[id]);
+        if (match && document.getElementById(id)) document.getElementById(id).value = match[1].trim();
+      }
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape'){
-      const m = document.getElementById('textToChoModal');
-      if (m && m.style.display === 'flex') t2cHide();
+      if (document.getElementById('mPersona') && (!document.getElementById('mPersona').value || !document.getElementById('mPersona').value.trim())) {
+        const oldV = (content.match(/\{persona:\s*(.*?)\}/i) || [null,''])[1];
+        if (oldV) document.getElementById('mPersona').value = String(oldV).trim();
+      }
+      updateMetaBadge();
     }
-  });
-}
 
-// ===============================
-// v2.7: Save back to file + New Version
-// ===============================
-let __fsHandle = null;
-let __fsLastModified = null;
-let __openedFileName = null;
-
-function __toast(msg){
-  const t = document.getElementById('snToast');
-  if (!t) return;
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(t.__hideTimer);
-  t.__hideTimer = setTimeout(() => t.classList.remove('show'), 2400);
-}
-function __showSaveAsBanner(){ const b = document.getElementById('saveAsBanner'); if (b) b.style.display='flex'; }
-function __hideSaveAsBanner(){ const b = document.getElementById('saveAsBanner'); if (b) b.style.display='none'; }
-function __wireSaveAsBanner(){
-  const x = document.getElementById('saveAsBannerHideBtn');
-  if (x) x.addEventListener('click', __hideSaveAsBanner);
-}
-
-async function openChoFile(){
-  if (window.showOpenFilePicker){
-    try{
-      const [h] = await window.showOpenFilePicker({
-        multiple:false,
-        types:[{ description:'ChordPro', accept:{ 'text/plain': ['.cho','.txt'] } }]
+    function syncFieldsToEditor() {
+      let content = document.getElementById('editor').value;
+      const mappings = [
+        { id: 'mTitle', tag: 'title' }, { id: 'mArtist', tag: 'artist' },
+        { id: 'mSinger', tag: 'singer' }, { id: 'mPersona', tag: 'version' },
+        { id: 'mKey', tag: 'key' }, { id: 'mCapo', tag: 'capo' },
+        { id: 'mTempo', tag: 'tempo' }, { id: 'mDur', tag: 'duration' }
+      ];
+      mappings.forEach(m => {
+        const val = document.getElementById(m.id).value;
+        const regex = new RegExp(`\\{${m.tag}:.*?\\}`, 'i');
+        if (content.match(regex)) { content = content.replace(regex, `{${m.tag}: ${val}}`); }
+        else if (val) { content = `{${m.tag}: ${val}}\n` + content; }
       });
-      __fsHandle = h;
-      const f = await h.getFile();
-      __fsLastModified = f.lastModified;
-      __openedFileName = f.name;
-
-      const text = await f.text();
-      document.getElementById('editor').value = text;
-      populateMetaFromChordProText(text);
+      document.getElementById('editor').value = content;
       saveAndRender();
+      updateMetaBadge();
+    }
 
+    function saveAndRender() {
+      const data = {
+        title: document.getElementById('mTitle').value, artist: document.getElementById('mArtist').value,
+        singer: document.getElementById('mSinger').value, version: document.getElementById('mPersona').value,
+        key: document.getElementById('mKey').value, capo: document.getElementById('mCapo').value,
+        tempo: document.getElementById('mTempo').value, duration: document.getElementById('mDur').value,
+        content: document.getElementById('editor').value
+      };
+      localStorage.setItem('chordpro_studio_save', JSON.stringify(data));
+      render();
+    }
+
+    function render() {
+      const title = document.getElementById('mTitle').value || 'Song';
+      const artist = document.getElementById('mArtist').value || 'Artist';
+      const capo = document.getElementById('mCapo').value;
+
+      let headerHtml = `<div style="text-align:center; font-weight:bold; border-bottom:1px solid #444; margin-bottom:15px; padding-bottom:10px; color:var(--lyric-clr)">`;
+      headerHtml += `${title} | ${artist}`;
+      if(capo) headerHtml += `<span class="capo-badge">CAPO ${capo}</span>`;
+      headerHtml += `</div>`;
+
+      let inChorus = false;
+      let bodyHtml = document.getElementById('editor').value.split('\n').map(line => {
+        let p = line.trim();
+
+        if (p.includes("---PAGE BREAK---")) {
+          return '<div class="page-break"></div>';
+        }
+
+        if (p.match(/\{(start_of_chorus|soc)\}/i)) { inChorus = true; return ""; }
+        if (p.match(/\{(end_of_chorus|eoc)\}/i)) { inChorus = false; return ""; }
+        let cMatch = p.match(/\{c(?:omment)?:\s*(.*?)\}/i);
+        if (cMatch) {
+          inChorus = cMatch[1].toLowerCase().includes("chorus");
+          return `<span class="p-section">${cMatch[1]}</span>`;
+        }
+        if (p.startsWith('{')) return "";
+
+        if (p === "") return "<div>&nbsp;</div>";
+
+        let lineClass = inChorus ? "p-chorus-text" : "";
+        return `<div class="${lineClass}">${p.replace(/\[([^\]]+)\]/g, `<span class="p-chord">$1</span>`)}</div>`;
+      }).join("");
+
+      document.getElementById('preview').innerHTML = headerHtml + bodyHtml;
+    }
+
+    function updateUI() {
+      const themeUser = document.getElementById('userTheme').value;
+      const mode = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+      let settings = JSON.parse(localStorage.getItem('theme_settings')) || {};
+      settings[themeUser] = settings[themeUser] || {};
+      settings[themeUser][mode] = {
+        bg: document.getElementById('bgColor').value, cho: document.getElementById('choColor').value,
+        sec: document.getElementById('secColor').value, chorus: document.getElementById('chorusColor').value,
+        size: document.getElementById('fontSize').value, line: document.getElementById('lineSpacing').value
+      };
+      localStorage.setItem('theme_settings', JSON.stringify(settings));
+      const root = document.documentElement;
+      const s = settings[themeUser][mode];
+      root.style.setProperty('--ipad-bg', s.bg);
+      root.style.setProperty('--chord-clr', s.cho);
+      root.style.setProperty('--section-clr', s.sec);
+      root.style.setProperty('--chorus-clr', s.chorus);
+      root.style.setProperty('--font-size', s.size + 'px');
+      root.style.setProperty('--line-height', s.line);
+
+      const hex = s.bg.replace('#','');
+      const r = parseInt(hex.substring(0,2), 16), g = parseInt(hex.substring(2,4), 16), b = parseInt(hex.substring(4,6), 16);
+      root.style.setProperty('--lyric-clr', (r*0.299 + g*0.587 + b*0.114) < 128 ? '#ffffff' : '#000000');
+
+      document.getElementById('v-size').innerText = s.size + 'px';
+      document.getElementById('v-line').innerText = s.line;
+      render();
+    }
+
+    function loadThemeSettings() {
+      const themeUser = document.getElementById('userTheme').value;
+      const mode = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+      const settings = JSON.parse(localStorage.getItem('theme_settings')) || {};
+      const s = (settings[themeUser] && settings[themeUser][mode]) ? settings[themeUser][mode] : DEFAULTS[mode];
+      document.getElementById('bgColor').value = s.bg;
+      document.getElementById('choColor').value = s.cho;
+      document.getElementById('secColor').value = s.sec;
+      document.getElementById('chorusColor').value = s.chorus;
+      document.getElementById('fontSize').value = s.size;
+      document.getElementById('lineSpacing').value = s.line;
+      updateUI();
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('light-theme');
+      document.getElementById('themeToggleBtn').innerText = document.body.classList.contains('light-theme') ? "☀️ Light" : "🌙 Dark";
+      loadThemeSettings();
+    }
+
+    function resetSliders() {
+      const mode = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+      const s = DEFAULTS[mode];
+      document.getElementById('bgColor').value = s.bg;
+      document.getElementById('choColor').value = s.cho;
+      document.getElementById('secColor').value = s.sec;
+      document.getElementById('chorusColor').value = s.chorus;
+      document.getElementById('fontSize').value = s.size;
+      document.getElementById('lineSpacing').value = s.line;
+      updateUI();
+    }
+
+    // Legacy file input import
+    function handleFileImport(input) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target.result;
+        document.getElementById('editor').value = content;
+        populateMetaFromChordProText(content);
+        saveAndRender();
+      };
+      reader.readAsText(input.files[0]);
+    }
+
+    function generateUid() {
+      try { return crypto.randomUUID(); } catch(e) {}
+      return 'uid-' + Math.random().toString(16).slice(2) + '-' + Date.now().toString(16);
+    }
+
+    function ensureUidInEditorText() {
+      const ed = document.getElementById('editor');
+      let text = ed.value || '';
+      if (/\{uid:\s*.+?\}/i.test(text)) return;
+      const uid = generateUid();
+      const lines = text.split(/\r?\n/);
+      let i = 0;
+      while (i < lines.length && (lines[i].trim() === '' || lines[i].trim().startsWith('#'))) i++;
+      lines.splice(i, 0, `{uid: ${uid}}`);
+      ed.value = lines.join('\n');
+    }
+
+    // Save-As prompt state (used after "New version")
+    let __needsSaveAsPrompt = false;
+
+    function __suggestChoName() {
+      const title = document.getElementById('mTitle')?.value || 'Song';
+      const artist = document.getElementById('mArtist')?.value || 'Artist';
+      const ver = document.getElementById('mPersona')?.value || 'Adam';
+      return `${title} - ${artist} (${ver}).cho`;
+    }
+
+    async function __saveChoViaPickerAlwaysPrompt() {
+      if (!window.showSaveFilePicker) return false;
+
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: __suggestChoName(),
+          types: [{ description: 'ChordPro', accept: { 'text/plain': ['.cho'] } }]
+        });
+
+        ensureUidInEditorText();
+
+        const w = await handle.createWritable();
+        await w.write(document.getElementById('editor').value);
+        await w.close();
+
+        __fsHandle = handle;
+        const f = await handle.getFile();
+        __fsLastModified = f.lastModified;
+        __openedFileName = f.name;
+
+        const sb = document.getElementById('saveBackBtn');
+        if (sb) sb.style.display = 'inline-block';
+
+        __needsSaveAsPrompt = false;
+        __hideSaveAsBanner();
+        __toast('Saved new file: ' + f.name);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function downloadCho() {
+      if (__needsSaveAsPrompt && window.showSaveFilePicker) {
+        __saveChoViaPickerAlwaysPrompt();
+        return;
+      }
+
+      ensureUidInEditorText();
+      const title = document.getElementById('mTitle').value || 'Song';
+      const artist = document.getElementById('mArtist').value || 'Artist';
+      const ver = document.getElementById('mPersona').value || 'Adam';
+      const blob = new Blob([document.getElementById('editor').value], {type: "text/plain"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${title} - ${artist} (${ver}).cho`;
+      a.click();
+    }
+
+    function clearAllFields() {
+      if (confirm("Clear all?")) {
+        META_IDS.forEach(id => document.getElementById(id).value = "");
+        document.getElementById('editor').value = "";
+        saveAndRender();
+        updateMetaBadge();
+      }
+    }
+
+    function newSong() {
+      META_IDS.forEach(id => document.getElementById(id).value = "");
+      document.getElementById('mPersona').value = "Adam";
+      document.getElementById('editor').value = "{title: New Song}\n{artist: Artist}\n{singer: Adam}\n{persona: Adam}\n\n{c: Verse 1}\n[G] Lyrics here...";
+      saveAndRender();
+      updateMetaBadge();
+    }
+
+    function transpose(dir) {
+      const editor = document.getElementById('editor');
+      editor.value = editor.value.replace(/\[([A-G][b#]?)(.*?)\]/g, (m, n, s) => {
+        let clean = n.replace('Db','C#').replace('Eb','D#').replace('Gb','F#').replace('Ab','G#').replace('Bb','A#');
+        let idx = scale.indexOf(clean);
+        return `[${scale[(idx + dir + 12) % 12]}${s}]`;
+      });
+      saveAndRender();
+    }
+
+    function insertPageBreak() {
+      const s = prompt("Page turn to:", "Chorus");
+      if (s !== null) {
+        document.getElementById('editor').value += `\n---PAGE BREAK--- [${s || 'Turn'}]\n`;
+        saveAndRender();
+      }
+    }
+
+    function insertBlankLine() {
+      const editor = document.getElementById('editor');
+      const cursorPos = editor.selectionStart;
+      const textBefore = editor.value.substring(0, cursorPos);
+      const textAfter = editor.value.substring(cursorPos);
+      editor.value = textBefore + '\n' + textAfter;
+      editor.selectionStart = editor.selectionEnd = cursorPos + 1;
+      saveAndRender();
+    }
+
+    function updatePageTitle() {
+      document.title = (document.getElementById('mTitle').value || "Song") + " - " + (document.getElementById('mArtist').value || "Artist");
+      saveAndRender();
+    }
+
+    function exportPdf() {
+      updatePageTitle();
+      window.print();
+    }
+
+    document.getElementById('fileInput').addEventListener('change', function() {
+      if (this.files && this.files[0]) handleFileImport(this);
+    });
+
+    // ===============================
+    // Display modal wiring (NEW)
+    // ===============================
+    function displayShow(){
+      const m = document.getElementById('displayModal');
+      if (!m) return;
+      m.style.display = 'flex';
+      m.setAttribute('aria-hidden','false');
+      // Ensure label on open is correct
+      document.getElementById('themeToggleBtn').innerText = document.body.classList.contains('light-theme') ? "☀️ Light" : "🌙 Dark";
+    }
+    function displayHide(){
+      const m = document.getElementById('displayModal');
+      if (!m) return;
+      m.style.display = 'none';
+      m.setAttribute('aria-hidden','true');
+    }
+    function displayWire(){
+      const btn = document.getElementById('displayBtn');
+      const closeBtn = document.getElementById('displayCloseBtn');
+      const doneBtn = document.getElementById('displayDoneBtn');
+      const modal = document.getElementById('displayModal');
+      if (btn) btn.addEventListener('click', displayShow);
+      if (closeBtn) closeBtn.addEventListener('click', displayHide);
+      if (doneBtn) doneBtn.addEventListener('click', displayHide);
+      if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) displayHide(); });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const m = document.getElementById('displayModal');
+          if (m && m.style.display === 'flex') displayHide();
+        }
+      });
+    }
+
+    // ===============================
+    // Text → .cho Converter
+    // ===============================
+    function t2cShow() {
+      const m = document.getElementById('textToChoModal');
+      if (!m) return;
+      m.style.display = 'flex';
+      m.setAttribute('aria-hidden', 'false');
+      const ta = document.getElementById('t2cInput');
+      if (ta) setTimeout(() => ta.focus(), 50);
+    }
+    function t2cHide() {
+      const m = document.getElementById('textToChoModal');
+      if (!m) return;
+      m.style.display = 'none';
+      m.setAttribute('aria-hidden', 'true');
+    }
+    function t2cInferFromFilename(raw) {
+      const s = (raw || '').trim().replace(/\.(docx|txt|cho)$/i, '').trim();
+      let version = '';
+      let base = s;
+
+      const verMatch = base.match(/\(([^)]+)\)\s*$/);
+      if (verMatch) {
+        version = verMatch[1].trim();
+        base = base.replace(/\s*\([^)]+\)\s*$/, '').trim();
+      }
+
+      let title = '';
+      let artist = '';
+      if (base.includes(' - ')) {
+        const parts = base.split(' - ');
+        title = (parts[0] || '').trim();
+        artist = (parts.slice(1).join(' - ') || '').trim();
+      } else {
+        title = base;
+      }
+      return { title, artist, version };
+    }
+
+    function t2cProcessChords(line) {
+      const chordRegex = /(^|\s+)([A-G][#b]?(?:m7|maj7|maj|min|m|sus[24]|add[29]|dim|aug|[5679]|11|13)?(?:\/[A-G][#b]?(?:m7|maj7|maj|min|m|sus[24]|add[29]|dim|aug|[5679]|11|13)?)?)(?=\s+|$)/g;
+      return line.replace(chordRegex, '$1[$2]');
+    }
+
+    function t2cConvertPlainText(plainText, inferred) {
+      const lines = (plainText || '').split(/\r?\n/);
+      const out = [];
+
+      out.push(`{uid: ${generateUid()}}`);
+
+      if (inferred && inferred.version) out.push(`{persona: ${inferred.version}}`);
+      if (inferred && inferred.title) out.push(`{title: ${inferred.title}}`);
+      if (inferred && inferred.artist) out.push(`{artist: ${inferred.artist}}`);
+      out.push('');
+
+      const sectionKeys = /^(verse|chorus|bridge|solo|outro|intro|pre[\s\-]?chorus|page|guitar|adam|pete)\b/i;
+
+      for (let idx = 0; idx < lines.length; idx++) {
+        const raw = lines[idx] || '';
+        const trimmed = raw.trim();
+
+        if (!trimmed) { out.push(''); continue; }
+
+        const isTitleLine = idx < 5 && inferred && inferred.title && trimmed.toLowerCase().includes(inferred.title.toLowerCase());
+
+        if (sectionKeys.test(trimmed)) {
+          const clean = trimmed.replace(/[\[\]{}]/g, '');
+          out.push(`{comment: ${clean}}`);
+        } else if (isTitleLine) {
+          out.push(trimmed);
+        } else {
+          out.push(t2cProcessChords(raw.replace(/\s+$/,'')));
+        }
+      }
+      return out.join('\n');
+    }
+
+    function t2cLoadIntoEditor(chordProText) {
+      const ed = document.getElementById('editor');
+      ed.value = chordProText;
+      populateMetaFromChordProText(chordProText);
+      saveAndRender();
+    }
+
+    function t2cWire() {
+      const btn = document.getElementById('btnTextToCho');
+      const closeBtn = document.getElementById('t2cCloseBtn');
+      const cancelBtn = document.getElementById('t2cCancelBtn');
+      const convertBtn = document.getElementById('t2cConvertBtn');
+      const modal = document.getElementById('textToChoModal');
+
+      if (btn) btn.addEventListener('click', t2cShow);
+      if (closeBtn) closeBtn.addEventListener('click', t2cHide);
+      if (cancelBtn) cancelBtn.addEventListener('click', t2cHide);
+
+      if (convertBtn) {
+        convertBtn.addEventListener('click', () => {
+          const filenameRaw = (document.getElementById('t2cFilename')?.value || '');
+          const inputText = (document.getElementById('t2cInput')?.value || '');
+          const inferred = t2cInferFromFilename(filenameRaw);
+          const chordPro = t2cConvertPlainText(inputText, inferred);
+          t2cLoadIntoEditor(chordPro);
+          t2cHide();
+        });
+      }
+
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) t2cHide();
+        });
+      }
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const m = document.getElementById('textToChoModal');
+          if (m && m.style.display === 'flex') t2cHide();
+        }
+      });
+    }
+
+    // ===============================
+    // v2.7: Save back to file + New version
+    // ===============================
+    let __fsHandle = null;
+    let __fsLastModified = null;
+    let __openedFileName = null;
+
+    function __toast(msg) {
+      const t = document.getElementById('snToast');
+      if (!t) return;
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(t.__hideTimer);
+      t.__hideTimer = setTimeout(() => t.classList.remove('show'), 2400);
+    }
+
+    function __showSaveAsBanner() {
+      const b = document.getElementById('saveAsBanner');
+      if (b) b.style.display = 'flex';
+    }
+    function __hideSaveAsBanner() {
+      const b = document.getElementById('saveAsBanner');
+      if (b) b.style.display = 'none';
+    }
+    function __wireSaveAsBanner() {
+      const x = document.getElementById('saveAsBannerHideBtn');
+      if (x) x.addEventListener('click', __hideSaveAsBanner);
+    }
+
+    async function openChoFile() {
+      if (window.showOpenFilePicker) {
+        try {
+          const [h] = await window.showOpenFilePicker({
+            multiple: false,
+            types: [{ description: 'ChordPro', accept: { 'text/plain': ['.cho', '.txt'] } }]
+          });
+          __fsHandle = h;
+          const f = await h.getFile();
+          __fsLastModified = f.lastModified;
+          __openedFileName = f.name;
+
+          const text = await f.text();
+          document.getElementById('editor').value = text;
+
+          populateMetaFromChordProText(text);
+          saveAndRender();
+
+          const sb = document.getElementById('saveBackBtn');
+          if (sb) sb.style.display = 'inline-block';
+
+          __toast('Opened: ' + f.name);
+          return;
+        } catch (e) {
+          // cancelled
+        }
+      }
+      document.getElementById('fileInput').click();
+    }
+
+    async function saveBackToFile() {
+      if (!__fsHandle) {
+        alert('Save back to file is only available when you open a file using Chrome/Edge “Open”.');
+        return;
+      }
+      try {
+        const current = await __fsHandle.getFile();
+        if (__fsLastModified && current.lastModified !== __fsLastModified) {
+          const ok = confirm('File changed on disk since you opened it. Overwrite anyway?');
+          if (!ok) return;
+        }
+
+        ensureUidInEditorText();
+
+        const w = await __fsHandle.createWritable();
+        await w.write(document.getElementById('editor').value);
+        await w.close();
+
+        const refreshed = await __fsHandle.getFile();
+        __fsLastModified = refreshed.lastModified;
+        __openedFileName = refreshed.name;
+
+        __toast('Saved back to: ' + refreshed.name);
+      } catch (e) {
+        console.error(e);
+        alert('Save back failed. Check Console for details.');
+      }
+    }
+
+    function nvShow() {
+      const m = document.getElementById('newVersionModal');
+      if (!m) return;
+
+      const curVer = document.getElementById('mPersona')?.value || '';
+      const verText = document.getElementById('nvVersionText');
+      if (verText && !verText.value) verText.value = curVer || 'Pete';
+
+      m.style.display = 'flex';
+      m.setAttribute('aria-hidden', 'false');
+      setTimeout(() => verText && verText.focus(), 30);
+    }
+
+    function nvHide() {
+      const m = document.getElementById('newVersionModal');
+      if (!m) return;
+      m.style.display = 'none';
+      m.setAttribute('aria-hidden', 'true');
+    }
+
+    function __upsertTag(text, tag, value) {
+      const re = new RegExp(`\\{${tag}:\\s*.*?\\}`, 'i');
+      if (re.test(text)) return text.replace(re, `{${tag}: ${value}}`);
+      return `{${tag}: ${value}}\n` + text;
+    }
+
+    function nvCreate() {
+      const ver = (document.getElementById('nvVersionText')?.value || '').trim();
+      if (!ver) { alert('Please enter a version name (e.g. Pete).'); return; }
+
+      const ed = document.getElementById('editor');
+      if (!ed) return;
+
+      if (!/\{uid:/i.test(ed.value)) {
+        const uid0 = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('uid-' + Date.now());
+        ed.value = `{uid: ${uid0}}\n` + ed.value;
+      }
+      const uidNew = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('uid-' + Date.now());
+      ed.value = ed.value.replace(/\{uid:\s*.*?\}/i, `{uid: ${uidNew}}`);
+
+      ed.value = __upsertTag(ed.value, 'version', ver);
+
+      const vSel = document.getElementById('mPersona');
+      if (vSel) {
+        const has = Array.from(vSel.options).some(o => o.value === ver);
+        if (has) vSel.value = ver;
+      }
+
+      __fsHandle = null;
+      __fsLastModified = null;
+      __openedFileName = null;
       const sb = document.getElementById('saveBackBtn');
-      if (sb) sb.style.display='inline-block';
-      __toast('Opened: ' + f.name);
-      return;
-    }catch(e){
-      // user cancelled; fall through
-    }
-  }
-  document.getElementById('fileInput').click();
-}
+      if (sb) sb.style.display = 'none';
 
-async function saveBackToFile(){
-  if (!__fsHandle){
-    alert('Save back to file is only available when you open a file using Chrome/Edge “Open”.');
-    return;
-  }
-  try{
-    const current = await __fsHandle.getFile();
-    if (__fsLastModified && current.lastModified !== __fsLastModified){
-      const ok = confirm('File changed on disk since you opened it. Overwrite anyway?');
-      if (!ok) return;
+      __needsSaveAsPrompt = true;
+      __showSaveAsBanner();
+
+      saveAndRender();
+      nvHide();
+      __toast('New version created: ' + ver);
+      updateMetaBadge();
     }
 
-    ensureUidInEditorText();
+    function __onReady(fn) {
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+      else fn();
+    }
 
-    const w = await __fsHandle.createWritable();
-    await w.write(document.getElementById('editor').value);
-    await w.close();
+    function nvWire() {
+      const closeBtn = document.getElementById('nvCloseBtn');
+      const cancelBtn = document.getElementById('nvCancelBtn');
+      const createBtn = document.getElementById('nvCreateBtn');
+      const modal = document.getElementById('newVersionModal');
 
-    const refreshed = await __fsHandle.getFile();
-    __fsLastModified = refreshed.lastModified;
-    __openedFileName = refreshed.name;
+      if (closeBtn) closeBtn.addEventListener('click', nvHide);
+      if (cancelBtn) cancelBtn.addEventListener('click', nvHide);
+      if (createBtn) createBtn.addEventListener('click', nvCreate);
 
-    __toast('Saved back to: ' + refreshed.name);
-  }catch(e){
-    console.error(e);
-    alert('Save back failed. Check Console for details.');
-  }
-}
+      if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) nvHide(); });
 
-function nvShow(){
-  const m = document.getElementById('newVersionModal');
-  if (!m) return;
-  const curVer = document.getElementById('mPersona')?.value || '';
-  const verText = document.getElementById('nvVersionText');
-  if (verText && !verText.value) verText.value = curVer || 'Pete';
-  m.style.display = 'flex';
-  m.setAttribute('aria-hidden','false');
-  setTimeout(() => verText && verText.focus(), 30);
-}
-function nvHide(){
-  const m = document.getElementById('newVersionModal');
-  if (!m) return;
-  m.style.display = 'none';
-  m.setAttribute('aria-hidden','true');
-}
-function __upsertTag(text, tag, value){
-  const re = new RegExp(`\\{${tag}:\\s*.*?\\}`, 'i');
-  if (re.test(text)) return text.replace(re, `{${tag}: ${value}}`);
-  return `{${tag}: ${value}}\n` + text;
-}
-function nvCreate(){
-  const ver = (document.getElementById('nvVersionText')?.value || '').trim();
-  if (!ver){ alert('Please enter a version name (e.g. Pete).'); return; }
+      window.nvShow = nvShow;
+      window.saveBackToFile = saveBackToFile;
+      window.openChoFile = openChoFile;
+    }
 
-  const ed = document.getElementById('editor');
-  if (!ed) return;
+    // Init
+    window.onload = () => {
+      initFontSelect();
+      loadThemeSettings();
+      render();
+      t2cWire();
+      displayWire();
+      __wireSaveAsBanner();
+      updateMetaBadge();
+      document.getElementById('themeToggleBtn').innerText = document.body.classList.contains('light-theme') ? "☀️ Light" : "🌙 Dark";
+    };
+    __onReady(nvWire);
+  </script>
 
-  // 1) Ensure the editor text contains the current meta fields BEFORE forking
-  const meta = {
-    title:   (document.getElementById('mTitle')?.value || '').trim(),
-    artist:  (document.getElementById('mArtist')?.value || '').trim(),
-    singer:  (document.getElementById('mSinger')?.value || '').trim(),
-    key:     (document.getElementById('mKey')?.value || '').trim(),
-    capo:    (document.getElementById('mCapo')?.value || '').trim(),
-    tempo:   (document.getElementById('mTempo')?.value || '').trim(),
-    dur:     (document.getElementById('mDur')?.value || '').trim()
-  };
-
-  // Upsert core tags (only if value exists)
-  if (meta.title)  ed.value = __upsertTag(ed.value, 'title', meta.title);
-  if (meta.artist) ed.value = __upsertTag(ed.value, 'artist', meta.artist);
-  if (meta.singer) ed.value = __upsertTag(ed.value, 'singer', meta.singer);
-  if (meta.key)    ed.value = __upsertTag(ed.value, 'key', meta.key);
-  if (meta.capo)   ed.value = __upsertTag(ed.value, 'capo', meta.capo);
-  if (meta.tempo)  ed.value = __upsertTag(ed.value, 'tempo', meta.tempo);
-  if (meta.dur)    ed.value = __upsertTag(ed.value, 'duration', meta.dur);
-
-  // 2) Ensure UID exists, then replace it with a new one (fork)
-  if (!/\{uid:/i.test(ed.value)) {
-    ed.value = `{uid: ${generateUid()}}\n` + ed.value;
-  }
-  ed.value = ed.value.replace(/\{uid:\s*.*?\}/i, `{uid: ${generateUid()}}`);
-
-  // 3) Set version for the fork + remove legacy persona to avoid duplicates
-  ed.value = __upsertTag(ed.value, 'version', ver);
-  ed.value = ed.value.replace(/\{persona:\s*.*?\}\s*\n?/ig, '');
-
-  // 4) Re-populate meta inputs from the editor (so UI shows original values)
-  populateMetaFromChordProText(ed.value);
-
-  // 5) Update dropdown if option exists
-  const vSel = document.getElementById('mPersona');
-  if (vSel) {
-    const has = Array.from(vSel.options).some(o => o.value === ver);
-    if (has) vSel.value = ver;
-  }
-
-  // 6) SAFETY: clear file handle so you can't overwrite the original
-  __fsHandle = null;
-  __fsLastModified = null;
-  __openedFileName = null;
-  const sb = document.getElementById('saveBackBtn');
-  if (sb) sb.style.display = 'none';
-
-  // 7) Force Save As prompt (Chrome/Edge)
-  __needsSaveAsPrompt = true;
-  __showSaveAsBanner();
-
-  saveAndRender();
-  nvHide();
-  __toast('New version created: ' + ver);
-}
-
-function __onReady(fn){
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
-  else fn();
-}
-function nvWire(){
-  const closeBtn = document.getElementById('nvCloseBtn');
-  const cancelBtn = document.getElementById('nvCancelBtn');
-  const createBtn = document.getElementById('nvCreateBtn');
-  const modal = document.getElementById('newVersionModal');
-
-  if (closeBtn) closeBtn.addEventListener('click', nvHide);
-  if (cancelBtn) cancelBtn.addEventListener('click', nvHide);
-  if (createBtn) createBtn.addEventListener('click', nvCreate);
-  if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) nvHide(); });
-
-  window.nvShow = nvShow;
-  window.saveBackToFile = saveBackToFile;
-  window.openChoFile = openChoFile;
-}
-
-__onReady(() => {
-  initFontSelect();
-  loadThemeSettings();
-  render();
-  t2cWire();
-  nvWire();
-  __wireSaveAsBanner();
-});
-</script>
-
-<!-- New Version Modal -->
-<div id="newVersionModal" aria-hidden="true">
-  <div class="nv-box" role="dialog" aria-modal="true" aria-label="Create new version">
-    <div class="nv-head">
-      <div>🧬 Create new version</div>
-      <button type="button" id="nvCloseBtn" title="Close">Close</button>
-    </div>
-    <div class="nv-body">
-      <div style="display:grid; gap:6px;">
-        <label style="opacity:.85; font-size:12px; font-weight:bold;">Version name (dropdown + free text)</label>
-        <input id="nvVersionText" list="nvVersionList" placeholder="e.g. Pete">
-        <datalist id="nvVersionList">
-          <option value="Adam"></option>
-          <option value="Pete"></option>
-          <option value="Both"></option>
-        </datalist>
-      </div>
-
-      <div class="nv-actions">
-        <button type="button" id="nvCreateBtn" style="background: var(--btn-accent);">Create version</button>
-        <button type="button" id="nvCancelBtn">Cancel</button>
-      </div>
-
-      <div style="opacity:.7; font-size:12px; margin-top:8px;">
-        This creates a fork: new UID + updates {version}. It also clears the “Save back to file” handle to prevent overwriting the original.
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="snToast" aria-live="polite" aria-atomic="true"></div>
-<div class="app-footer"><strong>ChordPro Edit</strong> • Build 2026-02-08</div>
-
+  <div id="snToast" aria-live="polite" aria-atomic="true"></div>
+  <div class="app-footer"><strong>ChordPro Edit</strong> • Build 2026-02-08</div>
 </body>
 </html>

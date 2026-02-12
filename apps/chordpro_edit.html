@@ -22,6 +22,7 @@
   --radius: 12px;
   --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --editor-text: var(--text);
 
   /* Preview/export theme vars */
   --bg-dark:#000000; --sec-dark:#ffff00; --cho-dark:#00ffff; --chorus-dark:#ff6b6b;
@@ -71,6 +72,7 @@ body.light-theme{
   --muted:#6b7280;
   --line:#e5e7eb;
   --btn-grey:#e5e7eb;
+  --editor-text:#111827;
   background:#f0f2f5;
 }
 
@@ -869,7 +871,7 @@ body.light-theme #saveAsBanner button{ border-color: rgba(0,0,0,0.25); }
   </div>
 </details>
 
-    <details class="theme-card" open>
+    <details class="theme-card">
       <summary>
   <div class="summary-row">
     <span>🎛️ Theme (Preview + PDF)</span>
@@ -994,127 +996,164 @@ const META_IDS = ['mTitle','mArtist','mSinger','mKey','mCapo','mTempo','mDur','m
 
 // -------------------------------
 // Editor content mode: hide/show meta tag lines inside the textarea
-// (Meta fields are always the source of truth)
+// - __rawEditorText ALWAYS stores full text (tags + body)
+// - When tags are hidden, the textarea shows body-only, and we cache the tag block.
 // -------------------------------
 let __hideTagsInEditor = (localStorage.getItem('cpe_hide_tags') ?? 'true') === 'true';
 let __rawEditorText = ''; // always includes tags
+let __tagsCache = '';
+let __bodyCache = '';
+
+function __splitTagsAndBody(raw){
+  const lines = String(raw || '').split(/\r?\n/);
+
+  // Recognised meta tags at top of file
+  const tagLine = /^\{\s*(song_uid|uid|title|t|artist|a|singer|persona|version|key|k|capo|ca|tempo|bpm|duration)\s*:\s*.*?\}\s*$/i;
+
+  let i = 0;
+  // skip leading blanks/comments
+  while (i < lines.length && (lines[i].trim() === '' || lines[i].trim().startsWith('#'))) i++;
+
+  // collect contiguous tag block (allow blanks inside it)
+  let j = i;
+  while (j < lines.length){
+    const s = lines[j].trim();
+    if (s === '') { j++; continue; }
+    if (tagLine.test(s)) { j++; continue; }
+    break;
+  }
+
+  const leading = lines.slice(0, i).join('\n');   // preserve leading blanks/comments
+  const tagText = lines.slice(i, j).join('\n');
+  const bodyText = lines.slice(j).join('\n');
+
+  const combinedTagText = [leading, tagText].filter(Boolean).join('\n').replace(/\n+$/,'');
+  return { tagText: combinedTagText, bodyText };
+}
 
 function __stripMetaBlock(text){
-    const lines = String(text || '').split(/\r?\n/);
-  const known = /^(\{\s*(song_uid|uid|title|t|artist|a|singer|persona|version|key|k|capo|ca|tempo|bpm|duration)\s*:)/i;
-    let i = 0;
-    // skip initial blank/comment lines
-    while (i < lines.length && (lines[i].trim()==='' || lines[i].trim().startsWith('#'))) i++;
-    // strip contiguous tag lines at the top (and blank lines between them)
-    let j = i;
-    while (j < lines.length){
-        const t = lines[j].trim();
-        if (t === '') { j++; continue; }
-        if (known.test(t)) { j++; continue; }
-        break;
-    }
-    return lines.slice(0, i).concat(lines.slice(j)).join('\n');
+  return __splitTagsAndBody(text).bodyText;
 }
 
 function __getUidFromText(text){
-    const m = String(text || '').match(/\{uid:\s*([^}]+)\}/i);
-    return m ? String(m[1]).trim() : '';
+  const m = String(text || '').match(/\{uid:\s*([^}]+)\}/i);
+  return m ? String(m[1]).trim() : '';
 }
 
 function __buildMetaBlock(uid){
-    const title  = (document.getElementById('mTitle')?.value || '').trim();
-    const artist = (document.getElementById('mArtist')?.value || '').trim();
-    const singer = (document.getElementById('mSinger')?.value || '').trim();
-    const ver    = (document.getElementById('mPersona')?.value || '').trim();
-    const key    = (document.getElementById('mKey')?.value || '').trim();
-    const capo   = (document.getElementById('mCapo')?.value || '').trim();
-    const tempo  = (document.getElementById('mTempo')?.value || '').trim();
-    const dur    = (document.getElementById('mDur')?.value || '').trim();
+  const title  = (document.getElementById('mTitle')?.value || '').trim();
+  const artist = (document.getElementById('mArtist')?.value || '').trim();
+  const singer = (document.getElementById('mSinger')?.value || '').trim();
+  const ver    = (document.getElementById('mPersona')?.value || '').trim();
+  const key    = (document.getElementById('mKey')?.value || '').trim();
+  const capo   = (document.getElementById('mCapo')?.value || '').trim();
+  const tempo  = (document.getElementById('mTempo')?.value || '').trim();
+  const dur    = (document.getElementById('mDur')?.value || '').trim();
 
-    const out = [];
-    out.push(`{uid: ${uid || generateUid()}}`);
-    if (ver)   out.push(`{version: ${ver}}`);
-    if (title) out.push(`{title: ${title}}`);
-    if (artist)out.push(`{artist: ${artist}}`);
-    if (singer)out.push(`{singer: ${singer}}`);
-    if (key)   out.push(`{key: ${key}}`);
-    if (capo)  out.push(`{capo: ${capo}}`);
-    if (tempo) out.push(`{tempo: ${tempo}}`);
-    if (dur)   out.push(`{duration: ${dur}}`);
-    out.push('');
-    return out.join('\n');
+  const out = [];
+  out.push(`{uid: ${uid || generateUid()}}`);
+  if (ver)   out.push(`{version: ${ver}}`);
+  if (title) out.push(`{title: ${title}}`);
+  if (artist)out.push(`{artist: ${artist}}`);
+  if (singer)out.push(`{singer: ${singer}}`);
+  if (key)   out.push(`{key: ${key}}`);
+  if (capo)  out.push(`{capo: ${capo}}`);
+  if (tempo) out.push(`{tempo: ${tempo}}`);
+  if (dur)   out.push(`{duration: ${dur}}`);
+  out.push('');
+  return out.join('\n');
 }
 
 function __composeRawFromBody(bodyText){
-    const currentUid = __getUidFromText(__rawEditorText) || __getUidFromText(bodyText) || '';
-    const meta = __buildMetaBlock(currentUid);
-    const body = String(bodyText || '').replace(/^\s+/, ''); // trim leading whitespace/newlines
-    return meta + body;
+  const currentUid = __getUidFromText(__rawEditorText) || __getUidFromText(bodyText) || '';
+  const meta = __buildMetaBlock(currentUid);
+  const body = String(bodyText || '').replace(/^\s+/, ''); // trim leading whitespace/newlines
+  return meta + body;
+}
+
+function __updateTagsBtn(){
+  const btn = document.getElementById('toggleTagsBtn');
+  if (btn) btn.textContent = __hideTagsInEditor ? '🏷️ Tags: Hidden' : '🏷️ Tags: Shown';
+}
+
+function __updateSongSummary(){
+  updateMetaSummaryUI();
+}
+
+function __ensureRawEditorUpToDate(){
+  const ed = document.getElementById('editor');
+  const cur = ed ? String(ed.value || '') : '';
+  if (__hideTagsInEditor){
+    __bodyCache = cur;
+    __rawEditorText = (__tagsCache ? (__tagsCache + '\n\n') : '') + (__bodyCache || '');
+  } else {
+    __rawEditorText = cur;
+    const parts = __splitTagsAndBody(__rawEditorText);
+    __tagsCache = parts.tagText || '';
+    __bodyCache = parts.bodyText || '';
+  }
 }
 
 function __setEditorFromRaw(rawText){
-    __rawEditorText = String(rawText || '');
-    const ed = document.getElementById('editor');
-    if (!ed) return;
-    ed.value = __hideTagsInEditor ? __stripMetaBlock(__rawEditorText) : __rawEditorText;
+  __rawEditorText = String(rawText || '');
+  const ed = document.getElementById('editor');
+  if (!ed) return;
+
+  const parts = __splitTagsAndBody(__rawEditorText);
+  __tagsCache = parts.tagText || '';
+  __bodyCache = parts.bodyText || '';
+
+  ed.value = __hideTagsInEditor ? __bodyCache : __rawEditorText;
 }
 
 function __getRawEditorText(){
-    const ed = document.getElementById('editor');
-    const cur = ed ? String(ed.value || '') : '';
+  const ed = document.getElementById('editor');
+  const cur = ed ? String(ed.value || '') : '';
 
-    if (!__tagsHidden){
-        return cur;
-    }
+  if (!__hideTagsInEditor){
+    return cur;
+  }
 
-    // Tags hidden: textarea contains body only
-    __bodyCache = cur;
-    const full = (__tagsCache ? (__tagsCache + '\n\n') : '') + (__bodyCache || '');
-    return full;
+  // Tags hidden: textarea contains body only; merge with cached tags
+  __bodyCache = cur;
+  return (__tagsCache ? (__tagsCache + '\n\n') : '') + (__bodyCache || '');
 }
+
 function __setRawEditorText(raw){
-    __rawEditorText = String(raw || '');
-    __setEditorFromRaw(__rawEditorText);
-    saveAndRender();
-    __updateSongSummary();
-}
-
-
-function __applyHideTagsUI(){
-    const btn = document.getElementById('toggleTagsBtn');
-    if (btn) btn.textContent = __hideTagsInEditor ? '🏷️ Tags: Hidden' : '🏷️ Tags: Shown';
+  __rawEditorText = String(raw || '');
+  __setEditorFromRaw(__rawEditorText);
+  saveAndRender();
+  __updateSongSummary();
 }
 
 function toggleTagsInEditor(){
-    // Toggle between showing full text (tags + body) and body-only compose view.
-    __ensureRawEditorUpToDate();
+  __ensureRawEditorUpToDate();
 
-    if (!__tagsHidden){
-        // Going to Hidden: split current raw into tags/body and show body only
-        const parts = __splitTagsAndBody(__rawEditorText || '');
-        __tagsCache = parts.tagText || '';
-        __bodyCache = parts.bodyText || '';
-        __tagsHidden = true;
-        localStorage.setItem('cps_tags_hidden', '1');
-        document.getElementById('editor').value = __bodyCache;
-    } else {
-        // Going to Shown: reassemble
-        __tagsHidden = false;
-        localStorage.setItem('cps_tags_hidden', '0');
-        const full = (__tagsCache ? (__tagsCache + '\n\n') : '') + (__bodyCache || document.getElementById('editor').value || '');
-        __rawEditorText = full;
-        document.getElementById('editor').value = full;
-    }
+  __hideTagsInEditor = !__hideTagsInEditor;
+  localStorage.setItem('cpe_hide_tags', String(__hideTagsInEditor));
 
-    __updateTagsBtn();
-    saveAndRender();
+  const ed = document.getElementById('editor');
+  if (!ed) return;
+
+  if (__hideTagsInEditor){
+    // Show body-only
+    const parts = __splitTagsAndBody(__rawEditorText);
+    __tagsCache = parts.tagText || '';
+    __bodyCache = parts.bodyText || '';
+    ed.value = __bodyCache;
+  } else {
+    // Show full text
+    ed.value = __rawEditorText;
+  }
+
+  __updateTagsBtn();
+  saveAndRender();
 }
 
-
 function __wireTagsToggle(){
-    const b = document.getElementById('toggleTagsBtn');
-    if (b) b.addEventListener('click', toggleTagsInEditor);
-    __applyHideTagsUI();
+  const b = document.getElementById('toggleTagsBtn');
+  if (b) b.addEventListener('click', (e) => { e.preventDefault(); toggleTagsInEditor(); });
+  __updateTagsBtn();
 }
 
 
@@ -1213,22 +1252,7 @@ function syncFieldsToEditor(){
 
     __setRawEditorText(raw);
 }
-  ];
-  mappings.forEach(m => {
-    const el = document.getElementById(m.id);
-    if (!el) return;
-    const val = el.value;
-    const regex = new RegExp(`\\{${m.tag}:.*?\\}`, 'i');
-    if (content.match(regex)) content = content.replace(regex, `{${m.tag}: ${val}}`);
-    else if (val) content = `{${m.tag}: ${val}}\n` + content;
-  });
 
-  // If legacy persona exists, remove it to avoid duplicates
-  content = content.replace(/\{persona:\s*.*?\}\s*\n?/ig, '');
-
-  __setEditorFromRaw(content);
-  saveAndRender();
-}
 
 function saveAndRender(){
     // Persist and render based on the *raw* chordpro text (tags + body), even when Tags are hidden.
@@ -1499,29 +1523,27 @@ function clearAllFields(){
 }
 
 function newSong(){
-    META_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
-    const persona = document.getElementById('mPersona');
-    if (persona) persona.value = "Adam";
-    const singer = document.getElementById('mSinger');
-    if (singer) singer.value = "Adam";
+  // Clear fields and set defaults
+  META_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+  const persona = document.getElementById('mPersona');
+  if (persona) persona.value = "Adam";
+  const singer = document.getElementById('mSinger');
+  if (singer) singer.value = "Adam";
 
-    const skeletonBody = "{c: Verse 1}
-[G] Lyrics here...";
-    let raw = "
-" + skeletonBody;
-    raw = ensureCoreTagsInRaw(raw);
-
-    __rawEditorText = raw;
-    __setEditorFromRaw(raw);
-    populateMetaFromChordProText(raw);
-    saveAndRender();
-}
-{artist: Artist}
-{singer: Adam}
-{version: Adam}
-
-{comment: Verse 1}
+  // Multi-line skeleton (template string)
+  const skeletonBody = `{comment: Verse 1}
 [G] Lyrics here...`;
+
+  // Optional leading blank line before body
+  let raw = "
+" + skeletonBody;
+
+  // Ensure required tags exist
+  raw = ensureCoreTagsInRaw(raw);
+
+  __rawEditorText = raw;
+  __setEditorFromRaw(raw);
+  populateMetaFromChordProText(raw);
   saveAndRender();
 }
 
@@ -1879,12 +1901,7 @@ function nvWire(){
 
 __onReady(() => {
   initFontSelect();
-  __applyHideTagsUI();
-
-  const toggleBtn = document.getElementById('toggleTagsBtn');
-  if (toggleBtn) toggleBtn.addEventListener('click', (e) => { e.preventDefault(); toggleTagsInEditor(); });
-
-  // Load last session (if present)
+    // Load last session (if present)
   try{
     const saved = JSON.parse(localStorage.getItem('chordpro_studio_save') || 'null');
     if (saved && typeof saved === 'object'){

@@ -551,37 +551,76 @@ body.light-theme #saveAsBanner button{ border-color: rgba(0,0,0,0.25); }
   <button type="button" id="saveAsBannerHideBtn" title="Hide this message">✕</button>
 </div>
 
+
 <details id="songInfo" class="song-info" open>
-  <summary>
+  <summary class="si-summary">
     <div class="si-left">
-      <span>📝</span>
-      <span>Song Info</span>
+      <div class="si-title">📝 <span>Song Info</span></div>
+      <span id="songInfoPill" class="si-pill">Song • Artist</span>
     </div>
-    <div class="si-actions">
-      <span id="songInfoPill" class="si-pill">Song • Artist • Key ? • Capo ? • ? BPM • ?</span>
-      <button type="button" class="si-mini-btn" id="toggleMetaTagsBtn" title="Show/hide meta tags in the editor">🧾 Tags</button>
+    <div class="si-right">
+      <button type="button" id="toggleMetaTagsBtn" title="Toggle showing meta tags inside the editor textarea">🏷️ Tags</button>
+      <span style="opacity:.75; font-weight:800;">▾</span>
     </div>
   </summary>
 
-  <div class="meta-grid">
-    <input type="text" id="mTitle" placeholder="Title" oninput="updatePageTitle(); syncFieldsToEditor()">
-    <input type="text" id="mArtist" placeholder="Artist" oninput="updatePageTitle(); syncFieldsToEditor()">
-    <select id="mSinger" onchange="syncFieldsToEditor()">
-        <option value="Adam">Adam</option>
-        <option value="Pete">Pete</option>
-        <option value="Both">Both</option>
-    </select>
-    <input type="text" id="mKey" placeholder="Key" oninput="syncFieldsToEditor()">
-    <input type="text" id="mCapo" placeholder="Capo" oninput="syncFieldsToEditor()">
-    <input type="text" id="mTempo" placeholder="BPM" oninput="syncFieldsToEditor()">
-    <input type="text" id="mDur" placeholder="m:ss" oninput="syncFieldsToEditor()">
-    <select id="mPersona" onchange="syncFieldsToEditor()">
-        <option value="Adam">Adam</option>
-        <option value="Pete">Pete</option>
-    </select>
-    <div style="display:flex; gap:5px;">
-        <button onclick="transpose(-1)" style="min-width:35px; width:50%;">♭</button>
-        <button onclick="transpose(1)" style="min-width:35px; width:50%;">♯</button>
+  <div class="si-panel">
+    <div class="meta-grid">
+      <div class="field">
+        <label for="mTitle">Title</label>
+        <input type="text" id="mTitle" placeholder="e.g. 3 A.M." oninput="updatePageTitle(); syncFieldsToEditor()">
+      </div>
+
+      <div class="field">
+        <label for="mArtist">Artist</label>
+        <input type="text" id="mArtist" placeholder="e.g. Matchbox Twenty" oninput="updatePageTitle(); syncFieldsToEditor()">
+      </div>
+
+      <div class="field">
+        <label for="mSinger">Singer</label>
+        <select id="mSinger" onchange="syncFieldsToEditor()">
+          <option value="Adam">Adam</option>
+          <option value="Pete">Pete</option>
+          <option value="Both">Both</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="mKey">Key</label>
+        <input type="text" id="mKey" placeholder="e.g. A" oninput="syncFieldsToEditor()">
+      </div>
+
+      <div class="field">
+        <label for="mCapo">Capo</label>
+        <input type="text" id="mCapo" placeholder="e.g. 2" oninput="syncFieldsToEditor()">
+      </div>
+
+      <div class="field">
+        <label for="mTempo">BPM</label>
+        <input type="text" id="mTempo" placeholder="e.g. 137" oninput="syncFieldsToEditor()">
+      </div>
+
+      <div class="field">
+        <label for="mDur">Duration</label>
+        <input type="text" id="mDur" placeholder="e.g. 3:37" oninput="syncFieldsToEditor()">
+      </div>
+
+      <div class="field">
+        <label for="mPersona">Version</label>
+        <select id="mPersona" onchange="syncFieldsToEditor()">
+          <option value="Adam">Adam</option>
+          <option value="Pete">Pete</option>
+        </select>
+        <div class="hint">Used for layout / versions</div>
+      </div>
+
+      <div class="field">
+        <label>Transpose</label>
+        <div class="field-inline">
+          <button type="button" class="btn-mini" onclick="transpose(-1)" title="Transpose down">♭</button>
+          <button type="button" class="btn-mini" onclick="transpose(1)" title="Transpose up">♯</button>
+        </div>
+      </div>
     </div>
   </div>
 </details>
@@ -678,6 +717,25 @@ const META_IDS = ['mTitle','mArtist','mSinger','mKey','mCapo','mTempo','mDur','m
     // Editor meta-tag hiding (default ON)
     // ===============================
     let __hideMetaTagsInEditor = (localStorage.getItem('cpe_hide_meta_tags') ?? '1') !== '0';
+
+    function __syncMetaTagsToggleUI(){
+        const btn = document.getElementById('toggleMetaTagsBtn');
+        if (!btn) return;
+        btn.setAttribute('aria-pressed', __hideMetaTagsInEditor ? 'true' : 'false');
+        btn.textContent = __hideMetaTagsInEditor ? '🏷️ Tags: Hidden' : '🏷️ Tags: Shown';
+        btn.classList.toggle('primary', !__hideMetaTagsInEditor);
+    }
+
+    function __wireMetaTagsToggle(){
+        const btn = document.getElementById('toggleMetaTagsBtn');
+        if (!btn) return;
+        btn.addEventListener('click', (e) => {
+            // Prevent accordion toggle
+            e.preventDefault();
+            e.stopPropagation();
+            __setHideMetaTags(!__hideMetaTagsInEditor);
+        });
+    }
     let __metaHeaderCache = [];   // preserved lines at top
     const __META_TAG_LINE_RE = /^\{(?:uid|t(?:itle)?|artist|a|singer|version|persona|k(?:ey)?|ca(?:po)?|tempo|bpm|duration)\s*:\s*.*\}\s*$/i;
 
@@ -751,21 +809,46 @@ const META_IDS = ['mTitle','mArtist','mSinger','mKey','mCapo','mTempo','mDur','m
     function __setHideMetaTags(flag){
         __hideMetaTagsInEditor = !!flag;
         localStorage.setItem('cpe_hide_meta_tags', __hideMetaTagsInEditor ? '1' : '0');
+
         const full = __getFullChordProText();
         __loadEditorWithText(full);
         saveAndRender();
+
+        // Update UI
+        const btn = document.getElementById('toggleMetaTagsBtn');
+        if (btn){
+            btn.setAttribute('aria-pressed', __hideMetaTagsInEditor ? 'true' : 'false');
+            btn.textContent = __hideMetaTagsInEditor ? '🏷️ Tags: Hidden' : '🏷️ Tags: Shown';
+            btn.classList.toggle('primary', !__hideMetaTagsInEditor);
+        }
+
         __toast(__hideMetaTagsInEditor ? 'Meta tags hidden in editor' : 'Meta tags shown in editor');
     }
 
     function __updateSongInfoPill(){
-        const title = document.getElementById('mTitle')?.value || 'Song';
-        const artist = document.getElementById('mArtist')?.value || 'Artist';
-        const key = document.getElementById('mKey')?.value || '?';
-        const capo = document.getElementById('mCapo')?.value || '?';
-        const bpm = document.getElementById('mTempo')?.value || '?';
-        const dur = document.getElementById('mDur')?.value || '?';
+        const titleRaw = (document.getElementById('mTitle')?.value || '').trim();
+        const artistRaw = (document.getElementById('mArtist')?.value || '').trim();
+        const keyRaw = (document.getElementById('mKey')?.value || '').trim();
+        const capoRaw = (document.getElementById('mCapo')?.value || '').trim();
+        const bpmRaw = (document.getElementById('mTempo')?.value || '').trim();
+        const durRaw = (document.getElementById('mDur')?.value || '').trim();
+
+        const title = titleRaw || 'Song';
+        const artist = artistRaw || 'Artist';
+
+        const parts = [];
+        parts.push(`${title} • ${artist}`);
+
+        const meta = [];
+        if (keyRaw) meta.push(`Key ${keyRaw}`);
+        if (capoRaw) meta.push(`Capo ${capoRaw}`);
+        if (bpmRaw) meta.push(`${bpmRaw} BPM`);
+        if (durRaw) meta.push(durRaw);
+
+        if (meta.length) parts.push('· ' + meta.join(' · '));
+
         const pill = document.getElementById('songInfoPill');
-        if (pill) pill.textContent = `${title} • ${artist} • Key ${key} • Capo ${capo} • ${bpm} BPM • ${dur}`;
+        if (pill) pill.textContent = parts.join(' ');
     }
 
 
@@ -1031,7 +1114,7 @@ function downloadCho(){
   const title = document.getElementById('mTitle').value || 'Song';
   const artist = document.getElementById('mArtist').value || 'Artist';
   const ver = document.getElementById('mPersona').value || 'Adam';
-  const blob = new Blob([document.getElementById('editor').value], {type:"text/plain"});
+  const blob = new Blob([__getFullChordProText()], {type:"text/plain"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = `${title} - ${artist} (${ver}).cho`;
@@ -1404,6 +1487,15 @@ function nvWire(){
 __onReady(() => {
   initFontSelect();
   loadThemeSettings();
+
+  // Meta tag hide/show in editor
+  __syncMetaTagsToggleUI();
+  __wireMetaTagsToggle();
+  if (__hideMetaTagsInEditor) {
+    const full = __getFullChordProText();
+    __loadEditorWithText(full);
+  }
+
   render();
   t2cWire();
   nvWire();

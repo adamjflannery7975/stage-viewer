@@ -98,7 +98,12 @@ body.light-theme{
 }
 
 /* Header */
-.brand{cursor:pointer;color:var(--text);} .brand span{color:var(--text);} body.light-theme .brand, body.light-theme .brand span{color:#111827;}
+.brand{
+            color: var(--text);
+        }
+        .brand-link{ text-decoration:none; color: var(--text); }
+        .brand-link:hover{ filter: brightness(1.08); }
+        .brand{cursor:pointer;color:var(--text);} .brand span{color:var(--text);} body.light-theme .brand, body.light-theme .brand span{color:#111827;}
 
 .header {
   display:flex;
@@ -111,6 +116,11 @@ body.light-theme{
   margin-bottom:12px;
 }
 .brand{
+            color: var(--text);
+        }
+        .brand-link{ text-decoration:none; color: var(--text); }
+        .brand-link:hover{ filter: brightness(1.08); }
+        .brand{
   display:flex;
   align-items:center;
   gap:10px;
@@ -195,6 +205,8 @@ body.light-theme button{
   color:#1f2937;
   box-shadow: 0 2px 4px rgba(0,0,0,.1);
 }
+
+        body.light-theme .brand-link{ color:#1f2937; }
 #saveBackBtn, #newVersionBtn{ min-width:160px; }
 
 /* Meta */
@@ -783,7 +795,7 @@ body.light-theme #saveAsBanner button{ border-color: rgba(0,0,0,0.25); }
 
 <div class="main-layout">
   <div class="left-col">
-    <details class="meta-card" id="metaDetails" open>
+    <details class="meta-card" id="metaDetails">
   <summary>
     <div class="meta-title">
       <span class="chev">▶</span>
@@ -1049,9 +1061,24 @@ function __setEditorFromRaw(rawText){
 
 function __getRawEditorText(){
     const ed = document.getElementById('editor');
-    const display = ed ? ed.value : '';
-    return __hideTagsInEditor ? __composeRawFromBody(display) : display;
+    const cur = ed ? String(ed.value || '') : '';
+
+    if (!__tagsHidden){
+        return cur;
+    }
+
+    // Tags hidden: textarea contains body only
+    __bodyCache = cur;
+    const full = (__tagsCache ? (__tagsCache + '\n\n') : '') + (__bodyCache || '');
+    return full;
 }
+function __setRawEditorText(raw){
+    __rawEditorText = String(raw || '');
+    __setEditorFromRaw(__rawEditorText);
+    saveAndRender();
+    __updateSongSummary();
+}
+
 
 function __applyHideTagsUI(){
     const btn = document.getElementById('toggleTagsBtn');
@@ -1059,12 +1086,28 @@ function __applyHideTagsUI(){
 }
 
 function toggleTagsInEditor(){
-    __hideTagsInEditor = !__hideTagsInEditor;
-    localStorage.setItem('cpe_hide_tags', __hideTagsInEditor ? 'true' : 'false');
-    __applyHideTagsUI();
-    __toast(__hideTagsInEditor ? 'Tags hidden in editor (meta stays in PDF + saved file).' : 'Tags shown in editor (raw meta lines visible).');
-    __setEditorFromRaw(__getRawEditorText()); // re-render textarea based on current state
-    render();
+    // Toggle between showing full text (tags + body) and body-only compose view.
+    __ensureRawEditorUpToDate();
+
+    if (!__tagsHidden){
+        // Going to Hidden: split current raw into tags/body and show body only
+        const parts = __splitTagsAndBody(__rawEditorText || '');
+        __tagsCache = parts.tagText || '';
+        __bodyCache = parts.bodyText || '';
+        __tagsHidden = true;
+        localStorage.setItem('cps_tags_hidden', '1');
+        document.getElementById('editor').value = __bodyCache;
+    } else {
+        // Going to Shown: reassemble
+        __tagsHidden = false;
+        localStorage.setItem('cps_tags_hidden', '0');
+        const full = (__tagsCache ? (__tagsCache + '\n\n') : '') + (__bodyCache || document.getElementById('editor').value || '');
+        __rawEditorText = full;
+        document.getElementById('editor').value = full;
+    }
+
+    __updateTagsBtn();
+    saveAndRender();
 }
 
 
@@ -1128,24 +1171,48 @@ function updateMetaSummaryUI(){
 }
 
 function onMetaChanged(){
-    // update raw meta block + preserve body
-    __rawEditorText = __getRawEditorText();
-    __setEditorFromRaw(__rawEditorText);
-    updateMetaSummaryUI();
-    saveAndRender(); // renders preview + persists
+    // Keep UI summary in sync, and persist meta tag changes back into the raw editor text.
+    __updateSongSummary();
+    syncFieldsToEditor();
 }
 
 function syncFieldsToEditor(){
-  let content = document.getElementById('editor').value;
-  const mappings = [
-    { id:'mTitle', tag:'title' },
-    { id:'mArtist', tag:'artist' },
-    { id:'mSinger', tag:'singer' },
-    { id:'mPersona', tag:'version' },  // ✅ standardised
-    { id:'mKey', tag:'key' },
-    { id:'mCapo', tag:'capo' },
-    { id:'mTempo', tag:'tempo' },
-    { id:'mDur', tag:'duration' }
+    // Upsert meta tags into the *raw* text (tags + body), respecting Tags Hidden mode.
+    let raw = __getRawEditorText();
+
+    const mappings = [
+        { id: 'mTitle', tag: 'title' },
+        { id: 'mArtist', tag: 'artist' },
+        { id: 'mSinger', tag: 'singer' },
+        { id: 'mPersona', tag: 'version' },
+        { id: 'mKey', tag: 'key' },
+        { id: 'mCapo', tag: 'capo' },
+        { id: 'mTempo', tag: 'tempo' },
+        { id: 'mDur', tag: 'duration' }
+    ];
+
+    mappings.forEach(m => {
+        const el = document.getElementById(m.id);
+        const val = (el ? el.value : '').trim();
+        const re = new RegExp(`\\{${m.tag}:\\s*.*?\\}`, 'i');
+
+        if (re.test(raw)) {
+            raw = raw.replace(re, val ? `{${m.tag}: ${val}}` : '');
+        } else if (val) {
+            // Insert tags at top (after any existing tag block)
+            const parts = __splitTagsAndBody(raw);
+            const tags = parts.tagText ? parts.tagText.split(/\r?\n/) : [];
+            tags.push(`{${m.tag}: ${val}}`);
+            raw = tags.join('\n') + (parts.bodyText ? ('\n\n' + parts.bodyText) : '\n\n');
+        }
+    });
+
+    // Clean up accidental double-blank blocks at the top
+    raw = raw.replace(/^\s*\n+/, '');
+    raw = raw.replace(/\n{3,}/g, '\n\n');
+
+    __setRawEditorText(raw);
+}
   ];
   mappings.forEach(m => {
     const el = document.getElementById(m.id);
@@ -1163,20 +1230,23 @@ function syncFieldsToEditor(){
   saveAndRender();
 }
 
-function saveAndRender() {
+function saveAndRender(){
+    // Persist and render based on the *raw* chordpro text (tags + body), even when Tags are hidden.
     const rawText = __getRawEditorText();
-    __rawEditorText = rawText;
 
     const data = {
-        title: document.getElementById('mTitle').value, artist: document.getElementById('mArtist').value,
-        singer: document.getElementById('mSinger').value, version: document.getElementById('mPersona').value,
-        key: document.getElementById('mKey').value, capo: document.getElementById('mCapo').value,
-        tempo: document.getElementById('mTempo').value, duration: document.getElementById('mDur').value,
+        title: document.getElementById('mTitle')?.value || '',
+        artist: document.getElementById('mArtist')?.value || '',
+        singer: document.getElementById('mSinger')?.value || '',
+        version: document.getElementById('mPersona')?.value || '',
+        key: document.getElementById('mKey')?.value || '',
+        capo: document.getElementById('mCapo')?.value || '',
+        tempo: document.getElementById('mTempo')?.value || '',
+        duration: document.getElementById('mDur')?.value || '',
         content: rawText
     };
     localStorage.setItem('chordpro_studio_save', JSON.stringify(data));
-    updateMetaSummaryUI();
-    render();
+    render(rawText);
 }
 
 function render(){
@@ -1296,6 +1366,56 @@ function handleFileImport(input){
   reader.readAsText(input.files[0]);
 }
 
+function ensureCoreTagsInRaw(raw){
+    // Ensures at least uid/song_uid + core meta tags exist in the raw text.
+    let text = String(raw || '');
+
+    const parts = __splitTagsAndBody(text);
+    let tags = parts.tagText ? parts.tagText.split(/\r?\n/) : [];
+
+    function hasTag(name){
+        const re = new RegExp(`^\\{${name}:`, 'i');
+        return tags.some(l => re.test(l.trim()));
+    }
+    function upsertTag(name, value){
+        const re = new RegExp(`^\\{${name}:\\s*.*?\\}$`, 'i');
+        const line = `{${name}: ${value}}`;
+        let found = false;
+        tags = tags.map(l => {
+            if (re.test(l.trim())) { found = true; return line; }
+            return l;
+        });
+        if (!found) tags.unshift(line);
+    }
+
+    // Prefer existing uid/song_uid, otherwise create song_uid
+    if (!hasTag('uid') && !hasTag('song_uid')){
+        upsertTag('song_uid', 'song-' + generateUid());
+    }
+
+    // Create placeholders for core tags if missing (don't overwrite existing)
+    const defaults = {
+        title: (document.getElementById('mTitle')?.value || 'New Song'),
+        artist: (document.getElementById('mArtist')?.value || 'Artist'),
+        singer: (document.getElementById('mSinger')?.value || 'Adam'),
+        version: (document.getElementById('mPersona')?.value || 'Adam'),
+        key: (document.getElementById('mKey')?.value || ''),
+        capo: (document.getElementById('mCapo')?.value || ''),
+        tempo: (document.getElementById('mTempo')?.value || ''),
+        duration: (document.getElementById('mDur')?.value || '')
+    };
+    Object.keys(defaults).forEach(k => {
+        if (!hasTag(k) && defaults[k] !== undefined && defaults[k] !== null) {
+            tags.push(`{${k}: ${String(defaults[k]).trim()}}`);
+        }
+    });
+
+    // Reassemble
+    const newTagText = tags.filter(Boolean).join('\n');
+    const body = parts.bodyText || '';
+    return newTagText + (body ? ('\n\n' + body) : '\n\n');
+}
+
 function generateUid(){
   try { return crypto.randomUUID(); } catch(e) {}
   return 'uid-' + Math.random().toString(16).slice(2) + '-' + Date.now().toString(16);
@@ -1379,10 +1499,23 @@ function clearAllFields(){
 }
 
 function newSong(){
-  META_IDS.forEach(id => document.getElementById(id).value = "");
-  document.getElementById('mPersona').value = "Adam";
-  document.getElementById('editor').value =
-`{title: New Song}
+    META_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+    const persona = document.getElementById('mPersona');
+    if (persona) persona.value = "Adam";
+    const singer = document.getElementById('mSinger');
+    if (singer) singer.value = "Adam";
+
+    const skeletonBody = "{c: Verse 1}
+[G] Lyrics here...";
+    let raw = "
+" + skeletonBody;
+    raw = ensureCoreTagsInRaw(raw);
+
+    __rawEditorText = raw;
+    __setEditorFromRaw(raw);
+    populateMetaFromChordProText(raw);
+    saveAndRender();
+}
 {artist: Artist}
 {singer: Adam}
 {version: Adam}

@@ -59,7 +59,6 @@ body{
 
 a{ color: var(--accent2); }
 button, select, input, textarea{ font-family:inherit; }
-
 /* ✅ Font presets (same class names as viewer) */
 body.font-mono { --song-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 body.font-system { --song-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
@@ -220,6 +219,26 @@ body.light-theme .meta-card{
   padding: 10px 12px;
   cursor:pointer;
   user-select:none;
+
+/* Summary layout helpers */
+.summary-row{ display:flex; align-items:center; justify-content:space-between; width:100%; gap:12px; }
+.summary-actions{ display:flex; align-items:center; gap:8px; }
+.summary-actions button{ height:30px; padding:0 10px; min-width:unset; font-size:12px; }
+
+/* Theme pane helpers */
+.theme-inline{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:8px 10px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background: rgba(12,18,27,.35);
+  margin-bottom:10px;
+}
+.theme-inline label{ font-size:11px; font-weight:800; opacity:.9; }
+.theme-inline select{ min-width: 180px; }
 }
 .meta-card > summary::-webkit-details-marker{ display:none; }
 .meta-title{
@@ -360,13 +379,14 @@ body.light-theme .theme-card>summary{color:#111827;}
 .editor-container{
   display:flex;
   flex-direction:column;
+  flex:1;
+  min-height:0;
   background: rgba(15,22,32,.88);
   border:1px solid var(--line);
   padding:15px;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-}
-body.light-theme .editor-container{ background:#fff; border-color:#e5e7eb; }
+}body.light-theme .editor-container{ background:#fff; border-color:#e5e7eb; }
 
 .styling-controls{
   display:grid;
@@ -637,23 +657,11 @@ body.light-theme #saveAsBanner button{ border-color: rgba(0,0,0,0.25); }
 <body>
 
 <div class="header">
-  <div class="brand">
+  <div class="brand" id="brandHome" title="Back to Apps">
     <div class="dot"></div>
-    <span>ChordPro Edit v2.7.5</span>
+    <span>ChordPro Edit v2.7.6</span>
   </div>
   <div class="btn-group">
-    <a href="./index.html" style="text-decoration:none">
-      <button title="Apps">Apps</button>
-    </a>
-
-    <select id="fontSelect" class="header-select" title="Preview font">
-      <option value="mono">Mono</option>
-      <option value="system">System</option>
-      <option value="readable">Readable</option>
-      <option value="serif">Serif</option>
-    </select>
-
-    <button id="themeToggleBtn" onclick="toggleTheme()">🌙 Theme</button>
     <button onclick="newSong()">📄 New</button>
     <button onclick="clearAllFields()" class="danger">🗑️ Clear</button>
     <button onclick="insertPageBreak()">✂️ Break</button>
@@ -661,8 +669,8 @@ body.light-theme #saveAsBanner button{ border-color: rgba(0,0,0,0.25); }
     <button onclick="openChoFile()">📂 Open</button>
     <button id="btnTextToCho" title="Convert plain text to ChordPro">🧩 Text → .cho</button>
     <button onclick="exportPdf()">📄 PDF</button>
-    <button onclick="downloadCho()" class="primary" style="background:var(--btn-accent);" title="Save .cho (downloads). After New version, this prompts Save As.">💾 Save .cho</button>
-    <button id="saveBackBtn" onclick="saveBackToFile()" style="display:none; background: var(--btn-accent);" title="Overwrite the currently opened file (Chrome/Edge only)">💾 Save back to file</button>
+    <button onclick="downloadCho()" class="primary" title="Save .cho (downloads). After New version, this prompts Save As.">💾 Save .cho</button>
+    <button id="saveBackBtn" onclick="saveBackToFile()" style="display:none;" title="Overwrite the currently opened file (Chrome/Edge only)">💾 Save back</button>
     <button id="newVersionBtn" onclick="nvShow()" title="Create a new version (new UID). Requires Save .cho to save a new file.">🧬 New version</button>
     <input type="file" id="fileInput" style="display:none">
   </div>
@@ -750,8 +758,25 @@ body.light-theme #saveAsBanner button{ border-color: rgba(0,0,0,0.25); }
 </details>
 
     <details class="theme-card" open>
-      <summary>🎛️ Theme (Preview + PDF)</summary>
+      <summary>
+  <div class="summary-row">
+    <span>🎛️ Theme (Preview + PDF)</span>
+    <div class="summary-actions" onclick="event.stopPropagation()">
+      <button type="button" id="themeToggleBtn" onclick="toggleTheme()">🌙 Theme</button>
+    </div>
+  </div>
+</summary>
       <div class="theme-body">
+        <div class="theme-inline">
+          <label for="fontSelect">Font</label>
+          <select id="fontSelect" class="header-select" title="Preview font">
+            <option value="mono">Mono</option>
+            <option value="system">System</option>
+            <option value="readable">Readable</option>
+            <option value="serif">Serif</option>
+          </select>
+        </div>
+
         <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px;">THEME FOR PREVIEW AND EXPORT TO PDF:</div>
     <div class="styling-controls">
       <div class="slider-group">STYLE PROFILE:
@@ -998,7 +1023,6 @@ function onMetaChanged(){
     __setEditorFromRaw(__rawEditorText);
     updateMetaSummaryUI();
     saveAndRender(); // renders preview + persists
-}
 }
 
 function syncFieldsToEditor(){

@@ -196,104 +196,36 @@ body.light-theme button{
 #saveBackBtn, #newVersionBtn{ min-width:160px; }
 
 /* Meta */
+.meta-section{
+  display:grid;
+  grid-template-columns: 1.8fr 1.2fr 0.8fr 0.7fr 0.5fr 0.5fr 0.5fr 0.8fr 1fr;
+  gap:10px;
+  background: rgba(15,22,32,.88);
+  border:1px solid var(--line);
+  padding:12px;
+  border-radius: var(--radius);
+  margin: 0 12px 12px 12px;
+  box-shadow: var(--shadow);
+}
+.meta-section input, .meta-section select{
+  background: rgba(4,8,12,.55);
+  border:1px solid var(--line);
+  color: var(--text);
+  padding: 9px 10px;
+  border-radius:10px;
+  width:100%;
+  font-size:13px;
+  height:36px;
+  outline:none;
+}
+.meta-section input:focus, .meta-section select:focus{
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(0,188,212,.12);
+}
+body.light-theme .meta-section{ background:#ffffff; border-color:#e5e7eb; }
+body.light-theme .meta-section input,
+body.light-theme .meta-section select{ background:#f9fafb; border-color:#d1d5db; color:#222; }
 
-        /* =========================
-           Song Info (collapsible)
-           - Wrapper uses <details> so it expands naturally (no max-height traps)
-           ========================= */
-        .meta-details{
-            margin: 0 12px 12px 12px;
-            border-radius: var(--radius);
-            border: 1px solid var(--line);
-            background: rgba(15,22,32,.88);
-            box-shadow: var(--shadow);
-            overflow: hidden; /* keep rounded corners */
-        }
-        body.light-theme .meta-details{
-            background: #ffffff;
-            border-color: #e5e7eb;
-        }
-
-        .meta-details > summary{
-            display:flex;
-            align-items:center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 12px 12px;
-            cursor: pointer;
-            user-select: none;
-            list-style: none;
-        }
-        .meta-details > summary::-webkit-details-marker{ display:none; }
-
-        .meta-sum-left{
-            display:flex;
-            align-items:center;
-            gap:10px;
-            font-weight:800;
-            letter-spacing:.2px;
-        }
-        .meta-sum-left .ico{ filter: saturate(1.2); }
-
-        .meta-pill{
-            display:inline-flex;
-            align-items:center;
-            gap:8px;
-            padding: 6px 10px;
-            border-radius: 999px;
-            border: 1px solid rgba(255,255,255,0.14);
-            background: rgba(0,0,0,0.25);
-            color: rgba(255,255,255,0.85);
-            font-size: 12px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: min(64vw, 720px);
-        }
-        body.light-theme .meta-pill{
-            background: #f3f4f6;
-            color: #111827;
-            border-color: #e5e7eb;
-        }
-
-        .meta-details[open] > summary{
-            border-bottom: 1px solid var(--line);
-        }
-        body.light-theme .meta-details[open] > summary{
-            border-bottom-color: #e5e7eb;
-        }
-
-        .meta-body{
-            padding: 0 12px 12px 12px;
-        }
-
-        .meta-grid{
-            display: grid;
-            grid-template-columns: 1.8fr 1.2fr 0.8fr 0.7fr 0.5fr 0.5fr 0.5fr 0.8fr 1fr;
-            gap: 10px;
-        }
-        .meta-grid input, .meta-grid select{
-            background: rgba(4,8,12,.55);
-            border: 1px solid var(--line);
-            color: var(--editor-text);
-            padding: 9px 10px;
-            border-radius: 10px;
-            width: 100%;
-            box-sizing: border-box;
-            font-size: 13px;
-            height: 36px;
-            outline: none;
-        }
-        .meta-grid input:focus, .meta-grid select:focus{
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(0,188,212,.12);
-        }
-        body.light-theme .meta-grid input,
-        body.light-theme .meta-grid select{
-            background: #f9fafb;
-            border-color: #d1d5db;
-            color: #111827;
-        }
 /* Layout */
 .main-layout{
   display:grid;
@@ -424,7 +356,7 @@ body.light-theme textarea{ background:#f9fafb; border-color:#d1d5db; color:#222;
 @media print{
   *{ -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   html, body{ margin:0 !important; padding:0 !important; background: var(--ipad-bg) !important; }
-  .header, .meta-details, .editor-container, .static-page-marker{ display:none !important; }
+  .header, .meta-section, .editor-container, .static-page-marker{ display:none !important; }
   .main-layout{ display:block !important; }
   .preview-pane{
     border:none !important;
@@ -566,38 +498,45 @@ body.light-theme #saveAsBanner button{ border-color: rgba(0,0,0,0.25); }
   font-size:11px;
   color: rgba(255,255,255,0.65);
   background: rgba(0,0,0,0.35);
-  border:1px soli
-<details id="metaDetails" class="meta-details" open>
-  <summary>
-    <div class="meta-sum-left"><span class="ico">📝</span><span>Song Info</span></div>
-    <div id="songInfoPill" class="meta-pill" title="Song metadata summary"></div>
-  </summary>
-  <div class="meta-body">
-    <div class="meta-grid">
-<input type="text" id="mTitle" placeholder="Title" oninput="updatePageTitle(); syncFieldsToEditor()">
-  <input type="text" id="mArtist" placeholder="Artist" oninput="updatePageTitle(); syncFieldsToEditor()">
-  <select id="mSinger" onchange="syncFieldsToEditor()">
-    <option value="Adam">Adam</option>
-    <option value="Pete">Pete</option>
-    <option value="Both">Both</option>
-  </select>
-  <input type="text" id="mKey" placeholder="Key" oninput="syncFieldsToEditor()">
-  <input type="text" id="mCapo" placeholder="Capo" oninput="syncFieldsToEditor()">
-  <input type="text" id="mTempo" placeholder="BPM" oninput="syncFieldsToEditor()">
-  <input type="text" id="mDur" placeholder="m:ss" oninput="syncFieldsToEditor()">
-  <select id="mPersona" onchange="syncFieldsToEditor()">
-    <option value="Adam">Adam</option>
-    <option value="Pete">Pete</option>
-  </select>
-  <div style="display:flex; gap:5px;">
-    <button onclick="transpose(-1)" style="min-width:35px; width:50%;">♭</button>
-    <button onclick="transpose(1)" style="min-width:35px; width:50%;">♯</button>
-  </div>
-    </div>
-  </div>
-</details>
+  border:1px solid rgba(255,255,255,0.12);
+  padding:4px 8px;
+  border-radius:999px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  user-select:none;
+  pointer-events:none;
+  max-width: calc(100% - 20px);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+  </style>
+</head>
+<body>
 
-<div class="main-layout">utton onclick="openChoFile()">📂 Open</button>
+<div class="header">
+  <div class="brand">
+    <div class="dot"></div>
+    <span>ChordPro Edit v2.7.5</span>
+  </div>
+  <div class="btn-group">
+    <a href="./index.html" style="text-decoration:none">
+      <button title="Apps">Apps</button>
+    </a>
+
+    <select id="fontSelect" class="header-select" title="Preview font">
+      <option value="mono">Mono</option>
+      <option value="system">System</option>
+      <option value="readable">Readable</option>
+      <option value="serif">Serif</option>
+    </select>
+
+    <button id="themeToggleBtn" onclick="toggleTheme()">🌙 Theme</button>
+    <button onclick="newSong()">📄 New</button>
+    <button onclick="clearAllFields()" class="danger">🗑️ Clear</button>
+    <button onclick="insertPageBreak()">✂️ Break</button>
+    <button onclick="insertBlankLine()">➕ Blank Line</button>
+    <button onclick="openChoFile()">📂 Open</button>
     <button id="btnTextToCho" title="Convert plain text to ChordPro">🧩 Text → .cho</button>
     <button onclick="exportPdf()">📄 PDF</button>
     <button onclick="downloadCho()" class="primary" style="background:var(--btn-accent);" title="Save .cho (downloads). After New version, this prompts Save As.">💾 Save .cho</button>
@@ -612,33 +551,37 @@ body.light-theme #saveAsBanner button{ border-color: rgba(0,0,0,0.25); }
   <button type="button" id="saveAsBannerHideBtn" title="Hide this message">✕</button>
 </div>
 
-
-<details id="metaDetails" class="meta-details" open>
+<details id="songInfo" class="song-info" open>
   <summary>
-    <div class="meta-sum-left"><span class="ico">📝</span><span>Song Info</span></div>
-    <div id="songInfoPill" class="meta-pill" title="Song metadata summary"></div>
+    <div class="si-left">
+      <span>📝</span>
+      <span>Song Info</span>
+    </div>
+    <div class="si-actions">
+      <span id="songInfoPill" class="si-pill">Song • Artist • Key ? • Capo ? • ? BPM • ?</span>
+      <button type="button" class="si-mini-btn" id="toggleMetaTagsBtn" title="Show/hide meta tags in the editor">🧾 Tags</button>
+    </div>
   </summary>
-  <div class="meta-body">
-    <div class="meta-grid">
-<input type="text" id="mTitle" placeholder="Title" oninput="updatePageTitle(); syncFieldsToEditor()">
-  <input type="text" id="mArtist" placeholder="Artist" oninput="updatePageTitle(); syncFieldsToEditor()">
-  <select id="mSinger" onchange="syncFieldsToEditor()">
-    <option value="Adam">Adam</option>
-    <option value="Pete">Pete</option>
-    <option value="Both">Both</option>
-  </select>
-  <input type="text" id="mKey" placeholder="Key" oninput="syncFieldsToEditor()">
-  <input type="text" id="mCapo" placeholder="Capo" oninput="syncFieldsToEditor()">
-  <input type="text" id="mTempo" placeholder="BPM" oninput="syncFieldsToEditor()">
-  <input type="text" id="mDur" placeholder="m:ss" oninput="syncFieldsToEditor()">
-  <select id="mPersona" onchange="syncFieldsToEditor()">
-    <option value="Adam">Adam</option>
-    <option value="Pete">Pete</option>
-  </select>
-  <div style="display:flex; gap:5px;">
-    <button onclick="transpose(-1)" style="min-width:35px; width:50%;">♭</button>
-    <button onclick="transpose(1)" style="min-width:35px; width:50%;">♯</button>
-  </div>
+
+  <div class="meta-grid">
+    <input type="text" id="mTitle" placeholder="Title" oninput="updatePageTitle(); syncFieldsToEditor()">
+    <input type="text" id="mArtist" placeholder="Artist" oninput="updatePageTitle(); syncFieldsToEditor()">
+    <select id="mSinger" onchange="syncFieldsToEditor()">
+        <option value="Adam">Adam</option>
+        <option value="Pete">Pete</option>
+        <option value="Both">Both</option>
+    </select>
+    <input type="text" id="mKey" placeholder="Key" oninput="syncFieldsToEditor()">
+    <input type="text" id="mCapo" placeholder="Capo" oninput="syncFieldsToEditor()">
+    <input type="text" id="mTempo" placeholder="BPM" oninput="syncFieldsToEditor()">
+    <input type="text" id="mDur" placeholder="m:ss" oninput="syncFieldsToEditor()">
+    <select id="mPersona" onchange="syncFieldsToEditor()">
+        <option value="Adam">Adam</option>
+        <option value="Pete">Pete</option>
+    </select>
+    <div style="display:flex; gap:5px;">
+        <button onclick="transpose(-1)" style="min-width:35px; width:50%;">♭</button>
+        <button onclick="transpose(1)" style="min-width:35px; width:50%;">♯</button>
     </div>
   </div>
 </details>
@@ -730,6 +673,103 @@ function initFontSelect(){
 
 const META_IDS = ['mTitle','mArtist','mSinger','mKey','mCapo','mTempo','mDur','mPersona'];
 
+
+    // ===============================
+    // Editor meta-tag hiding (default ON)
+    // ===============================
+    let __hideMetaTagsInEditor = (localStorage.getItem('cpe_hide_meta_tags') ?? '1') !== '0';
+    let __metaHeaderCache = [];   // preserved lines at top
+    const __META_TAG_LINE_RE = /^\{(?:uid|t(?:itle)?|artist|a|singer|version|persona|k(?:ey)?|ca(?:po)?|tempo|bpm|duration)\s*:\s*.*\}\s*$/i;
+
+    function __splitMetaAndBody(fullText){
+        const lines = String(fullText || '').split(/\r?\n/);
+        const header = [];
+        let i = 0;
+        while (i < lines.length){
+            const raw = lines[i];
+            const t = raw.trim();
+            if (t === '' || t.startsWith('#') || __META_TAG_LINE_RE.test(t)){
+                header.push(raw);
+                i++; continue;
+            }
+            break;
+        }
+        return { headerLines: header, bodyText: lines.slice(i).join('\n') };
+    }
+
+    function __ensureUidInHeader(){
+        const joined = (__metaHeaderCache || []).join('\n');
+        if (/\{uid:\s*.+?\}/i.test(joined)) return;
+        __metaHeaderCache = ([`{uid: ${generateUid()}}`]).concat(__metaHeaderCache || []);
+    }
+
+    function __rebuildHeaderFromFields(){
+        __ensureUidInHeader();
+        const joined = (__metaHeaderCache || []).join('\n');
+        const uidLine = (joined.match(/\{uid:\s*.*?\}/i) || [null])[0] || `{uid: ${generateUid()}}`;
+
+        const title = document.getElementById('mTitle')?.value || '';
+        const artist = document.getElementById('mArtist')?.value || '';
+        const singer = document.getElementById('mSinger')?.value || '';
+        const version = document.getElementById('mPersona')?.value || 'Adam';
+        const key = document.getElementById('mKey')?.value || '';
+        const capo = document.getElementById('mCapo')?.value || '';
+        const tempo = document.getElementById('mTempo')?.value || '';
+        const dur = document.getElementById('mDur')?.value || '';
+
+        const header = [];
+        header.push(`{version: ${version}}`);
+        header.push(uidLine);
+        if (title) header.push(`{title: ${title}}`);
+        if (artist) header.push(`{artist: ${artist}}`);
+        if (singer) header.push(`{singer: ${singer}}`);
+        if (key) header.push(`{key: ${key}}`);
+        if (capo) header.push(`{capo: ${capo}}`);
+        if (tempo) header.push(`{tempo: ${tempo}}`);
+        if (dur) header.push(`{duration: ${dur}}`);
+        header.push('');
+        __metaHeaderCache = header;
+    }
+
+    function __getFullChordProText(){
+        if (!__hideMetaTagsInEditor){
+            return document.getElementById('editor')?.value || '';
+        }
+        __rebuildHeaderFromFields();
+        const body = document.getElementById('editor')?.value || '';
+        return __metaHeaderCache.join('\n') + body;
+    }
+
+    function __loadEditorWithText(fullText){
+        const ed = document.getElementById('editor');
+        if (!ed) return;
+        const parts = __splitMetaAndBody(fullText);
+        __metaHeaderCache = parts.headerLines;
+        ed.value = __hideMetaTagsInEditor ? (parts.bodyText || '') : (fullText || '');
+    }
+
+    function __setHideMetaTags(flag){
+        __hideMetaTagsInEditor = !!flag;
+        localStorage.setItem('cpe_hide_meta_tags', __hideMetaTagsInEditor ? '1' : '0');
+        const full = __getFullChordProText();
+        __loadEditorWithText(full);
+        saveAndRender();
+        __toast(__hideMetaTagsInEditor ? 'Meta tags hidden in editor' : 'Meta tags shown in editor');
+    }
+
+    function __updateSongInfoPill(){
+        const title = document.getElementById('mTitle')?.value || 'Song';
+        const artist = document.getElementById('mArtist')?.value || 'Artist';
+        const key = document.getElementById('mKey')?.value || '?';
+        const capo = document.getElementById('mCapo')?.value || '?';
+        const bpm = document.getElementById('mTempo')?.value || '?';
+        const dur = document.getElementById('mDur')?.value || '?';
+        const pill = document.getElementById('songInfoPill');
+        if (pill) pill.textContent = `${title} • ${artist} • Key ${key} • Capo ${capo} • ${bpm} BPM • ${dur}`;
+    }
+
+
+
 // -------------------------------
 // Meta parsing helper
 // - Standardise on {version: ...}
@@ -766,33 +806,28 @@ function populateMetaFromChordProText(content){
   }
 }
 
-function syncFieldsToEditor(){
-  let content = document.getElementById('editor').value;
-  const mappings = [
-    { id:'mTitle', tag:'title' },
-    { id:'mArtist', tag:'artist' },
-    { id:'mSinger', tag:'singer' },
-    { id:'mPersona', tag:'version' },  // ✅ standardised
-    { id:'mKey', tag:'key' },
-    { id:'mCapo', tag:'capo' },
-    { id:'mTempo', tag:'tempo' },
-    { id:'mDur', tag:'duration' }
-  ];
-  mappings.forEach(m => {
-    const el = document.getElementById(m.id);
-    if (!el) return;
-    const val = el.value;
-    const regex = new RegExp(`\\{${m.tag}:.*?\\}`, 'i');
-    if (content.match(regex)) content = content.replace(regex, `{${m.tag}: ${val}}`);
-    else if (val) content = `{${m.tag}: ${val}}\n` + content;
-  });
-
-  // If legacy persona exists, remove it to avoid duplicates
-  content = content.replace(/\{persona:\s*.*?\}\s*\n?/ig, '');
-
-  document.getElementById('editor').value = content;
-  saveAndRender();
-}
+function syncFieldsToEditor() {
+        if (__hideMetaTagsInEditor) {
+            __updateSongInfoPill();
+            saveAndRender();
+            return;
+        }
+        let content = document.getElementById('editor').value;
+        const mappings = [
+            { id: 'mTitle', tag: 'title' }, { id: 'mArtist', tag: 'artist' },
+            { id: 'mSinger', tag: 'singer' }, { id: 'mPersona', tag: 'version' },
+            { id: 'mKey', tag: 'key' }, { id: 'mCapo', tag: 'capo' },
+            { id: 'mTempo', tag: 'tempo' }, { id: 'mDur', tag: 'duration' }
+        ];
+        mappings.forEach(m => {
+            const val = document.getElementById(m.id).value;
+            const regex = new RegExp(`\{${m.tag}:.*?\}`, 'i');
+            if (content.match(regex)) { content = content.replace(regex, `{${m.tag}: ${val}}`); }
+            else if (val) { content = `{${m.tag}: ${val}}\n` + content; }
+        });
+        document.getElementById('editor').value = content;
+        saveAndRender();
+    }
 
 function saveAndRender(){
   const data = {
@@ -804,11 +839,10 @@ function saveAndRender(){
     capo: document.getElementById('mCapo').value,
     tempo: document.getElementById('mTempo').value,
     duration: document.getElementById('mDur').value,
-    content: document.getElementById('editor').value
+    content: __getFullChordProText()
   };
   localStorage.setItem('chordpro_studio_save', JSON.stringify(data));
-        updateSongInfoPill();
-        render();
+  render();
 }
 
 function render(){
@@ -920,9 +954,10 @@ function handleFileImport(input){
   const reader = new FileReader();
   reader.onload = (e) => {
     const content = e.target.result;
-    document.getElementById('editor').value = content;
-    populateMetaFromChordProText(content);
-    saveAndRender();
+    __loadEditorWithText(content);
+            populateMetaFromChordProText(content);
+            __updateSongInfoPill();
+            saveAndRender();
   };
   reader.readAsText(input.files[0]);
 }
@@ -931,17 +966,21 @@ function generateUid(){
   try { return crypto.randomUUID(); } catch(e) {}
   return 'uid-' + Math.random().toString(16).slice(2) + '-' + Date.now().toString(16);
 }
-function ensureUidInEditorText(){
-  const ed = document.getElementById('editor');
-  let text = ed.value || '';
-  if (/\{uid:\s*.+?\}/i.test(text)) return;
-  const uid = generateUid();
-  const lines = text.split(/\r?\n/);
-  let i = 0;
-  while (i < lines.length && (lines[i].trim() === '' || lines[i].trim().startsWith('#'))) i++;
-  lines.splice(i, 0, `{uid: ${uid}}`);
-  ed.value = lines.join('\n');
-}
+function ensureUidInEditorText() {
+        if (__hideMetaTagsInEditor) {
+            __ensureUidInHeader();
+            return;
+        }
+        const ed = document.getElementById('editor');
+        let text = ed.value || '';
+        if (/\{uid:\s*.+?\}/i.test(text)) return;
+        const uid = generateUid();
+        const lines = text.split(/\r?\n/);
+        let i = 0;
+        while (i < lines.length && (lines[i].trim() === '' || lines[i].trim().startsWith('#'))) i++;
+        lines.splice(i, 0, `{uid: ${uid}}`);
+        ed.value = lines.join('\n');
+    }
 
 let __needsSaveAsPrompt = false;
 
@@ -963,7 +1002,7 @@ async function __saveChoViaPickerAlwaysPrompt(){
     ensureUidInEditorText();
 
     const w = await handle.createWritable();
-    await w.write(document.getElementById('editor').value);
+    await w.write(__getFullChordProText());
     await w.close();
 
     __fsHandle = handle;
@@ -1213,9 +1252,10 @@ async function openChoFile(){
       __openedFileName = f.name;
 
       const text = await f.text();
-      document.getElementById('editor').value = text;
-      populateMetaFromChordProText(text);
-      saveAndRender();
+                __loadEditorWithText(text);
+                populateMetaFromChordProText(text);
+                __updateSongInfoPill();
+                saveAndRender();
 
       const sb = document.getElementById('saveBackBtn');
       if (sb) sb.style.display='inline-block';
@@ -1243,7 +1283,7 @@ async function saveBackToFile(){
     ensureUidInEditorText();
 
     const w = await __fsHandle.createWritable();
-    await w.write(document.getElementById('editor').value);
+    await w.write(__getFullChordProText());
     await w.close();
 
     const refreshed = await __fsHandle.getFile();

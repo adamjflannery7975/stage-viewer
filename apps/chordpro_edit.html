@@ -1922,7 +1922,7 @@ function __wireBrandHome(){
         return;
       }
     }catch(ex){}
-    window.location.href = '../index.html';
+    window.location.href = (window.CPSNav && typeof window.CPSNav.getAppsIndexUrl==='function') ? window.CPSNav.getAppsIndexUrl() : '../apps/index.html';
   });
 }
 

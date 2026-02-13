@@ -450,13 +450,14 @@
 
   <!-- Shared theme (UI + ChordPro) -->
   <script src="../shared/theme.js" defer></script>
+  <script src="../shared/apps_nav.js"></script>
 </head>
 
 <body>
   <header id="topHeader">
-    <div class="brand">
+    <div class="brand" id="brandHome">
       <button id="menuBtn" title="Show/hide menu">☰ Menu</button>
-      <span id="brandHome" title="Apps">Stage Viewer</span>
+      <span>Stage Viewer</span>
     </div>
 
     <!-- Collections mode (preferred) -->
@@ -499,12 +500,7 @@
         <option value="serif">Serif</option>
       </select>
     </label>
-
-    <a href="./index.html" style="text-decoration:none">
-      <button title="Apps">Apps</button>
-    </a>
-
-    <button id="infoBtn" title="Info">i</button>
+<button id="infoBtn" title="Info">i</button>
     <button id="refreshBtn" title="Reload library index">Refresh</button>
     <button id="themeBtn" title="Toggle light/dark">Toggle Theme</button>
   </header>
@@ -1311,10 +1307,10 @@
   </script>
 
 <script>
-  // Shared Apps launcher (click app banner)
-  document.addEventListener('DOMContentLoaded', () => {
-    try{ if (window.CPSNav && typeof window.CPSNav.init === 'function') window.CPSNav.init({ triggerSelector:'#brandHome' }); }catch(e){}
-  });
+  if (window.CPSNav && typeof window.CPSNav.init === 'function') {
+    window.CPSNav.init({ triggerSelector: '#brandHome' });
+  }
 </script>
+
 </body>
 </html>

@@ -344,6 +344,11 @@
   </div>
 
   <script>
+    function songKeyFor(song){
+      if (!song) return '';
+      return String(song.song_uid || song.songUid || song.uid || '').trim();
+    }
+
     // --- Shared Theme toggle (UI mode) ---
     const themeBtn = document.getElementById('themeBtn');
     themeBtn.addEventListener('click', () => {

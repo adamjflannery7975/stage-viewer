@@ -355,11 +355,6 @@
       }
     });
 
-    // --- Shared Apps launcher ---
-    document.addEventListener('DOMContentLoaded', () => {
-      try{ if (window.CPSNav && typeof window.CPSNav.init === 'function') window.CPSNav.init({ triggerSelector:'#brandHome' }); }catch(e){}
-    });
-
     // --- DOM ---
     const modePill = document.getElementById('modePill');
     const hintEl = document.getElementById('hint');
@@ -397,6 +392,14 @@
     const smartNote = document.getElementById('smartNote');
     const smartName = document.getElementById('smartName');
 
+    // --- Apps Launcher (shared modal) ---
+    function openAppsLauncher(){
+      if (window.CPSNav && typeof window.CPSNav.open === 'function') {
+        window.CPSNav.open();
+      } else {
+        // Fallback (should not happen if ../shared/apps_nav.js is present)
+        window.location.href = './index.html';
+      }
     }
 
 
@@ -904,6 +907,12 @@
     reloadBtn.addEventListener('click', loadAll);
     downloadBtn.addEventListener('click', downloadSetlists);
 
+    // Apps launcher trigger
+    const appsBtn = document.getElementById('appsBtn');
+    const brandHome = document.getElementById('brandHome');
+    if (appsBtn) appsBtn.addEventListener('click', (e) => { e.preventDefault(); openAppsLauncher(); });
+    if (brandHome) brandHome.addEventListener('click', (e) => { e.preventDefault(); openAppsLauncher(); });
+
 
     collectionFilter.addEventListener('input', renderCollections);
     songSearch.addEventListener('input', renderSongTable);
@@ -928,5 +937,12 @@
       setHint('Failed to load. Check console + paths.');
     });
   </script>
+
+<script>
+  if (window.CPSNav && typeof window.CPSNav.init === 'function') {
+    window.CPSNav.init({ triggerSelector: '#brandHome' });
+  }
+</script>
+
 </body>
 </html>

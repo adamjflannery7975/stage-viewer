@@ -1,13 +1,4 @@
-<!
-// Status line (top hint)
-function setStatus(msg){
-  const el = document.getElementById('hint');
-  if (!el) return;
-  el.textContent = msg || '';
-  el.style.display = (msg ? 'block' : 'none');
-}
-
-DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -17,6 +8,16 @@ DOCTYPE html>
   <!-- Shared theme helpers -->
   <script src="../shared/theme.js"></script>
   <script src="../shared/apps_nav.js"></script>
+
+  <script>
+  // Status line (top hint)
+  function setStatus(msg){
+    const el = document.getElementById('hint');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.style.display = (msg ? 'block' : 'none');
+  }
+  </script>
 
   <style>
     :root{

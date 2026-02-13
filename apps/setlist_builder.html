@@ -408,6 +408,7 @@
     let SETLISTS = null; // setlists.json (collections)
     let SONGS = []; // from library.index.json
     let SONG_BY_UID = new Map();
+    let SONG_BY_SONG = new Map(); // song_uid -> representative song record
 
     let currentCollectionId = null;
     let currentSetId = null;
@@ -867,11 +868,48 @@
 
       // Load songs library
       LIB = await fetchJSON('../library/library.index.json');
-      SONGS = Array.isArray(LIB?.songs) ? LIB.songs : [];
-      SONG_BY_UID = new Map();
-      SONGS.forEach(s => { if (s?.uid) SONG_BY_UID.set(String(s.uid), s); });
+      
+      // Raw song sheet records (may include multiple versions per song)
+      const rawSongs = Array.isArray(LIB?.songs) ? LIB.songs : [];
 
-      // Load collections (preferred: library/setlists.json)
+      // Prefer to treat a "song" as song_uid (canonical), falling back to uid.
+      const preferredVersion = (localStorage.getItem('cps_persona') || localStorage.getItem('cps_default_persona') || 'Adam');
+
+      // Group all sheets by canonical song id
+      const bySong = new Map();          // song_uid -> { canonical, versions:[] }
+      const byUid  = new Map();          // uid -> raw record
+
+      rawSongs.forEach(s => {
+        if (!s) return;
+        const uid = s.uid ? String(s.uid) : '';
+        if (uid) byUid.set(uid, s);
+
+        const songKey = s.song_uid ? String(s.song_uid) : (uid || '');
+        if (!songKey) return;
+
+        if (!bySong.has(songKey)) bySong.set(songKey, { song_uid: songKey, versions: [] });
+        bySong.get(songKey).versions.push(s);
+      });
+
+      // Build SONGS as a de-duplicated "song list" (1 row per song_uid)
+      // Choose a representative record per song:
+      // 1) version matches preferredVersion
+      // 2) otherwise first in group
+      SONGS = Array.from(bySong.values()).map(g => {
+        const hit = g.versions.find(v => String(v.version || '').toLowerCase() === String(preferredVersion).toLowerCase());
+        const rep = hit || g.versions[0] || {};
+        // Attach a versions list for later use if needed
+        return Object.assign({}, rep, { song_uid: g.song_uid, __versions: g.versions });
+      });
+
+      // Lookup maps
+      SONG_BY_UID = byUid;               // uid -> raw record
+      SONG_BY_SONG = new Map();          // song_uid -> representative record
+      SONGS.forEach(s => {
+        const k = s.song_uid ? String(s.song_uid) : (s.uid ? String(s.uid) : '');
+        if (k) SONG_BY_SONG.set(k, s);
+      });
+// Load collections (preferred: library/setlists.json)
       try{
         SETLISTS = await fetchJSON('../library/setlists.json');
       }catch(e){

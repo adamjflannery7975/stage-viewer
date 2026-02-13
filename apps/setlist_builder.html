@@ -7,6 +7,7 @@
 
   <!-- Shared theme helpers -->
   <script src="../shared/theme.js"></script>
+  <script src="../shared/apps_nav.js"></script>
 
   <style>
     :root{
@@ -231,11 +232,9 @@
 </head>
 <body>
   <header>
-    <div class="brand">Setlist Builder</div>
+    <div class="brand" id="brandHome" title="Apps">Setlist Builder</div>
     <span class="pill" id="modePill">Mode: —</span>
-    <a href="./index.html" style="text-decoration:none">
-  <button title="Apps">Apps</button>
-</a>
+    <button id="appsBtn" title="Apps">Apps</button>
     <button id="reloadBtn">Reload</button>
     <button id="downloadBtn" class="btnPrimary">Download setlists.json</button>
     <button id="themeBtn">Toggle Theme</button>
@@ -394,6 +393,17 @@
     const smartNote = document.getElementById('smartNote');
     const smartName = document.getElementById('smartName');
 
+    // --- Apps Launcher (shared modal) ---
+    function openAppsLauncher(){
+      if (window.CPSNav && typeof window.CPSNav.open === 'function') {
+        window.CPSNav.open();
+      } else {
+        // Fallback (should not happen if ../shared/apps_nav.js is present)
+        window.location.href = './index.html';
+      }
+    }
+
+
     // --- State ---
     let LIB = null; // library.index.json (songs)
     let SETLISTS = null; // setlists.json (collections)
@@ -466,24 +476,7 @@
       inSetPill.textContent = set ? `In set: ${count}` : `—`;
     }
 
-    function renderCollections(){
-      const filter = (collectionFilter.value || '').trim().toLowerCase();
-      collectionsList.innerHTML = '';
-
-      const cols = getCollections()
-        .filter(c => {
-          if (!filter) return True;
-          const name = (c.name || c.id || '').toLowerCase();
-          return name.includes(filter);
-        });
-
-      // JS True isn't defined in Python. Fix in final string by manual replace.
-    }
-  </script>
-
-  <script>
-    // NOTE: The block above had a Python-friendly placeholder bug; this block contains the real logic.
-  </script>
+    
 
   <script>
     function renderCollections(){
@@ -917,6 +910,13 @@
     // Events
     reloadBtn.addEventListener('click', loadAll);
     downloadBtn.addEventListener('click', downloadSetlists);
+
+    // Apps launcher trigger
+    const appsBtn = document.getElementById('appsBtn');
+    const brandHome = document.getElementById('brandHome');
+    if (appsBtn) appsBtn.addEventListener('click', (e) => { e.preventDefault(); openAppsLauncher(); });
+    if (brandHome) brandHome.addEventListener('click', (e) => { e.preventDefault(); openAppsLauncher(); });
+
 
     collectionFilter.addEventListener('input', renderCollections);
     songSearch.addEventListener('input', renderSongTable);

@@ -17,6 +17,30 @@
     el.textContent = msg || '';
     el.style.display = (msg ? 'block' : 'none');
   }
+
+  // Save status helper (used by autosave/export wiring)
+  function __updateSaveStatus(){
+    try{
+      const dirty = (localStorage.getItem('cps_sb_v2_dirty') || '0') === '1';
+      const metaRaw = localStorage.getItem('cps_sb_v2_draft_meta');
+      let savedAt = '';
+      if (metaRaw){
+        const meta = JSON.parse(metaRaw);
+        if (meta && meta.savedAt) savedAt = meta.savedAt;
+      }
+      if (dirty){
+        setStatus(savedAt ? ('Unsaved changes (autosaved locally) • ' + savedAt) : 'Unsaved changes (autosaved locally)');
+      } else {
+        // Clear status line; app may set its own messages
+        // setStatus('');
+      }
+    }catch(e){}
+  }
+
+  // Back-compat aliases (older builds referenced a single-underscore variant)
+  function _updateSaveStatus(){ return __updateSaveStatus(); }
+  function updateSaveStatus(){ return __updateSaveStatus(); }
+
   </script>
 
   <style>

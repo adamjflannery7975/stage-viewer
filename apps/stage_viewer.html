@@ -456,7 +456,7 @@
   <header id="topHeader">
     <div class="brand">
       <button id="menuBtn" title="Show/hide menu">☰ Menu</button>
-      <span>Stage Viewer</span>
+      <span id="brandHome" title="Apps">Stage Viewer</span>
     </div>
 
     <!-- Collections mode (preferred) -->
@@ -1309,5 +1309,12 @@
 
     loadLibrary();
   </script>
+
+<script>
+  // Shared Apps launcher (click app banner)
+  document.addEventListener('DOMContentLoaded', () => {
+    try{ if (window.CPSNav && typeof window.CPSNav.init === 'function') window.CPSNav.init({ triggerSelector:'#brandHome' }); }catch(e){}
+  });
+</script>
 </body>
 </html>

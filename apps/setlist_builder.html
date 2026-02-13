@@ -1,4 +1,13 @@
-<!DOCTYPE html>
+<!
+// Status line (top hint)
+function setStatus(msg){
+  const el = document.getElementById('hint');
+  if (!el) return;
+  el.textContent = msg || '';
+  el.style.display = (msg ? 'block' : 'none');
+}
+
+DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />

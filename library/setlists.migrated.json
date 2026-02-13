@@ -1,0 +1,43 @@
+{
+  "collections": [
+    {
+      "id": "_all_songs",
+      "type": "smart",
+      "name": "All Songs",
+      "rules": {
+        "mode": "all_songs"
+      },
+      "sets": []
+    },
+    {
+      "id": "working_on",
+      "type": "list",
+      "name": "Working On",
+      "tags": [
+        "practice"
+      ],
+      "sets": [
+        {
+          "id": "main",
+          "name": "Working On",
+          "songs": []
+        }
+      ]
+    },
+    {
+      "id": "newbies",
+      "type": "list",
+      "name": "Newbies",
+      "tags": [
+        "practice"
+      ],
+      "sets": [
+        {
+          "id": "main",
+          "name": "Newbies",
+          "songs": []
+        }
+      ]
+    }
+  ]
+}

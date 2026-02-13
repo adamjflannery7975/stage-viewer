@@ -1,127 +1,105 @@
 #!/usr/bin/env python3
 """
-Migrate ChordPro Studio setlists.json from sheet uids -> canonical song_uid.
+One-time migration: setlists.json -> song_uid canonical
 
-Reads:
-  - ./songs/*.cho (extract {uid:} and {song_uid:})
-  - ./library/setlists.json
+- Reads ./library/setlists.json
+- Builds uid -> song_uid map from ./songs/**/*.cho tag blocks
+- Rewrites each set item to include song_uid, and de-dupes per set by song_uid
+- Writes ./library/setlists.migrated.json (does not overwrite originals)
 
-Writes:
-  - ./library/setlists.migrated.json (does NOT overwrite original)
-  - ./library/migrate_setlists.log.json
-
-Rules:
-  - If a song entry matches a sheet uid found in .cho, replace with its song_uid.
-  - If missing song_uid, falls back to the uid (no change).
-  - De-dupes songs within each set after migration (preserves order of first occurrences).
+Run:
+  python3 migrate_setlists_to_songuid.py
 """
 
 from __future__ import annotations
-import json, os, re
-from datetime import datetime
+import json, re, time
 from pathlib import Path
-from typing import Dict, List
 
-TAG_RE = re.compile(r"^\s*\{([a-zA-Z0-9_\-]+)\s*:\s*(.*?)\}\s*$")
+ROOT = Path(__file__).resolve().parent
+SONGS_DIR = ROOT / "songs"
+LIB_DIR   = ROOT / "library"
+IN_FILE   = LIB_DIR / "setlists.json"
+OUT_FILE  = LIB_DIR / "setlists.migrated.json"
 
-def now_iso():
-    return datetime.now().astimezone().isoformat(timespec="seconds")
+TAG_LINE_RE = re.compile(r'^\s*\{([^}:]+)\s*:\s*(.*?)\}\s*$', re.I)
 
-def read_text(p: Path) -> str:
-    return p.read_text(encoding="utf-8", errors="replace")
-
-def parse_tags(text: str) -> Dict[str,str]:
-    out: Dict[str,str] = {}
+def parse_tag_block(text: str):
+    tags = {}
     for line in text.splitlines():
-        m = TAG_RE.match(line)
-        if not m: 
+        s = line.strip()
+        if s == "":
             continue
-        k = m.group(1).strip().lower()
-        v = m.group(2).strip()
-        if k not in out:
-            out[k] = v
-    return out
+        m = TAG_LINE_RE.match(s)
+        if not m:
+            break
+        tags[m.group(1).strip().lower()] = m.group(2).strip()
+    return tags
 
-def build_uid_map(repo_root: Path) -> Dict[str,str]:
-    songs_dir = repo_root / "songs"
-    uid_to_song: Dict[str,str] = {}
-    for f in sorted(songs_dir.rglob("*.cho")):
-        tags = parse_tags(read_text(f))
+def build_uid_map():
+    m = {}
+    for p in SONGS_DIR.rglob("*.cho"):
+        try:
+            txt = p.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        tags = parse_tag_block(txt)
         uid = (tags.get("uid") or "").strip()
-        song_uid = (tags.get("song_uid") or tags.get("songuid") or "").strip()
-        if uid:
-            uid_to_song[uid] = song_uid or uid
-    return uid_to_song
-
-def load_setlists(p: Path) -> dict:
-    if not p.exists():
-        return {"version": 1, "updated": now_iso(), "collections": []}
-    data = json.loads(read_text(p))
-    # supports old/new, same as consolidate_library.py
-    if isinstance(data, dict) and "collections" in data:
-        return data
-    if isinstance(data, dict) and "setlists" in data:
-        migrated = {"version": data.get("version", 1), "updated": now_iso(), "collections": []}
-        for sl in data.get("setlists", []):
-            migrated["collections"].append({
-                "id": sl.get("id") or sl.get("name") or "",
-                "type": "gig",
-                "name": sl.get("name") or sl.get("id") or "Unnamed",
-                "notes": sl.get("notes", ""),
-                "sets": sl.get("sets", [])
-            })
-        return migrated
-    raise RuntimeError("setlists.json must contain 'collections' or 'setlists'")
-
-def dedupe_preserve_order(items: List[str]) -> List[str]:
-    seen = set()
-    out = []
-    for x in items:
-        if x in seen: 
-            continue
-        seen.add(x)
-        out.append(x)
-    return out
+        song_uid = (tags.get("song_uid") or "").strip()
+        if uid and song_uid:
+            m[uid] = song_uid
+    return m
 
 def main():
-    repo_root = Path(".").resolve()
-    uid_map = build_uid_map(repo_root)
+    if not IN_FILE.exists():
+        print(f"ERROR: missing {IN_FILE}")
+        return
 
-    lib_dir = repo_root / "library"
-    src = lib_dir / "setlists.json"
-    out = lib_dir / "setlists.migrated.json"
-    logp = lib_dir / "migrate_setlists.log.json"
-    lib_dir.mkdir(parents=True, exist_ok=True)
+    uid_map = build_uid_map()
+    data = json.loads(IN_FILE.read_text(encoding="utf-8"))
 
-    data = load_setlists(src)
+    def item_key(it):
+        return (it.get("song_uid") or it.get("uid") or "").strip()
+
+    # Support both possible shapes:
+    #  - {"collections":[...]} or direct list of collections
+    collections = data.get("collections") if isinstance(data, dict) else data
+    if not isinstance(collections, list):
+        print("ERROR: unexpected setlists.json structure (expected list or {collections:[]})")
+        return
+
     changed = 0
-    missing = 0
-
-    for col in data.get("collections", []):
-        for st in col.get("sets", []):
-            songs = st.get("songs", [])
+    for col in collections:
+        sets = col.get("sets") if isinstance(col, dict) else None
+        if not isinstance(sets, list):
+            continue
+        for st in sets:
+            songs = st.get("songs")
             if not isinstance(songs, list):
                 continue
             new_songs = []
-            for uid in songs:
-                key = str(uid)
-                canon = uid_map.get(key)
-                if canon is None:
-                    # unknown uid - keep as-is and log
-                    missing += 1
-                    canon = key
-                if canon != key:
+            seen = set()
+            for it in songs:
+                if not isinstance(it, dict):
+                    continue
+                uid = (it.get("uid") or "").strip()
+                song_uid = (it.get("song_uid") or "").strip()
+                if not song_uid and uid and uid in uid_map:
+                    song_uid = uid_map[uid]
+                    it["song_uid"] = song_uid
                     changed += 1
-                new_songs.append(canon)
-            st["songs"] = dedupe_preserve_order(new_songs)
+                k = (song_uid or uid).strip()
+                if not k:
+                    continue
+                if k in seen:
+                    changed += 1
+                    continue
+                seen.add(k)
+                new_songs.append(it)
+            st["songs"] = new_songs
 
-    data["updated"] = now_iso()
-    out.write_text(json.dumps(data, indent=2), encoding="utf-8")
-    logp.write_text(json.dumps({"written": str(out), "changed": changed, "unknown_refs": missing, "ts": now_iso()}, indent=2), encoding="utf-8")
-
-    print("✅ Wrote", out)
-    print(" - Converted refs:", changed)
-    print(" - Unknown refs kept:", missing)
+    out = {"collections": collections} if isinstance(data, dict) else collections
+    OUT_FILE.write_text(json.dumps(out, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"Done. Wrote {OUT_FILE}. Items changed/removed: {changed}")
 
 if __name__ == "__main__":
     main()

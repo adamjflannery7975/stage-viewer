@@ -406,12 +406,9 @@
     // --- State ---
     let LIB = null; // library.index.json (songs)
     let SETLISTS = null; // setlists.json (collections)
-    let SONGS = []; // de-duped (1 per song_uid)
-    let RAW_SONGS = []; // raw sheets (may include versions)
-    let SONG_UID_BY_UID = new Map(); // uid -> song_uid
-    let SONG_BY_SONG_UID = new Map(); // song_uid -> representative song
-    let RAW_BY_UID = new Map(); // uid -> raw sheet // from library.index.json
+    let SONGS = []; // from library.index.json
     let SONG_BY_UID = new Map();
+    let SONG_BY_SONG = new Map(); // song_uid -> canonical song record
 
     let currentCollectionId = null;
     let currentSetId = null;
@@ -443,56 +440,7 @@
         .slice(0,40) || ('id_' + Math.random().toString(16).slice(2,8));
     }
 
-    function songKeyForRaw(s){
-      // Canonical id for a song (not a specific sheet/version).
-      // Prefer song_uid tag. Fall back to common variants, then uid.
-      if (!s) return '';
-      return String(
-        s.song_uid ??
-        s.songUid ??
-        s.songUID ??
-        s.song_id ??
-        s.songId ??
-        (s.meta && (s.meta.song_uid || s.meta.songUid || s.meta.songId)) ??
-        s.uid ??
-        ''
-      ).trim();
-    }
-
-    function resolveSongUid(anyId){
-      // anyId might be a raw uid or already a song_uid
-      const k = String(anyId || '').trim();
-      if (!k) return '';
-      return SONG_UID_BY_UID.get(k) || k;
-    }
-
-    function normalizeSetSongsArray(arr){
-      // Convert existing set.songs to canonical song_uid list, de-duped preserving order
-      const out = [];
-      const seen = new Set();
-      (Array.isArray(arr) ? arr : []).forEach(item => {
-        const raw = (item && typeof item === 'object') ? (item.song_uid || item.songUid || item.uid) : item;
-        const suid = resolveSongUid(raw);
-        if (!suid) return;
-        if (seen.has(suid)) return;
-        seen.add(suid);
-        out.push(suid);
-      });
-      return out;
-    }
-
-    function normalizeAllSetlists(){
-      if (!SETLISTS || !Array.isArray(SETLISTS.collections)) return;
-      SETLISTS.collections.forEach(col => {
-        if (!col || !Array.isArray(col.sets)) return;
-        col.sets.forEach(st => {
-          if (!st) return;
-          st.songs = normalizeSetSongsArray(st.songs);
-        });
-      });
-    }
-
-function nowIso(){
+    function nowIso(){
       return new Date().toISOString();
     }
 
@@ -631,20 +579,6 @@ function nowIso(){
       songTable.innerHTML = '';
 
       let list = SONGS;
-
-      // Exclude songs already used anywhere in the current collection (prevents duplicates)
-      const used = (() => {
-        const out = new Set();
-        const col = findCollection(currentCollectionId);
-        if (!col) return out;
-        (col.sets || []).forEach(st => (st.songs || []).forEach(x => out.add(String(x))));
-        return out;
-      })();
-      list = list.filter(s => {
-        const k = songKeyForRaw(s);
-        return !(k && used.has(k));
-      });
-
       if (q){
         list = SONGS.filter(s => {
           const title = (s.title || '').toLowerCase();
@@ -668,7 +602,7 @@ function nowIso(){
           <td>${escapeHtml(String(s.duration || '—'))}</td>
           <td>${escapeHtml(String((s.tempo ?? '—')))}</td>
         `;
-        tr.addEventListener('click', () => addSongToCurrentSet(resolveSongUid(songKeyForRaw(s))));
+        tr.addEventListener('click', () => addSongToCurrentSet(String(s.uid)));
         songTable.appendChild(tr);
       });
     }
@@ -728,30 +662,18 @@ function nowIso(){
       refreshPills();
     }
 
-    function addSongToCurrentSet(anyId){
+    function addSongToCurrentSet(uid){
       const col = findCollection(currentCollectionId);
       if (!col || isSmart(col)) return;
 
       const set = findSet(col, currentSetId);
       if (!set) return;
 
-      const songUid = resolveSongUid(anyId);
-      if (!songUid) return;
-
-      // Prevent duplicates anywhere in the collection (across all sets)
-      const used = new Set();
-      (col.sets || []).forEach(st => (st.songs || []).forEach(x => used.add(String(x))));
-      if (used.has(songUid)){
-        toast('Already in this collection');
-        return;
-      }
-
       if (!Array.isArray(set.songs)) set.songs = [];
-      set.songs.push(songUid);
+      set.songs.push(uid);
 
-      selectedInSetUid = songUid;
+      selectedInSetUid = uid;
       SETLISTS.updated = nowIso();
-      renderSongs();      // refresh available list (removes used songs)
       renderInSet();
       refreshPills();
     }
@@ -768,7 +690,6 @@ function nowIso(){
 
       selectedInSetUid = null;
       SETLISTS.updated = nowIso();
-      renderSongs();
       renderInSet();
       refreshPills();
     }
@@ -791,7 +712,6 @@ function nowIso(){
       set.songs.splice(j, 0, moved);
 
       SETLISTS.updated = nowIso();
-      renderSongs();
       renderInSet();
       refreshPills();
     }
@@ -948,46 +868,11 @@ function nowIso(){
 
       // Load songs library
       LIB = await fetchJSON('../library/library.index.json');
-
-      // Raw song-sheet records (may include multiple versions per song)
-      RAW_SONGS = Array.isArray(LIB?.songs) ? LIB.songs : [];
-
-      // Build lookup maps
-      RAW_BY_UID = new Map();
-      SONG_UID_BY_UID = new Map();
-      const grouped = new Map(); // song_uid -> [raw versions]
-
-      RAW_SONGS.forEach(s => {
-        if (!s) return;
-        const uid = s.uid ? String(s.uid) : '';
-        if (uid) RAW_BY_UID.set(uid, s);
-
-        const songUid = songKeyForRaw(s);
-        if (!songUid) return;
-
-        if (uid) SONG_UID_BY_UID.set(uid, songUid);
-
-        if (!grouped.has(songUid)) grouped.set(songUid, []);
-        grouped.get(songUid).push(s);
-      });
-
-      // Create de-duped SONGS list (1 per song_uid) selecting a representative for display
-      const preferredVersion = (localStorage.getItem('cps_persona') || localStorage.getItem('cps_default_persona') || 'Adam');
-      SONGS = Array.from(grouped.entries()).map(([songUid, versions]) => {
-        const hit = versions.find(v => String(v.version || '').toLowerCase() === String(preferredVersion).toLowerCase());
-        const rep = hit || versions[0] || {};
-        return Object.assign({}, rep, { song_uid: songUid, __versions: versions });
-      });
-
-      // Map song_uid -> representative song
-      SONG_BY_SONG_UID = new Map();
-      SONGS.forEach(s => { const k = songKeyForRaw(s); if (k) SONG_BY_SONG_UID.set(k, s); });
-
-      // Keep legacy map name for minimal downstream changes:
-      //   SONG_BY_UID will now resolve canonical song ids (song_uid), not sheet uid.
-      SONG_BY_UID = SONG_BY_SONG_UID;
-
-      // Load collections (preferred: library/setlists.json)
+      SONGS = Array.isArray(LIB?.songs) ? LIB.songs : []; // canonical (one per song_uid)
+      SONG_BY_UID = new Map();
+      SONG_BY_SONG = new Map();
+      SONGS.forEach(s => { const k = songKeyFor(s); if (k) SONG_BY_SONG.set(k, s); });
+// Load collections (preferred: library/setlists.json)
       try{
         SETLISTS = await fetchJSON('../library/setlists.json');
       }catch(e){
@@ -998,8 +883,6 @@ function nowIso(){
 
       // Ensure shape
       if (!Array.isArray(SETLISTS.collections)) SETLISTS.collections = [];
-      // Normalize any existing sets to use canonical song_uid values
-      normalizeAllSetlists();
 
       const cSaved = localStorage.getItem('cps_sb_collection');
       const cIds = SETLISTS.collections.map(c => String(c.id));

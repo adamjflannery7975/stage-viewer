@@ -1948,8 +1948,7 @@ function nvWire(){
 
 __onReady(() => {
   // Initialise shared Apps launcher (modal). We bind our own click handler in __wireBrandHome().
-  try{ if (window.CPSNav && typeof window.CPSNav.init === 'function') window.CPSNav.init({ bindTrigger: false }); }catch(e){}
-  __wireBrandHome();
+  try{ if (window.CPSNav && typeof window.CPSNav.init === 'function') window.CPSNav.init({ triggerSelector:'#brandHome' }); }catch(e){}
   initFontSelect();
     // Load last session (if present)
   try{

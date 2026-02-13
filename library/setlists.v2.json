@@ -1,0 +1,47 @@
+{
+  "version": 2,
+  "contract": "song_uid_v2",
+  "collections": [
+    {
+      "id": "_all_songs",
+      "type": "smart",
+      "name": "All Songs",
+      "rules": {
+        "mode": "all_songs"
+      },
+      "sets": []
+    },
+    {
+      "id": "working_on",
+      "type": "list",
+      "name": "Working On",
+      "tags": [
+        "practice"
+      ],
+      "sets": [
+        {
+          "id": "main",
+          "name": "Working On",
+          "songs": [
+            "song-423a5c34-a94e-4f02-b270-57b7e9d25c36"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "newbies",
+      "type": "list",
+      "name": "Newbies",
+      "tags": [
+        "practice"
+      ],
+      "sets": [
+        {
+          "id": "main",
+          "name": "Newbies",
+          "songs": []
+        }
+      ]
+    }
+  ]
+}

@@ -234,8 +234,7 @@
   <header>
     <div class="brand" id="brandHome" title="Apps">Setlist Builder</div>
     <span class="pill" id="modePill">Mode: —</span>
-    <button id="appsBtn" title="Apps">Apps</button>
-    <button id="reloadBtn">Reload</button>
+<button id="reloadBtn">Reload</button>
     <button id="downloadBtn" class="btnPrimary">Download setlists.json</button>
     <button id="themeBtn">Toggle Theme</button>
   </header>
@@ -356,6 +355,11 @@
       }
     });
 
+    // --- Shared Apps launcher ---
+    document.addEventListener('DOMContentLoaded', () => {
+      try{ if (window.CPSNav && typeof window.CPSNav.init === 'function') window.CPSNav.init({ triggerSelector:'#brandHome' }); }catch(e){}
+    });
+
     // --- DOM ---
     const modePill = document.getElementById('modePill');
     const hintEl = document.getElementById('hint');
@@ -393,14 +397,6 @@
     const smartNote = document.getElementById('smartNote');
     const smartName = document.getElementById('smartName');
 
-    // --- Apps Launcher (shared modal) ---
-    function openAppsLauncher(){
-      if (window.CPSNav && typeof window.CPSNav.open === 'function') {
-        window.CPSNav.open();
-      } else {
-        // Fallback (should not happen if ../shared/apps_nav.js is present)
-        window.location.href = './index.html';
-      }
     }
 
 
@@ -907,12 +903,6 @@
     // Events
     reloadBtn.addEventListener('click', loadAll);
     downloadBtn.addEventListener('click', downloadSetlists);
-
-    // Apps launcher trigger
-    const appsBtn = document.getElementById('appsBtn');
-    const brandHome = document.getElementById('brandHome');
-    if (appsBtn) appsBtn.addEventListener('click', (e) => { e.preventDefault(); openAppsLauncher(); });
-    if (brandHome) brandHome.addEventListener('click', (e) => { e.preventDefault(); openAppsLauncher(); });
 
 
     collectionFilter.addEventListener('input', renderCollections);

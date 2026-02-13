@@ -601,6 +601,12 @@
       refreshPills();
     }
 
+    // Back-compat alias (older code paths)
+    function renderCollectionsUI(){
+      return renderCollections();
+    }
+
+
     function renderSets(){
       setsList.innerHTML = '';
       setsNote.textContent = '';

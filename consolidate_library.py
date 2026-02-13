@@ -32,10 +32,12 @@ TAG_RE = re.compile(r"^\s*\{([a-zA-Z0-9_\-]+)\s*:\s*(.*?)\}\s*$")
 @dataclass
 class SongFileMeta:
     uid: Optional[str]
+    song_uid: Optional[str]
     title: Optional[str]
     artist: Optional[str]
     persona: Optional[str]
     singer: Optional[str]
+    version: Optional[str]
     duration: Optional[str]
     tempo: Optional[int]
     key: Optional[str]
@@ -76,11 +78,16 @@ def parse_tags_from_cho(text: str) -> Dict[str, str]:
 
 
 def meta_from_tags(tags: Dict[str, str]) -> SongFileMeta:
-    uid = tags.get("uid") or tags.get("song_uid")  # allow legacy tag name
+    # uid = sheet/file identifier (unique per songsheet)
+    uid = tags.get("uid")
+    # song_uid = canonical song identifier shared across versions/personas
+    song_uid = tags.get("song_uid") or tags.get("songuid") or tags.get("song-id") or tags.get("song_id")
+
     title = tags.get("title")
     artist = tags.get("artist")
     persona = tags.get("persona")
     singer = tags.get("singer")
+    version = tags.get("version")
     duration = tags.get("duration")
     tempo = parse_int(tags.get("tempo", "")) if "tempo" in tags else None
     key = tags.get("key")
@@ -88,10 +95,12 @@ def meta_from_tags(tags: Dict[str, str]) -> SongFileMeta:
 
     return SongFileMeta(
         uid=uid,
+        song_uid=song_uid,
         title=title,
         artist=artist,
         persona=persona,
         singer=singer,
+        version=version,
         duration=duration,
         tempo=tempo,
         key=key,
@@ -204,8 +213,10 @@ def consolidate(repo_root: Path, verbose: bool = True) -> Tuple[dict, dict, dict
     cho_files = sorted(songs_dir.rglob("*.cho"))
     log["counts"]["choFilesFound"] = len(cho_files)
 
-    # Index by UID
-    songs_by_uid: Dict[str, dict] = {}
+    # Index by canonical song_uid (falls back to uid when missing)
+    songs_by_song_uid: Dict[str, dict] = {}
+    # Map sheet uid -> canonical song_uid for migration/validation
+    uid_to_song_uid: Dict[str, str] = {}
     missing_uid_files: List[str] = []
 
     for f in cho_files:
@@ -213,17 +224,37 @@ def consolidate(repo_root: Path, verbose: bool = True) -> Tuple[dict, dict, dict
         tags = parse_tags_from_cho(text)
         meta = meta_from_tags(tags)
 
-        persona = (meta.persona or "").strip() or None
-        uid = (meta.uid or "").strip() or None
+persona = (meta.persona or "").strip() or None
+sheet_uid = (meta.uid or "").strip() or None
+song_uid = (meta.song_uid or "").strip() or None
 
-        if not uid:
-            missing_uid_files.append(relpath(repo_root, f))
-            continue
+if not sheet_uid:
+    missing_uid_files.append(relpath(repo_root, f))
+    continue
 
-        rec = songs_by_uid.get(uid)
-        if rec is None:
-            rec = {
-                "uid": uid,
+# Canonical key for the song (preferred), falls back to sheet uid (legacy)
+song_key = song_uid or sheet_uid
+uid_to_song_uid[sheet_uid] = song_key
+
+rec = songs_by_song_uid.get(song_key)
+if rec is None:
+    rec = {
+        # Keep uid field stable as the canonical song id so UI components can use it as a single "song row"
+        "uid": song_key,
+        "song_uid": song_key,
+        "title": meta.title,
+        "artist": meta.artist,
+        "personas": [],
+        "singer": meta.singer,
+        "duration": meta.duration,
+        "tempo": meta.tempo,
+        "key": meta.key,
+        "capo": meta.capo,
+        "files": {},      # persona -> relative file path
+        "sheet_uids": {}, # persona -> sheet uid (for traceability)
+    }
+    songs_by_song_uid[song_key] = rec
+
                 "title": meta.title,
                 "artist": meta.artist,
                 "personas": [],
@@ -259,16 +290,17 @@ def consolidate(repo_root: Path, verbose: bool = True) -> Tuple[dict, dict, dict
             if existing and existing != this_path:
                 log["counts"]["uidCollisionsPersona"] += 1
                 log["warnings"].append(
-                    f"UID {uid} has multiple files for persona '{persona}'. Keeping first: {existing}; ignoring: {this_path}"
+                    f"SONG_UID {song_key} has multiple files for persona '{persona}'. Keeping first: {existing}; ignoring: {this_path}"
                 )
             else:
                 rec["files"][persona] = this_path
+                rec["sheet_uids"][persona] = sheet_uid
         else:
             fallback_key = "_default"
             if fallback_key not in rec["files"]:
                 rec["files"][fallback_key] = this_path
                 log["warnings"].append(
-                    f"UID {uid} file missing persona tag. Using fallback '_default': {this_path}"
+                    f"SONG_UID {song_key} file missing persona tag. Using fallback '_default': {this_path}"
                 )
 
         if not meta.title:
@@ -285,7 +317,7 @@ def consolidate(repo_root: Path, verbose: bool = True) -> Tuple[dict, dict, dict
 
     # Build songs.index.json
     songs_list = sorted(
-        songs_by_uid.values(),
+        songs_by_song_uid.values(),
         key=lambda r: ((r.get("title") or ""), (r.get("artist") or ""), r["uid"])
     )
 
@@ -307,7 +339,9 @@ def consolidate(repo_root: Path, verbose: bool = True) -> Tuple[dict, dict, dict
             if isinstance(uids, list):
                 for uid in uids:
                     referenced += 1
-                    if uid not in songs_by_uid:
+                    # Setlists may reference either canonical song_uid or legacy sheet uid
+                    canon = uid_to_song_uid.get(str(uid), str(uid))
+                    if canon not in songs_by_song_uid:
                         missing_uids.append(str(uid))
 
     log["counts"]["setlistSongsReferenced"] = referenced

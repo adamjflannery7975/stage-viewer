@@ -235,7 +235,9 @@
     <div class="brand" id="brandHome" title="Apps">Setlist Builder</div>
     <span class="pill" id="modePill">Mode: —</span>
 <button id="reloadBtn">Reload</button>
-    <button id="downloadBtn" class="btnPrimary">Download setlists.json</button>
+    <button id="downloadBtn" class="btnPrimary">Export setlists.v2.json</button>
+        <button id="resetDraftBtn" class="btn danger" title="Clear local draft and reload from repo">Reset Draft</button>
+        <span id="saveStatus" class="muted" style="margin-left:10px;font-size:12px;"></span>
     <button id="themeBtn">Toggle Theme</button>
   </header>
 
@@ -332,7 +334,7 @@
               </div>
 
               <div class="smallNote" style="margin-top:10px;">
-                Save via <b>Download setlists.json</b>, then overwrite <code>library/setlists.json</code> in your repo folder and commit.
+                Save via <b>Export setlists.v2.json</b>, then overwrite <code>library/setlists.json</code> in your repo folder and commit.
               </div>
             </div>
           </div>
@@ -411,7 +413,68 @@
     // --- State ---
     let LIB = null; // library.index.json (songs)
     let SETLISTS = null; // setlists.json (collections)
-    let SONGS = []; // from library.index.json
+    let SONGS = [];
+
+  // ===== Contract B (song_uid_v2) =====
+  const LIB_INDEX_V2_URL = '../library/library.index.v2.json';
+  const SETLISTS_V2_URL  = '../library/setlists.v2.json';
+  const LS_DRAFT_KEY     = 'cps_sb_v2_draft';
+  const LS_META_KEY      = 'cps_sb_v2_draft_meta';
+  const LS_DIRTY_KEY     = 'cps_sb_v2_dirty';
+
+  let __draftLoaded = false;
+  let __dirty = false;
+  let __autosaveTimer = null;
+
+  function __nowIso(){
+    return new Date().toISOString();
+  }
+  function __setDirty(v){
+    __dirty = !!v;
+    try { localStorage.setItem(LS_DIRTY_KEY, __dirty ? '1' : '0'); } catch(e){}
+    __updateSaveStatus();
+  }
+  function __loadDraft(){
+    try{
+      const raw = localStorage.getItem(LS_DRAFT_KEY);
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (obj && obj.contract === 'song_uid_v2' && Array.isArray(obj.collections)) return obj;
+      return null;
+    }catch(e){ return null; }
+  }
+  function __saveDraftNow(){
+    try{
+      const meta = { savedAt: __nowIso(), contract:'song_uid_v2' };
+      localStorage.setItem(LS_DRAFT_KEY, JSON.stringify(SETLISTS));
+      localStorage.setItem(LS_META_KEY, JSON.stringify(meta));
+      __setDirty(true);
+    }catch(e){
+      toast('Autosave failed — please Export now');
+    }
+    __updateSaveStatus();
+  }
+  function __scheduleAutosave(){
+    if (__autosaveTimer) clearTimeout(__autosaveTimer);
+    __autosaveTimer = setTimeout(__saveDraftNow, 350);
+  }
+  function __clearDraft(){
+    try{
+      localStorage.removeItem(LS_DRAFT_KEY);
+      localStorage.removeItem(LS_META_KEY);
+      localStorage.removeItem(LS_DIRTY_KEY);
+    }catch(e){}
+    __dirty = false;
+    __draftLoaded = false;
+    __updateSaveStatus();
+  }
+  function __readDraftMeta(){
+    try{
+      const m = localStorage.getItem(LS_META_KEY);
+      return m ? JSON.parse(m) : null;
+    }catch(e){ return null; }
+  }
+ // from library.index.json
     let SONG_BY_UID = new Map();
     let SONG_BY_SONG = new Map(); // song_uid -> canonical song record
 
@@ -637,7 +700,7 @@
       }
 
       uids.forEach(uid => {
-        const s = SONG_BY_UID.get(uid);
+        const s = SONG_BY_SONG.get(uid);
         const title = s ? (s.title || '(untitled)') : 'Missing song';
         const artist = s ? (s.artist || '') : uid;
 
@@ -668,20 +731,28 @@
     }
 
     function addSongToCurrentSet(uid){
-      const col = findCollection(currentCollectionId);
-      if (!col || isSmart(col)) return;
+  const song_uid = String(uid || '').trim();
+  if (!song_uid) return;
 
-      const set = findSet(col, currentSetId);
-      if (!set) return;
+  const col = getSelectedCollection();
+  if (!col){ toast('Select a collection first'); return; }
 
-      if (!Array.isArray(set.songs)) set.songs = [];
-      set.songs.push(uid);
+  const set = getSelectedSet();
+  if (!set){ toast('Select or create a set first'); return; }
 
-      selectedInSetUid = uid;
-      SETLISTS.updated = nowIso();
-      renderInSet();
-      refreshPills();
-    }
+  const used = getUsedSongUidsForSelectedCollection();
+  if (used.has(song_uid)){
+    toast('Already in this collection');
+    return;
+  }
+
+  set.songs = Array.isArray(set.songs) ? set.songs : [];
+  set.songs.push(song_uid);
+
+  __scheduleAutosave();
+  renderSongTable();
+  renderInSet();
+}
 
     function removeSelectedFromSet(){
       const col = findCollection(currentCollectionId);
@@ -850,64 +921,94 @@
     }
 
     function downloadSetlists(){
-      if (!SETLISTS) return;
+  try{
+    SETLISTS.version = 2;
+    SETLISTS.contract = 'song_uid_v2';
+    SETLISTS.updated_at = __nowIso();
+  }catch(e){}
+  const jsonStr = JSON.stringify(SETLISTS, null, 2);
+  const blob = new Blob([jsonStr], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
 
-      // Preserve version if present
-      if (!('version' in SETLISTS)) SETLISTS.version = 1;
-      SETLISTS.updated = nowIso();
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'setlists.v2.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 
-      const blob = new Blob([JSON.stringify(SETLISTS, null, 2)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'setlists.json';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-    }
+  __setDirty(false);
+  try{ localStorage.setItem(LS_DIRTY_KEY,'0'); }catch(e){}
+  __updateSaveStatus();
+  toast('Exported setlists.v2.json');
+}
 
-    async function loadAll(){
-      // Mode indicator
-      modePill.textContent = (location.protocol === 'file:') ? 'Mode: file://' : ('Mode: ' + location.protocol);
-      setHint('Loading songs + collections…');
+    async async function loadAll(){
+  setStatus('Loading…');
 
-      // Load songs library
-      LIB = await fetchJSON('../library/library.index.json');
-      SONGS = Array.isArray(LIB?.songs) ? LIB.songs : []; // canonical (one per song_uid)
-      SONG_BY_UID = new Map();
-      SONG_BY_SONG = new Map();
-      SONGS.forEach(s => { const k = songKeyFor(s); if (k) SONG_BY_SONG.set(k, s); });
-// Load collections (preferred: library/setlists.json)
-      try{
-        SETLISTS = await fetchJSON('../library/setlists.json');
-      }catch(e){
-        // fallback: if collections exist inside library.index.json, use them
-        const cols = Array.isArray(LIB?.collections) ? LIB.collections : [];
-        SETLISTS = { version: 1, updated: nowIso(), collections: cols };
+  // ---- Load library (v2 canonical) ----
+  const libResp = await fetch(LIB_INDEX_V2_URL, { cache: 'no-store' });
+  if (!libResp.ok) throw new Error('Failed to load library index (v2): ' + libResp.status);
+  const LIB = await libResp.json();
+
+  SONGS = Array.isArray(LIB.songs) ? LIB.songs : [];
+
+  // Build lookup maps
+  SONG_BY_SONG = new Map();
+  SONG_BY_UID  = new Map();
+  for (const s of SONGS){
+    const sk = songKeyFor(s);
+    if (sk) SONG_BY_SONG.set(sk, s);
+    if (s && s.uid) SONG_BY_UID.set(String(s.uid), s);
+  }
+
+  // ---- Load setlists (draft-first, else repo v2) ----
+  const draft = __loadDraft();
+  if (draft){
+    SETLISTS = draft;
+    __draftLoaded = true;
+    __dirty = (localStorage.getItem(LS_DIRTY_KEY) || '0') === '1';
+  } else {
+    try{
+      const slResp = await fetch(SETLISTS_V2_URL, { cache: 'no-store' });
+      if (!slResp.ok) throw new Error('HTTP ' + slResp.status);
+      SETLISTS = await slResp.json();
+      __draftLoaded = false;
+      __dirty = false;
+
+      if (!SETLISTS || !Array.isArray(SETLISTS.collections)){
+        SETLISTS = { version:2, contract:'song_uid_v2', collections: [] };
       }
-
-      // Ensure shape
-      if (!Array.isArray(SETLISTS.collections)) SETLISTS.collections = [];
-
-      const cSaved = localStorage.getItem('cps_sb_collection');
-      const cIds = SETLISTS.collections.map(c => String(c.id));
-      currentCollectionId = (cSaved && cIds.includes(cSaved)) ? cSaved : (cIds[0] || null);
-
-      if (currentCollectionId){
-        const setSaved = localStorage.getItem('cps_sb_set_' + currentCollectionId) || '';
-        const col = findCollection(currentCollectionId);
-        const sets = getSets(col);
-        const setIds = sets.map(s => String(s.id));
-        currentSetId = (setSaved && setIds.includes(setSaved)) ? setSaved : (setIds[0] || null);
-      } else {
-        currentSetId = null;
-      }
-
-      setHint(`Loaded ${SONGS.length} songs and ${SETLISTS.collections.length} collections. Make changes, then Download setlists.json.`);
-      renderCollections();
-      renderSets();
-      renderSongsPanel();
+      SETLISTS.contract = 'song_uid_v2';
+      try{ localStorage.setItem(LS_DIRTY_KEY, '0'); }catch(e){}
+    }catch(e){
+      toast('Could not load setlists.v2.json — starting empty');
+      SETLISTS = { version:2, contract:'song_uid_v2', collections: [] };
+      __draftLoaded = false;
+      __dirty = true;
+      __scheduleAutosave();
     }
+  }
+
+  // Normalize set songs arrays and detect legacy uid entries
+  let legacyFound = false;
+  for (const col of (SETLISTS.collections || [])){
+    for (const st of (col.sets || [])){
+      if (!Array.isArray(st.songs)) st.songs = [];
+      st.songs = st.songs.map(x => String(x||'').trim()).filter(Boolean);
+      if (st.songs.some(x => x.startsWith('uid-'))) legacyFound = true;
+    }
+  }
+  if (legacyFound) toast('Legacy uid entries detected in setlists — please migrate to v2');
+
+  renderCollectionsUI();
+  renderSongTable();
+  renderInSet();
+  __updateSaveStatus();
+
+  setStatus(`Loaded ${SONGS.length} songs • ${__draftLoaded ? 'Draft' : 'Repo'} setlists`);
+}
 
     // Events
     reloadBtn.addEventListener('click', loadAll);

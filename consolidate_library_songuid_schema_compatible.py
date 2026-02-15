@@ -212,12 +212,14 @@ def main():
       collections = []
 
   library_index = {
+    "contract": "song_uid_v2",
     "version": 2,
     "songs": songs_out,
     "collections": collections
   }
 
   songs_index = {
+    "contract": "song_uid_v2",
     "version": 2,
     "songCount": len(songs_out),
     "songs": songs_out

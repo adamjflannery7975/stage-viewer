@@ -1,0 +1,56 @@
+name: Rebuild library index (auto)
+
+on:
+  push:
+    branches:
+      - main
+
+# This workflow regenerates library index JSON files and commits them back to main.
+# Guardrails:
+# - Skips if the triggering commit message indicates it's already an index rebuild.
+# - Uses minimal permissions (contents: write) only for this workflow.
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild_and_commit:
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(index):') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Rebuild indexes
+        run: |
+          python3 -u consolidate_library_songuid_schema_compatible.py
+
+      - name: Commit regenerated indexes (if changed)
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "✅ No index changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Commit only generated library index files
+          git add library/songs.index.json library/library.index.json
+
+          # If nothing staged (e.g. only whitespace in other files), exit
+          if [ -z "$(git diff --cached --name-only)" ]; then
+            echo "✅ No relevant index changes staged."
+            exit 0
+          fi
+
+          git commit -m "chore(index): rebuild library indexes"
+          git push

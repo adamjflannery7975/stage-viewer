@@ -1,10 +1,12 @@
 name: Rebuild library index (verify)
 
 on:
-  push:
-    branches:
-      - "**"
+  # Verify on PRs and on non-main branches.
+  # main branch is handled by the auto-rebuild workflow that commits regenerated indexes.
   pull_request:
+  push:
+    branches-ignore:
+      - main
 
 permissions:
   contents: read
@@ -17,14 +19,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          node-version: "20"
+          python-version: "3.11"
 
       - name: Rebuild indexes
         run: |
-          node tools/rebuild_library_index.js --repo .
+          python3 -u consolidate_library_songuid_schema_compatible.py
 
       - name: Verify no changes
         run: |
@@ -32,7 +34,7 @@ jobs:
             echo ""
             echo "❌ Library index is out of date."
             echo "Run this locally, then commit the generated files:"
-            echo "  node tools/rebuild_library_index.js --repo ."
+            echo "  python3 -u consolidate_library_songuid_schema_compatible.py"
             echo ""
             echo "Changed files:"
             git status --porcelain

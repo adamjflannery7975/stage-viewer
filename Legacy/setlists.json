@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "contract": "song_uid_v2",
+  "version": 1,
+  "updated": "2026-02-10T06:37:17.663Z",
   "collections": [
     {
       "id": "_all_songs",
@@ -23,7 +23,7 @@
           "id": "main",
           "name": "Working On",
           "songs": [
-            "song-423a5c34-a94e-4f02-b270-57b7e9d25c36"
+            "uid-273ee8a9-b093-4d82-bc72-fad59e74a9eb"
           ]
         }
       ]

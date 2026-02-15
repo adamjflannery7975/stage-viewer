@@ -1,4 +1,5 @@
 {
+  "contract": "song_uid_v2",
   "version": 2,
   "songCount": 339,
   "songs": [
